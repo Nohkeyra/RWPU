@@ -19,7 +19,7 @@
         android:paddingTop="2dp"
         android:paddingBottom="8dp" />
 
-    <View
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/widget_divider"
