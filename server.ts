@@ -1,0 +1,1823 @@
+import "dotenv/config";
+import express from "express";
+import path from "path";
+import fs from "fs";
+import nodemailer from "nodemailer";
+import cors from "cors";
+import * as admin from "firebase-admin"; // Changed to namespace import for better compatibility
+import { cert, App } from "firebase-admin/app";
+import { getFirestore as getFirestoreModular, Timestamp, FieldValue } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
+import { google } from "googleapis";
+
+interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId: string;
+  firestoreDatabaseId?: string;
+}
+
+const firebaseConfig: FirebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCaCFMk6K8go9Wgt-jdNd6QTvD8JbsTkY4",
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "restoran-wawasan.firebaseapp.com",
+  projectId: process.env.FIREBASE_PROJECT_ID || "restoran-wawasan",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "restoran-wawasan.firebasestorage.app",
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "1019707766959",
+  appId: process.env.FIREBASE_APP_ID || "1:1019707766959:web:78644cddb16b67a69ffc5a",
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-ZWC8H62RZN",
+  firestoreDatabaseId: undefined
+};
+
+// IMPORTANT: The backend Express server must ALWAYS connect to the production
+// Firebase project (restoran-wawasan), regardless of environment. Unlike the
+// frontend (which legitimately switches to a sandbox project during AI Studio
+// preview), this server only ever runs on Render as the real production
+// backend — so it must never read firebase-applet-config.json or any other
+// sandbox override. Doing so previously caused orders, invoice counters, and
+// calendar syncs to silently target the wrong Firestore project.
+
+// Self-healing Local JSON Database Fallback
+const LOCAL_DB_PATH = path.join(process.cwd(), "orders.json");
+const ENABLE_LOCAL_FALLBACK = process.env.ENABLE_LOCAL_FALLBACK === "true";
+const STRICT_FIREBASE_ADMIN = process.env.STRICT_FIREBASE_ADMIN !== "false";
+
+// Lazy initialize Firebase Admin
+let adminApp: App | null = null;
+function getAdminApp() {
+  if (!adminApp) {
+    const apps = admin.apps || [];
+    if (apps.length === 0) {
+      const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+      const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+        ? process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n")
+        : undefined;
+
+      if (email && privateKey) {
+        // Render has no Application Default Credentials (that's a GCP-only
+        // mechanism), so Firebase Admin must be given an explicit service
+        // account credential or every Firestore call silently fails auth.
+        adminApp = admin.initializeApp({
+          credential: cert({
+            projectId: firebaseConfig.projectId,
+            clientEmail: email,
+            privateKey: privateKey,
+          }),
+          projectId: firebaseConfig.projectId,
+        });
+      } else {
+        const msg =
+          "Missing GOOGLE_SERVICE_ACCOUNT_EMAIL or GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY. " +
+          "On Render this usually means Firebase Admin cannot authenticate to Firestore, so orders/invoice counters/widgets will fail.";
+        if (STRICT_FIREBASE_ADMIN) {
+          throw new Error(msg);
+        }
+        console.warn(msg + " Continuing with Application Default Credentials (not recommended on Render).");
+        adminApp = admin.initializeApp({ projectId: firebaseConfig.projectId });
+      }
+    } else {
+      adminApp = apps[0]!;
+    }
+  }
+  return adminApp;
+}
+
+function getFirestore() {
+  const app = getAdminApp();
+  const dbId = firebaseConfig.firestoreDatabaseId;
+  
+  if (dbId && dbId !== "(default)") {
+    // In the modular API, a named database is passed as the second argument
+    // to getFirestore(app, databaseId).
+    try {
+      return getFirestoreModular(app, dbId);
+    } catch (err) {
+      console.warn(`Failed to initialize Firestore with database ID ${dbId}, falling back to default:`, err);
+      return getFirestoreModular(app);
+    }
+  }
+  return getFirestoreModular(app);
+}
+
+async function sendNotificationToTopic(topic: string, title: string, body: string) {
+  try {
+    const app = getAdminApp();
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      topic: topic,
+    };
+    const response = await getMessaging(app).send(message);
+    console.log(`Successfully sent message to topic ${topic}:`, response);
+  } catch (error) {
+    console.error(`Error sending message to topic ${topic}:`, error);
+  }
+}
+
+// Robust Firestore operation retry mechanism to minimize reliance on the transient file system
+async function runWithRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      console.warn(`[Firestore Retry] Attempt ${attempt} failed. Retrying in ${delayMs}ms... Error:`, error);
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2; // exponential backoff
+      }
+    }
+  }
+  throw lastError;
+}
+
+function getLocalOrders(): Record<string, unknown>[] {
+  if (!ENABLE_LOCAL_FALLBACK) return [];
+  try {
+    if (fs.existsSync(LOCAL_DB_PATH)) {
+      console.warn("[WARNING] Reading from local fallback file 'orders.json'. Note: This local file system is ephemeral and transient. All local changes will be lost upon container restart or redeployment.");
+      const data = JSON.parse(fs.readFileSync(LOCAL_DB_PATH, "utf-8"));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (err) {
+    console.error("Error reading local orders database:", err);
+  }
+  return [];
+}
+
+function saveLocalOrders(orders: Record<string, unknown>[]) {
+  if (!ENABLE_LOCAL_FALLBACK) return;
+  try {
+    console.warn("[WARNING] Writing to local fallback file 'orders.json'. Note: This local file system is ephemeral and transient. All local changes will be lost upon container restart or redeployment.");
+    fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(orders, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Error writing to local orders database:", err);
+  }
+}
+
+function toEventTimestamp(orderData: Partial<OrderData>): Timestamp | null {
+  try {
+    const raw = orderData.dateTime
+      ? new Date(orderData.dateTime)
+      : orderData.date
+        ? new Date(`${orderData.date}T${orderData.time || "12:00"}:00+08:00`)
+        : null;
+    if (!raw || isNaN(raw.getTime())) return null;
+    return Timestamp.fromDate(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function createOrderWithSequentialInvoice(orderData: OrderData): Promise<{ orderId: string; invoiceNo: string }> {
+  const db = getFirestore();
+  const counterRef = db.collection("meta").doc("invoiceCounter");
+  const orderRef = db.collection("orders").doc();
+
+  return await db.runTransaction(async (tx) => {
+    const counterSnap = await tx.get(counterRef);
+    let next = 1;
+    if (counterSnap.exists) {
+      const data = counterSnap.data();
+      if (data && typeof data.count === "number") {
+        next = data.count + 1;
+      }
+    }
+
+    const invoiceNo = `RW${String(next).padStart(4, "0")}`;
+    const eventTimestamp = toEventTimestamp(orderData);
+
+    tx.set(
+      counterRef,
+      { count: next, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+
+    tx.set(orderRef, {
+      ...orderData,
+      status: "approved",
+      approvedAt: new Date().toISOString(),
+      invoiceNo,
+      eventTimestamp,
+      // Always set by server (client may send a Firestore sentinel that isn't valid server-side)
+      createdAt: FieldValue.serverTimestamp(),
+      // Used by the admin endpoints; never trust client
+      adminPasscode: process.env.ADMIN_PASSWORD || "wawasan123",
+    });
+
+    return { orderId: orderRef.id, invoiceNo };
+  });
+}
+
+// Google Calendar Helper
+function getGoogleCalendarClient() {
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+    ? process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n")
+    : undefined;
+
+  if (!email || !privateKey) {
+    console.warn("GOOGLE_SERVICE_ACCOUNT_EMAIL or GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY not configured. Google Calendar event creation will be skipped.");
+    return null;
+  }
+
+  try {
+    const auth = new google.auth.JWT({
+      email,
+      key: privateKey,
+      scopes: ["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/calendar.events"]
+    });
+    return google.calendar({ version: "v3", auth });
+  } catch (err) {
+    console.error("Failed to initialize Google Calendar client:", err);
+    return null;
+  }
+}
+
+interface OrderData {
+  dateTime?: string;
+  date?: string;
+  time?: string;
+  meals?: string | string[];
+  quantity?: number;
+  location?: string;
+  menu?: string;
+  name?: string;
+  contact?: string;
+  email?: string;
+  notes?: string;
+  status?: string;
+  totalAmount?: number;
+  invoiceNo?: string;
+  calendarEventIds?: Record<string, string>;
+}
+
+async function syncGoogleCalendarEvent(orderId: string, passedOrderData?: OrderData) {
+  try {
+    const calendar = getGoogleCalendarClient();
+    if (!calendar) {
+      return;
+    }
+
+    // 1. Fetch current order data if not passed
+    let orderData: OrderData | undefined = passedOrderData;
+    if (!orderData) {
+      try {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection("orders").doc(orderId).get();
+        if (docSnap.exists) {
+          orderData = docSnap.data() as OrderData;
+        }
+      } catch (dbErr) {
+        console.warn(`Firestore sync load failed for order ${orderId}:`, dbErr);
+      }
+
+      if (!orderData) {
+        const localOrders = getLocalOrders();
+        orderData = localOrders.find(o => o.id === orderId) as OrderData | undefined;
+      }
+    }
+
+    if (!orderData) {
+      console.warn(`Sync Google Calendar Event: Order ${orderId} not found.`);
+      return;
+    }
+
+    // Determine start time (using orderData.dateTime or parsing date/time)
+    let startDateTime: Date;
+    if (orderData.dateTime) {
+      startDateTime = new Date(orderData.dateTime);
+    } else if (orderData.date) {
+      startDateTime = new Date(`${orderData.date}T${orderData.time || '12:00'}:00+08:00`);
+    } else {
+      startDateTime = new Date();
+    }
+
+    // Validate date
+    if (isNaN(startDateTime.getTime())) {
+      startDateTime = new Date();
+    }
+
+    // Default duration: 3 hours
+    const endDateTime = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000);
+
+    const mealList = Array.isArray(orderData.meals) ? orderData.meals.join(", ") : (orderData.meals || "");
+    const summary = `[${(orderData.status || "pending").toUpperCase()}] Wawasan Order - ${orderData.name || "Customer"} (${orderData.quantity || ""} Pax)`;
+    const description = `${orderData.quantity || "N/A"} Pax
+Meal For: ${mealList || "N/A"}
+Event Location: ${orderData.location || "N/A"}
+Menu: ${orderData.menu || "N/A"}`;
+
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+    const existingEventId = orderData.calendarEventIds?.[calendarId];
+
+    if (existingEventId) {
+      try {
+        console.log(`Updating existing Google Calendar event ${existingEventId} for order ${orderId}...`);
+        await calendar.events.update({
+          calendarId: calendarId,
+          eventId: existingEventId,
+          requestBody: {
+            summary: summary,
+            description: description,
+            location: orderData.location || "",
+            start: {
+              dateTime: startDateTime.toISOString(),
+              timeZone: "Asia/Kuala_Lumpur",
+            },
+            end: {
+              dateTime: endDateTime.toISOString(),
+              timeZone: "Asia/Kuala_Lumpur",
+            },
+          },
+        });
+        console.log(`Google Calendar event ${existingEventId} updated successfully.`);
+        return;
+      } catch (updateErr) {
+        // If event was deleted, we'll recreate it
+        const errObj = updateErr as { status?: number; message?: string };
+        if (errObj && (errObj.status === 404 || (errObj.message && errObj.message.includes('Not Found')))) {
+          console.warn(`Existing calendar event ${existingEventId} not found or deleted on calendar, recreating...`);
+        } else {
+          throw updateErr;
+        }
+      }
+    }
+
+    // Insert new event if no existing event id or if recreation is needed
+    console.log(`Creating new Google Calendar event for order ${orderId}...`);
+    const response = await calendar.events.insert({
+      calendarId: calendarId,
+      requestBody: {
+        summary: summary,
+        description: description,
+        location: orderData.location || "",
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: "Asia/Kuala_Lumpur",
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: "Asia/Kuala_Lumpur",
+        },
+      },
+    });
+
+    const eventId = response.data.id;
+    if (eventId) {
+      console.log(`Google Calendar event created successfully! Event Link: ${response.data.htmlLink}`);
+      
+      const updatedCalendarEventIds = {
+        ...(orderData.calendarEventIds || {}),
+        [calendarId]: eventId
+      };
+
+      // Update Firestore document with calendarEventIds
+      try {
+        const adminDb = getFirestore();
+        await adminDb.collection("orders").doc(orderId).update({
+          calendarEventIds: updatedCalendarEventIds
+        });
+        console.log(`Firestore updated with calendarEventIds for order ${orderId}`);
+      } catch (dbErr) {
+        console.warn(`Failed to update calendarEventIds in Firestore for order ${orderId}:`, dbErr);
+      }
+
+      // Update Local JSON file with calendarEventIds
+      try {
+        const localOrders = getLocalOrders();
+        const localIndex = localOrders.findIndex(o => o.id === orderId);
+        if (localIndex !== -1) {
+          localOrders[localIndex] = {
+            ...localOrders[localIndex],
+            calendarEventIds: updatedCalendarEventIds
+          };
+          saveLocalOrders(localOrders);
+          console.log(`Local JSON updated with calendarEventIds for order ${orderId}`);
+        }
+      } catch (localErr) {
+        console.error("Failed to update local orders with calendarEventIds:", localErr);
+      }
+    }
+  } catch (err) {
+    console.error(`Error syncing Google Calendar event for order ${orderId}:`, err);
+  }
+}
+
+// Google OAuth Configuration for User Form-to-Calendar Sync
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "1019707766959-nn4kt8gbrd10videj8f716ifo7ned8r9.apps.googleusercontent.com";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI || "https://restoran-wawasan-bio.onrender.com/__/auth/handler";
+
+const userOAuth2Client = new google.auth.OAuth2(
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  REDIRECT_URI
+);
+
+// Helper to set nested properties dynamically based on dotted path mappings (e.g. "start.dateTime")
+function setNestedProperty(obj: Record<string, unknown>, pathStr: string, value: unknown) {
+  const parts = pathStr.split('.');
+  let current = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!current[part] || typeof current[part] !== 'object') {
+      current[part] = {} as Record<string, unknown>;
+    }
+    current = current[part] as Record<string, unknown>;
+  }
+  current[parts[parts.length - 1]] = value;
+}
+
+async function startServer() {
+  const app = express();
+  const PORT = process.env.PORT || 3000;
+
+  // Middleware
+  app.use(cors());
+  app.use(express.json({ limit: '50mb' })); // Allow large payloads for base64 PDF
+
+  // Nodemailer transporter setup
+  // Expects environment variables for SMTP configuration
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    family: 4, // Force IPv4 — Render's network doesn't reliably route outbound IPv6 to Gmail SMTP
+  });
+
+  // Verify SMTP transporter connection
+  transporter.verify((error) => {
+    if (error) {
+      console.error("SMTP Configuration/Connection Error:", error);
+    } else {
+      console.log("SMTP connection verified! Server is ready to send emails.");
+    }
+  });
+
+  // API routes FIRST
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
+  // =========================================================================
+  //                     GOOGLE OAUTH2 CALENDAR SYNC PIPELINE
+  // =========================================================================
+
+  /**
+   * 1. OAUTH2 AUTHENTICATION FLOW - CONNECTION ENTRYPOINT
+   * Redirects the user to Google's consent screen to request Google Calendar access.
+   * We pass the user's ID as the 'state' parameter to retrieve it in the callback.
+   */
+  app.get("/auth/connect", (req, res) => {
+    const userId = req.query.userId || "default_user";
+    console.log(`[Google OAuth] Connection initiated by user ID: ${userId}`);
+
+    try {
+      const authUrl = userOAuth2Client.generateAuthUrl({
+        access_type: "offline",  // Required to receive a Refresh Token
+        prompt: "consent",       // Force the consent screen to guarantee a Refresh Token is returned
+        scope: ["https://www.googleapis.com/auth/calendar.events"],
+        state: String(userId),
+      });
+
+      console.log(`[Google OAuth] Redirecting user ${userId} to Google Consent Screen.`);
+      res.redirect(authUrl);
+    } catch (err) {
+      console.error("[Google OAuth] Error generating consent redirect URL:", err);
+      res.status(500).send(`Failed to generate Google auth URL: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
+
+  /**
+   * 1. OAUTH2 AUTHENTICATION FLOW - CALLBACK HANDLER
+   * Receives Google's authorization code, exchanges it for Access & Refresh Tokens,
+   * and securely stores them in Firestore under the specified user ID (from 'state').
+   * Support both double and triple underscore paths to ensure Render redirect compatibility.
+   */
+  const handleAuthCallback = async (req: express.Request, res: express.Response) => {
+    const code = req.query.code as string;
+    const userId = (req.query.state as string) || "default_user";
+
+    if (!code) {
+      console.error("[Google OAuth Callback] Authorization code is missing from redirect query.");
+      return res.status(400).send("Authorization code is missing.");
+    }
+
+    console.log(`[Google OAuth Callback] Exchanging authorization code for tokens for user ID: ${userId}`);
+
+    try {
+      const { tokens } = await userOAuth2Client.getToken(code);
+      console.log(`[Google OAuth Callback] Tokens successfully exchanged.`);
+
+      if (!tokens.refresh_token) {
+        console.warn("[Google OAuth Callback] Warning: No refresh token returned. User may have previously authorized the app. Revoke access if a new refresh token is required.");
+      }
+
+      // Securely store the Refresh Token & OAuth credentials in Firestore under the user's document ID
+      const db = getFirestore();
+      const tokenData: Record<string, unknown> = {
+        updatedAt: FieldValue.serverTimestamp()
+      };
+
+      if (tokens.refresh_token) {
+        tokenData.refresh_token = tokens.refresh_token;
+        tokenData.googleRefreshToken = tokens.refresh_token; // Keep both fields for robust cross-compatibility
+      }
+      if (tokens.access_token) {
+        tokenData.access_token = tokens.access_token;
+      }
+      if (tokens.expiry_date) {
+        tokenData.expiry_date = tokens.expiry_date;
+      }
+
+      await db.collection("users").doc(userId).set(tokenData, { merge: true });
+      console.log(`[Google OAuth Callback] Google Refresh Token & credentials saved to Firestore for user: ${userId}`);
+
+      // Render a polished success response page
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Google Calendar Linked Successfully</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              background-color: #f7fafc;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              margin: 0;
+              color: #2d3748;
+            }
+            .card {
+              background: white;
+              padding: 40px;
+              border-radius: 12px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              text-align: center;
+              max-width: 480px;
+              width: 90%;
+              border-top: 5px solid #48bb78;
+            }
+            .icon {
+              font-size: 54px;
+              margin-bottom: 20px;
+            }
+            h1 {
+              color: #48bb78;
+              font-size: 24px;
+              margin-top: 0;
+              margin-bottom: 12px;
+              font-weight: 700;
+            }
+            p {
+              font-size: 15px;
+              line-height: 1.6;
+              color: #4a5568;
+              margin-bottom: 24px;
+            }
+            .badge {
+              background-color: #ebf8ff;
+              border: 1px solid #bee3f8;
+              color: #2b6cb0;
+              font-family: monospace;
+              font-size: 13px;
+              padding: 8px 12px;
+              border-radius: 6px;
+              word-break: break-all;
+              margin-bottom: 28px;
+            }
+            .btn {
+              background-color: #4299e1;
+              color: white;
+              padding: 12px 28px;
+              border-radius: 6px;
+              text-decoration: none;
+              font-weight: 600;
+              display: inline-block;
+              transition: background-color 0.2s;
+              border: none;
+              cursor: pointer;
+              font-size: 14px;
+            }
+            .btn:hover {
+              background-color: #3182ce;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon">📅</div>
+            <h1>Google Calendar Linked!</h1>
+            <p>Your Google account has been successfully connected to Restoran Wawasan. Future form submissions will be automatically synced with your calendar events.</p>
+            <div class="badge">Connected User ID: ${userId}</div>
+            <button onclick="window.close()" class="btn">Close Window</button>
+          </div>
+        </body>
+        </html>
+      `);
+    } catch (err) {
+      console.error("[Google OAuth Callback] Token exchange failed:", err);
+      res.status(500).send(`Authentication failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+
+  app.get("/___/auth/handler", handleAuthCallback);
+  app.get("/__/auth/handler", handleAuthCallback);
+
+  /**
+   * 2. DYNAMIC PAYLOAD PARSING & EVENT SYNC ENGINE
+   * Triggered by frontend form submissions. Looks up saved Refresh Tokens, initializes
+   * Google OAuth client (refreshing expired tokens), dynamically maps the form fields
+   * using the requested mappings array, and inserts the event into the selected Google Calendar.
+   */
+  const handleSyncSubmission = async (req: express.Request, res: express.Response) => {
+    const { userId, calendarId = "primary", submission, mappings } = req.body;
+
+    if (!userId) {
+      console.error("[Sync Submission] Error: Missing required field: userId");
+      return res.status(400).json({ error: "Missing required field: userId" });
+    }
+
+    if (!submission) {
+      console.error("[Sync Submission] Error: Missing required field: submission");
+      return res.status(400).json({ error: "Missing required field: submission" });
+    }
+
+    if (!mappings || !Array.isArray(mappings)) {
+      console.error("[Sync Submission] Error: Missing or invalid 'mappings' array.");
+      return res.status(400).json({ error: "Missing or invalid 'mappings' array." });
+    }
+
+    console.log(`[Sync Submission] Processing sync for user: ${userId}, calendar ID: ${calendarId}`);
+
+    try {
+      // 1. Retrieve the saved Google Refresh Token from Firestore
+      const db = getFirestore();
+      const userDoc = await db.collection("users").doc(userId).get();
+
+      if (!userDoc.exists) {
+        console.error(`[Sync Submission] Error: User document not found in Firestore for ID: ${userId}`);
+        return res.status(404).json({ error: `User document for ${userId} not found in Firestore.` });
+      }
+
+      const userData = userDoc.data();
+      const refreshToken = userData?.googleRefreshToken || userData?.refresh_token;
+
+      if (!refreshToken) {
+        console.error(`[Sync Submission] Error: No Google refresh token found for user ID: ${userId}`);
+        return res.status(400).json({ error: "Google Calendar connection is missing. Please authenticate via /auth/connect first." });
+      }
+
+      console.log(`[Sync Submission] Refresh token successfully retrieved for user ${userId}.`);
+
+      // 2. Initialize OAuth2 client using saved user credentials
+      const client = new google.auth.OAuth2(
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        REDIRECT_URI
+      );
+
+      client.setCredentials({
+        refresh_token: refreshToken,
+        access_token: userData?.access_token,
+        expiry_date: userData?.expiry_date,
+      });
+
+      // Handle automatic token refresh and persist newly issued access tokens back to Firestore
+      client.on('tokens', async (newTokens) => {
+        console.log(`[Sync Submission] OAuth client refreshed access token for user ${userId}`);
+        try {
+          const updateData: Record<string, unknown> = {
+            updatedAt: FieldValue.serverTimestamp()
+          };
+          if (newTokens.access_token) updateData.access_token = newTokens.access_token;
+          if (newTokens.expiry_date) updateData.expiry_date = newTokens.expiry_date;
+          if (newTokens.refresh_token) {
+            updateData.refresh_token = newTokens.refresh_token;
+            updateData.googleRefreshToken = newTokens.refresh_token;
+          }
+          await db.collection("users").doc(userId).update(updateData);
+          console.log(`[Sync Submission] Saved freshly updated tokens in Firestore for user: ${userId}`);
+        } catch (saveErr) {
+          console.error(`[Sync Submission] Failed to persist refreshed tokens for user ${userId}:`, saveErr);
+        }
+      });
+
+      // 3. Dynamic payload generation using mappings configuration
+      const eventPayload: Record<string, unknown> = {};
+
+      mappings.forEach((mapping: { from: string; to: string }) => {
+        const { from, to } = mapping;
+        if (!from || !to) return;
+
+        const val = (submission as Record<string, unknown>)[from];
+        if (val !== undefined) {
+          setNestedProperty(eventPayload, to, val);
+        }
+      });
+
+      console.log(`[Sync Submission] Created dynamic event payload:`, JSON.stringify(eventPayload, null, 2));
+
+      // 4. Implement Smart Fallbacks for essential Calendar API properties
+      if (!eventPayload["summary"]) {
+        eventPayload["summary"] = (submission as Record<string, unknown>).name || (submission as Record<string, unknown>).summary || "New Form Submission Event";
+      }
+
+      const startObj = eventPayload["start"] as Record<string, unknown> | undefined;
+      if (!startObj || !startObj["dateTime"]) {
+        const parsedStart = (submission as Record<string, unknown>).dateTime || (submission as Record<string, unknown>).date || new Date().toISOString();
+        setNestedProperty(eventPayload, "start.dateTime", parsedStart);
+      }
+
+      const updatedStartObj = eventPayload["start"] as Record<string, unknown> | undefined;
+      if (updatedStartObj && updatedStartObj["dateTime"] && !updatedStartObj["timeZone"]) {
+        updatedStartObj["timeZone"] = "Asia/Kuala_Lumpur";
+      }
+
+      // Compute end time (duration: 3 hours) if start exists but end is unmapped
+      const endObj = eventPayload["end"] as Record<string, unknown> | undefined;
+      if (!endObj || !endObj["dateTime"]) {
+        const currentStartObj = eventPayload["start"] as Record<string, unknown> | undefined;
+        const startMs = new Date(String(currentStartObj?.["dateTime"] || "")).getTime();
+        if (!isNaN(startMs)) {
+          const endIso = new Date(startMs + 3 * 60 * 60 * 1000).toISOString();
+          setNestedProperty(eventPayload, "end.dateTime", endIso);
+        } else {
+          setNestedProperty(eventPayload, "end.dateTime", new Date().toISOString());
+        }
+      }
+
+      const updatedEndObj = eventPayload["end"] as Record<string, unknown> | undefined;
+      if (updatedEndObj && updatedEndObj["dateTime"] && !updatedEndObj["timeZone"]) {
+        updatedEndObj["timeZone"] = "Asia/Kuala_Lumpur";
+      }
+
+      // 5. Execute Google Calendar API events insert call
+      const calendar = google.calendar({ version: "v3", auth: client });
+      
+      console.log(`[Sync Submission] Inserting event into calendar: ${calendarId}`);
+      const insertResponse = await calendar.events.insert({
+        calendarId: calendarId,
+        requestBody: eventPayload,
+      });
+
+      const event = insertResponse.data;
+      console.log(`[Sync Submission] Google Calendar Event created successfully! ID: ${event.id}. HTML Link: ${event.htmlLink}`);
+
+      res.json({
+        success: true,
+        eventId: event.id,
+        htmlLink: event.htmlLink,
+        summary: event.summary,
+        start: event.start,
+        end: event.end
+      });
+
+    } catch (err) {
+      console.error("[Sync Submission] Critical failure in dynamic sync engine:", err);
+      const errorResponse = err as { errors?: unknown; response?: { data?: unknown } } | null;
+      res.status(500).json({
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+        details: errorResponse?.errors || errorResponse?.response?.data || null
+      });
+    }
+  };
+
+  app.post("/api/sync-submission", handleSyncSubmission);
+  app.post("/sync-submission", handleSyncSubmission);
+
+  // Diagnostics endpoint: verifies Firebase Admin can authenticate and write to Firestore.
+  // This creates/updates a harmless doc `meta/diagnostics`.
+  app.get("/api/diagnostics/firebase", async (req, res) => {
+    try {
+      const db = getFirestore();
+      const ref = db.collection("meta").doc("diagnostics");
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const prev = (snap.data() as { count?: number } | undefined)?.count || 0;
+        tx.set(
+          ref,
+          {
+            count: prev + 1,
+            lastRunAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+      res.json({ ok: true, projectId: firebaseConfig.projectId });
+    } catch (err) {
+      console.error("Firebase diagnostics failed:", err);
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
+  // Diagnostics endpoint: verifies Google Calendar API auth + API enablement.
+  app.get("/api/diagnostics/calendar", async (req, res) => {
+    try {
+      const calendar = getGoogleCalendarClient();
+      if (!calendar) {
+        return res.status(500).json({
+          ok: false,
+          error: "Google Calendar client not configured (missing GOOGLE_SERVICE_ACCOUNT_EMAIL/PRIVATE_KEY).",
+        });
+      }
+
+      // A lightweight call that will surface 403 PERMISSION_DENIED if the API is disabled.
+      const r = await calendar.calendarList.list({ maxResults: 1 });
+      res.json({ ok: true, calendarsReturned: (r.data.items || []).length });
+    } catch (err) {
+      const e = err as { code?: number; status?: number; message?: string; errors?: unknown };
+      console.error("Calendar diagnostics failed:", err);
+      res.status(500).json({
+        ok: false,
+        status: e?.status ?? e?.code,
+        message: e?.message || "Calendar diagnostics failed",
+      });
+    }
+  });
+
+  // Lightweight endpoint for the Android home-screen widget.
+  // Returns only the fields the widget needs (pax, meal, location, menu, date),
+  // sorted by event date ascending, limited to the nearest upcoming orders.
+  app.get("/api/widget/upcoming-orders", async (req, res) => {
+    try {
+      const limit = Math.min(parseInt((req.query.limit as string) || "5", 10), 20);
+      const now = new Date();
+      const results: { id: string; date: string; time?: string; quantity?: number; meals?: string; location?: string; menu?: string }[] = [];
+
+      try {
+        const adminDb = getFirestore();
+        // Prefer querying by a Firestore Timestamp field (fast, index-friendly).
+        // New orders created by the backend set `eventTimestamp`.
+        const nowTs = Timestamp.fromDate(now);
+        const snapshot = await adminDb
+          .collection("orders")
+          .where("eventTimestamp", ">=", nowTs)
+          .orderBy("eventTimestamp", "asc")
+          .limit(limit)
+          .get();
+
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data() as OrderData & { eventTimestamp?: Timestamp };
+          const eventDate =
+            d.eventTimestamp?.toDate?.() ||
+            (d.dateTime ? new Date(d.dateTime) : d.date ? new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null);
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+            results.push({
+              id: docSnap.id,
+              date: eventDate.toISOString(),
+              quantity: d.quantity,
+              meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+              location: d.location,
+              menu: d.menu,
+            });
+          }
+        });
+
+        // Backward compatibility for older orders that do not have `eventTimestamp`.
+        if (results.length === 0) {
+          const legacySnap = await adminDb.collection("orders").get();
+          legacySnap.forEach((docSnap) => {
+            const d = docSnap.data() as OrderData;
+            const eventDate = d.dateTime
+              ? new Date(d.dateTime)
+              : d.date
+                ? new Date(`${d.date}T${d.time || "12:00"}:00+08:00`)
+                : null;
+            if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+              results.push({
+                id: docSnap.id,
+                date: eventDate.toISOString(),
+                quantity: d.quantity,
+                meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+                location: d.location,
+                menu: d.menu,
+              });
+            }
+          });
+        }
+      } catch (dbErr) {
+        console.warn("Widget endpoint: Firestore fetch failed, falling back to local orders:", dbErr);
+        const localOrders = getLocalOrders() as unknown as (OrderData & { id: string })[];
+        localOrders.forEach((d) => {
+          const eventDate = d.dateTime ? new Date(d.dateTime) : (d.date ? new Date(`${d.date}T${d.time || '12:00'}:00+08:00`) : null);
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+            results.push({
+              id: d.id,
+              date: eventDate.toISOString(),
+              quantity: d.quantity,
+              meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+              location: d.location,
+              menu: d.menu,
+            });
+          }
+        });
+      }
+
+      results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      res.json({ success: true, orders: results.slice(0, limit) });
+    } catch (err) {
+      console.error("Widget endpoint error:", err);
+      res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
+  // TEMPORARY DEBUG ENDPOINT - lists ALL orders with no date filter, to verify
+  // Firestore actually contains test data. Remove this once debugging is done.
+  if (process.env.ENABLE_DEBUG_ENDPOINTS === "true") {
+    app.get("/api/widget/debug-all-orders", async (req, res) => {
+      try {
+        const results: Record<string, unknown>[] = [];
+        try {
+          const adminDb = getFirestore();
+          const snapshot = await adminDb.collection("orders").get();
+          snapshot.forEach((docSnap) => {
+            results.push({ id: docSnap.id, ...docSnap.data() });
+          });
+        } catch (dbErr) {
+          console.warn("Debug endpoint: Firestore fetch failed:", dbErr);
+        }
+        const localOrders = getLocalOrders();
+        res.json({ success: true, firestoreCount: results.length, localCount: localOrders.length, firestoreOrders: results, localOrders });
+      } catch (err) {
+        console.error("Debug endpoint error:", err);
+        res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+      }
+    });
+  }
+
+  // Submit order endpoint - tries Firestore first, falls back to local JSON backup
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const orderData = req.body as OrderData;
+
+      // IMPORTANT: Do not silently fall back to client-side Firestore writes in production.
+      // This endpoint is the single source of truth for:
+      // 1) sequential invoice numbers, 2) correct Firestore project, 3) widget pipeline.
+      let orderId = "";
+      let invoiceNo = "";
+      try {
+        const created = await runWithRetry(() => createOrderWithSequentialInvoice(orderData));
+        orderId = created.orderId;
+        invoiceNo = created.invoiceNo;
+      } catch (firestoreErr) {
+        if (ENABLE_LOCAL_FALLBACK) {
+          console.warn("Firestore order submission failed; ENABLE_LOCAL_FALLBACK=true so saving locally:", firestoreErr);
+          orderId = "order_" + Math.random().toString(36).substring(2, 10);
+          invoiceNo = `RW-FALLBACK-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          const localOrders = getLocalOrders();
+          localOrders.push({
+            id: orderId,
+            ...orderData,
+            status: "approved",
+            approvedAt: new Date().toISOString(),
+            invoiceNo,
+            createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+          });
+          saveLocalOrders(localOrders);
+        } else {
+          throw firestoreErr;
+        }
+      }
+
+      // Trigger background Google Calendar event creation safely without blocking client response
+      syncGoogleCalendarEvent(orderId, { ...orderData, invoiceNo }).catch(err => {
+        console.error("Background Google Calendar event creation error:", err);
+      });
+
+      // Trigger push notification
+      sendNotificationToTopic("new_orders", "New Order Received!", `New order from ${orderData.name || 'Customer'} - ${orderData.quantity || '0'} pax.`).catch(err => {
+        console.error("Background push notification error:", err);
+      });
+
+      res.json({ success: true, id: orderId, invoiceNo });
+    } catch (err) {
+      console.error("Order submission endpoint error:", err);
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
+  // Invoice Billing and Delivery system for Submissions/Orders collection
+  app.post("/api/submissions/bill", async (req, res) => {
+    try {
+      const { submissionId, totalAmount, pdfBase64, fileName, collectionName = 'submissions' } = req.body;
+
+      if (!submissionId) {
+        return res.status(400).json({ error: "Missing submissionId" });
+      }
+
+      if (totalAmount === undefined || totalAmount === null || isNaN(Number(totalAmount))) {
+        return res.status(400).json({ error: "Invalid or missing totalAmount" });
+      }
+
+      const parsedAmount = Number(totalAmount);
+
+      // 1. Fetch document from Firestore or Local JSON
+      let data: Record<string, unknown> | null = null;
+      let isLocal = false;
+      
+      try {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection(collectionName).doc(submissionId).get();
+        if (docSnap.exists) {
+          data = docSnap.data() as Record<string, unknown>;
+        }
+      } catch (dbErr) {
+        console.warn("Firestore fetch in bill failed, trying local backup:", dbErr);
+      }
+
+      if (!data) {
+        const localOrders = getLocalOrders();
+        const found = localOrders.find(o => o.id === submissionId);
+        if (found) {
+          data = found;
+          isLocal = true;
+        }
+      }
+
+      if (!data) {
+        return res.status(404).json({ error: `Document not found in ${collectionName}` });
+      }
+
+      // 2. Update Firestore document or Local JSON with totalAmount and set status to 'billed'
+      const updatedFields = {
+        totalAmount: parsedAmount,
+        status: 'billed',
+        billedAt: new Date().toISOString()
+      };
+
+      if (!isLocal) {
+        try {
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection(collectionName).doc(submissionId).update(updatedFields));
+        } catch (dbErr) {
+          console.warn("Firestore update in bill failed after retries, syncing locally:", dbErr);
+          isLocal = true;
+        }
+      }
+
+      if (isLocal) {
+        const localOrders = getLocalOrders();
+        const localIndex = localOrders.findIndex(o => o.id === submissionId);
+        if (localIndex !== -1) {
+          localOrders[localIndex] = {
+            ...localOrders[localIndex],
+            ...updatedFields
+          };
+          saveLocalOrders(localOrders);
+        }
+      }
+
+      // Sync Google Calendar Event in background if this is an order
+      if (collectionName === 'orders') {
+        syncGoogleCalendarEvent(submissionId).catch(err => {
+          console.error("Background Google Calendar event sync error during billing:", err);
+        });
+      }
+
+      // 3. Extract customer email, name, invoice details
+      const customerEmail = data.customerEmail || data.email;
+      const customerName = data.customerName || data.name || "Valued Customer";
+      const invoiceNo = data.invoiceNo || `INV-${submissionId.substring(0, 6).toUpperCase()}`;
+      const items = data.items || [];
+      const lang = data.lang || 'en';
+
+      if (!customerEmail) {
+        return res.json({ 
+          success: true, 
+          message: "Document successfully updated to 'billed', but no customer email was found in the document to send an invoice." 
+        });
+      }
+
+      // 4. Secure Email Delivery - Build styled HTML email
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = process.env.SMTP_PASS;
+
+      if (!smtpUser || !smtpPass) {
+        console.warn("SMTP credentials not configured. Please configure SMTP_USER and SMTP_PASS.");
+        return res.json({
+          success: true,
+          message: "Document successfully updated to 'billed', but email could not be sent because SMTP is not configured on the server."
+        });
+      }
+
+      // Build items list HTML table if present
+      let itemsHtml = '';
+      if (items && Array.isArray(items) && items.length > 0) {
+        itemsHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; font-family: sans-serif;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #4a5568; font-size: 13px;">
+                <th style="padding: 10px 0;">Item</th>
+                <th style="padding: 10px 0; text-align: center;">Qty</th>
+                <th style="padding: 10px 0; text-align: right;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        interface InvoiceItem {
+          name?: string;
+          title?: string;
+          qty?: number;
+          quantity?: number;
+          price?: number | string;
+        }
+        (items as InvoiceItem[]).forEach((item) => {
+          const name = item.name || item.title || 'Item';
+          const qty = item.qty || item.quantity || 1;
+          const price = item.price !== undefined ? `RM ${Number(item.price).toFixed(2)}` : '-';
+          itemsHtml += `
+            <tr style="border-bottom: 1px solid #edf2f7; color: #2d3748; font-size: 14px;">
+              <td style="padding: 12px 0; font-weight: 500;">${name}</td>
+              <td style="padding: 12px 0; text-align: center; color: #718096;">${qty}</td>
+              <td style="padding: 12px 0; text-align: right; font-weight: 500;">${price}</td>
+            </tr>
+          `;
+        });
+        itemsHtml += `
+            </tbody>
+          </table>
+        `;
+      }
+
+      // Styled HTML Template for the Invoice
+      const emailSubject = lang === 'bm'
+        ? `Invois Rasmi - ${invoiceNo} (Restoran Wawasan)`
+        : `Official Invoice - ${invoiceNo} (Restoran Wawasan)`;
+
+      const titleText = lang === 'bm' ? 'INVOIS RASMI' : 'OFFICIAL INVOICE';
+      const billToText = lang === 'bm' ? 'Bil Kepada:' : 'Bill To:';
+      const invoiceNoText = lang === 'bm' ? 'No. Invois:' : 'Invoice No:';
+      const dateText = lang === 'bm' ? 'Tarikh:' : 'Date:';
+      const totalAmountText = lang === 'bm' ? 'Jumlah Keseluruhan:' : 'Total Amount:';
+      const thankYouText = lang === 'bm'
+        ? 'Terima kasih atas kunjungan/pesanan anda di Restoran Wawasan! Sila dapati butiran bil anda di bawah.'
+        : 'Thank you for your order/visit at Restoran Wawasan! Please find your billing details below.';
+      const footerText = lang === 'bm'
+        ? 'E-mel ini dijanakan secara automatik. Sila hubungi kami jika terdapat sebarang pertanyaan.'
+        : 'This is an automatically generated email. Please contact us if you have any questions.';
+
+      const formattedDate = new Date().toLocaleDateString('en-MY', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              background-color: #f7fafc;
+              margin: 0;
+              padding: 20px;
+              color: #2d3748;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #ffffff;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              border: 1px solid #e2e8f0;
+            }
+            .header {
+              background-color: #1a202c;
+              padding: 30px;
+              text-align: center;
+              color: #ffffff;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+              font-weight: 700;
+              letter-spacing: 0.05em;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #a0aec0;
+              font-size: 14px;
+            }
+            .content {
+              padding: 30px;
+            }
+            .greeting {
+              font-size: 16px;
+              line-height: 1.6;
+              margin-bottom: 20px;
+            }
+            .meta-box {
+              background-color: #f8fafc;
+              border: 1px solid #edf2f7;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 25px;
+              font-size: 14px;
+            }
+            .meta-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+            }
+            .meta-row:last-child {
+              margin-bottom: 0;
+            }
+            .meta-label {
+              color: #718096;
+              font-weight: 500;
+            }
+            .meta-value {
+              color: #2d3748;
+              font-weight: 600;
+              text-align: right;
+            }
+            .total-box {
+              background-color: #ebf8ff;
+              border: 1px solid #bee3f8;
+              border-radius: 8px;
+              padding: 20px;
+              text-align: center;
+              margin-top: 20px;
+              margin-bottom: 25px;
+            }
+            .total-label {
+              font-size: 14px;
+              color: #2b6cb0;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              font-weight: 700;
+              margin-bottom: 5px;
+            }
+            .total-amount {
+              font-size: 32px;
+              font-weight: 800;
+              color: #2b6cb0;
+            }
+            .footer {
+              background-color: #f7fafc;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #a0aec0;
+              border-top: 1px solid #edf2f7;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>RESTORAN WAWASAN</h1>
+              <p>${titleText}</p>
+            </div>
+            <div class="content">
+              <div class="greeting">
+                <p style="margin-top:0; font-weight: 600; font-size: 18px;">${lang === 'bm' ? 'Salam' : 'Hello'} ${customerName},</p>
+                <p style="color: #4a5568;">${thankYouText}</p>
+              </div>
+              
+              <div class="meta-box">
+                <div class="meta-row">
+                  <span class="meta-label">${billToText}</span>
+                  <span class="meta-value">${customerName} (${customerEmail})</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">${invoiceNoText}</span>
+                  <span class="meta-value" style="color: #1a202c;">${invoiceNo}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">${dateText}</span>
+                  <span class="meta-value">${formattedDate}</span>
+                </div>
+              </div>
+
+              ${itemsHtml}
+
+              <div class="total-box">
+                <div class="total-label">${totalAmountText}</div>
+                <div class="total-amount">RM ${parsedAmount.toFixed(2)}</div>
+              </div>
+            </div>
+            <div class="footer">
+              <p style="margin: 0;">${footerText}</p>
+              <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} Restoran Wawasan. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // 5. Send secure email
+      const emailAttachments = [];
+      if (pdfBase64) {
+        emailAttachments.push({
+          filename: fileName || `Invoice_${invoiceNo}.pdf`,
+          content: pdfBase64,
+          encoding: 'base64'
+        });
+      }
+
+      await transporter.sendMail({
+        from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || 'madnor.noisy@gmail.com'}>`,
+        to: customerEmail,
+        subject: emailSubject,
+        html: htmlBody,
+        attachments: emailAttachments.length > 0 ? emailAttachments : undefined
+      });
+
+      console.log(`Invoice email sent successfully to ${customerEmail} for submission ${submissionId}`);
+      res.json({ 
+        success: true, 
+        message: "Submission updated and invoice email sent successfully", 
+        data: { 
+          submissionId, 
+          totalAmount: parsedAmount, 
+          status: 'billed',
+          emailSentTo: customerEmail
+        } 
+      });
+
+    } catch (error) {
+      console.error("Error billing submission:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to bill submission and send email" });
+    }
+  });
+
+  app.post("/api/send-invoice", async (req, res) => {
+    try {
+      const { email, name, invoiceNo, pdfBase64, isFinal, lang, orderDetails } = req.body;
+
+      if (!email || !pdfBase64) {
+        return res.status(400).json({ error: "Missing required fields (email, pdfBase64)" });
+      }
+
+      // Ensure SMTP is configured
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.warn("SMTP credentials not configured. Please configure SMTP_USER and SMTP_PASS.");
+        return res.status(500).json({ error: "Email service not configured." });
+      }
+
+      const emailSubject = lang === 'bm' 
+        ? (isFinal ? `Invois Muktamad - ${invoiceNo}` : `Invois Awal - ${invoiceNo}`)
+        : (isFinal ? `Final Invoice - ${invoiceNo}` : `Preliminary Invoice - ${invoiceNo}`);
+
+      let emailBody = "";
+      let htmlBody: string | undefined = undefined;
+
+      if (orderDetails) {
+        const titleText = lang === 'bm' ? 'TEMPAHAN KATERING REKODED' : 'CATERING BOOKING RECORDED';
+        const subtitleText = lang === 'bm' ? 'Butiran Tempahan & Invois Awal' : 'Booking Details & Preliminary Invoice';
+        const thankYouText = lang === 'bm'
+          ? `Terima kasih kerana memilih <strong>Restoran Wawasan</strong>! Butiran tempahan katering anda telah berjaya direkodkan. Sila dapati salinan butiran lengkap pesanan anda di bawah.`
+          : `Thank you for choosing <strong>Restoran Wawasan</strong>! Your catering booking details have been successfully recorded. Please find a copy of your complete order details below.`;
+        
+        const footerText = lang === 'bm'
+          ? 'E-mel ini dijanakan secara automatik. Sila hubungi kami jika terdapat sebarang pertanyaan.'
+          : 'This is an automatically generated email. Please contact us if you have any questions.';
+
+        const mealLabels: Record<string, string> = {
+          'breakfast': lang === 'bm' ? 'Sarapan (Breakfast)' : 'Breakfast (Sarapan)',
+          'lunch': lang === 'bm' ? 'Makan Tengahari (Lunch)' : 'Lunch (Makan Tengahari)',
+          'tea_break': lang === 'bm' ? 'Minum Petang (High Tea)' : 'High Tea (Minum Petang)',
+          'dinner': lang === 'bm' ? 'Makan Malam (Dinner)' : 'Dinner (Makan Malam)'
+        };
+        const formattedMeals = Array.isArray(orderDetails.meals)
+          ? orderDetails.meals.map((m: string) => mealLabels[m] || m).join(', ')
+          : (orderDetails.meals || 'N/A');
+
+        htmlBody = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: #f7fafc;
+                margin: 0;
+                padding: 20px;
+                color: #2d3748;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                border: 1px solid #e2e8f0;
+              }
+              .header {
+                background-color: #1a202c;
+                padding: 30px;
+                text-align: center;
+                color: #ffffff;
+                border-bottom: 3px solid #D4AF37;
+              }
+              .header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                color: #D4AF37;
+              }
+              .header p {
+                margin: 5px 0 0 0;
+                color: #a0aec0;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+              }
+              .content {
+                padding: 30px;
+              }
+              .greeting {
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 25px;
+              }
+              .section-title {
+                font-size: 16px;
+                font-weight: 700;
+                color: #1a202c;
+                border-bottom: 2px solid #edf2f7;
+                padding-bottom: 8px;
+                margin-top: 25px;
+                margin-bottom: 15px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+              }
+              .detail-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+                font-size: 14px;
+              }
+              .detail-table td {
+                padding: 10px 12px;
+                vertical-align: top;
+                border-bottom: 1px solid #f7fafc;
+              }
+              .detail-table td.label {
+                width: 35%;
+                color: #718096;
+                font-weight: 600;
+                background-color: #fcfcfc;
+              }
+              .detail-table td.value {
+                width: 65%;
+                color: #2d3748;
+                font-weight: 500;
+              }
+              .notes-box {
+                background-color: #fffaf0;
+                border: 1px solid #feebc8;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 25px;
+                font-size: 14px;
+              }
+              .notes-title {
+                color: #dd6b20;
+                font-weight: 700;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+                font-size: 12px;
+                letter-spacing: 0.05em;
+              }
+              .notes-content {
+                color: #7b341e;
+                line-height: 1.5;
+              }
+              .footer {
+                background-color: #f7fafc;
+                padding: 25px;
+                text-align: center;
+                font-size: 12px;
+                color: #a0aec0;
+                border-top: 1px solid #edf2f7;
+                line-height: 1.5;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>RESTORAN WAWASAN</h1>
+                <p>${titleText}</p>
+                <div style="font-size: 12px; color: #cbd5e0; margin-top: 4px;">${subtitleText}</div>
+              </div>
+              <div class="content">
+                <div class="greeting">
+                  <p style="margin-top: 0; font-weight: 700; font-size: 18px; color: #1a202c;">
+                    ${lang === 'bm' ? 'Salam' : 'Hello'} ${name || 'Customer'},
+                  </p>
+                  <p style="color: #4a5568; margin-bottom: 0;">${thankYouText}</p>
+                </div>
+
+                <div class="section-title">${lang === 'bm' ? 'BUTIRAN MAJLIS' : 'EVENT DETAILS'}</div>
+                <table class="detail-table">
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Syarikat / Organisasi' : 'Company / Organization'}</td>
+                    <td class="value">${orderDetails.to || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Untuk Perhatian (Attn)' : 'Attention (Attn)'}</td>
+                    <td class="value">${orderDetails.attn || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Nama PIC' : 'PIC Name'}</td>
+                    <td class="value">${orderDetails.name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Siri Hubungan' : 'Contact Number'}</td>
+                    <td class="value">${orderDetails.contact || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Alamat E-mel' : 'Email Address'}</td>
+                    <td class="value">${orderDetails.email || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Tarikh Majlis' : 'Event Date'}</td>
+                    <td class="value" style="color: #2b6cb0; font-weight: 700;">${orderDetails.date || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Masa Penghantaran' : 'Delivery Time'}</td>
+                    <td class="value">${orderDetails.time || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Lokasi / Alamat Majlis' : 'Event Venue'}</td>
+                    <td class="value">${orderDetails.location || 'N/A'}</td>
+                  </tr>
+                </table>
+
+                <div class="section-title">${lang === 'bm' ? 'PILIHAN MENU & HIDANGAN' : 'MENU & MEAL SELECTION'}</div>
+                <table class="detail-table">
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Pakej Pilihan' : 'Selected Package'}</td>
+                    <td class="value" style="font-weight: 700; color: #1a202c;">${orderDetails.menu || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Bilangan Pax' : 'Quantity (Pax)'}</td>
+                    <td class="value" style="font-weight: 700; color: #2b6cb0;">${orderDetails.quantity || 'N/A'} Pax</td>
+                  </tr>
+                  <tr>
+                    <td class="label">${lang === 'bm' ? 'Jenis Hidangan' : 'Meal Types'}</td>
+                    <td class="value">${formattedMeals}</td>
+                  </tr>
+                </table>
+
+                ${orderDetails.notes ? `
+                  <div class="notes-box">
+                    <div class="notes-title">${lang === 'bm' ? 'PERMINTAAN KHAS / NOTA' : 'SPECIAL REQUESTS / NOTES'}</div>
+                    <div class="notes-content">${orderDetails.notes.replace(/\n/g, '<br>')}</div>
+                  </div>
+                ` : ''}
+
+                <div style="background-color: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 15px; text-align: center; font-size: 14px; color: #2b6cb0; font-weight: 600;">
+                  ${lang === 'bm' 
+                    ? `Salinan invois awal (${invoiceNo}) telah dilampirkan bersama e-mel ini.` 
+                    : `A copy of your preliminary invoice (${invoiceNo}) has been attached to this email.`}
+                </div>
+              </div>
+              <div class="footer">
+                <p style="margin: 0;">${footerText}</p>
+                <p style="margin: 5px 0 0 0; font-weight: 600; color: #718096;">Restoran Wawasan Putrajaya</p>
+                <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} Restoran Wawasan. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+      } else {
+        emailBody = lang === 'bm'
+          ? `Salam ${name || 'Pelanggan'},\n\nSila dapati lampiran invois untuk rujukan anda.\n\nTerima kasih.\nRestoran Wawasan`
+          : `Dear ${name || 'Customer'},\n\nPlease find attached the invoice for your reference.\n\nThank you.\nRestoran Wawasan`;
+      }
+
+      // Convert base64 back to buffer
+      const pdfBuffer = Buffer.from(pdfBase64.split(',')[1] || pdfBase64, 'base64');
+
+      await transporter.sendMail({
+        from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || 'madnor.noisy@gmail.com'}>`,
+        to: email,
+        subject: emailSubject,
+        text: htmlBody ? undefined : emailBody,
+        html: htmlBody,
+        attachments: [
+          {
+            filename: `Invoice_${invoiceNo}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
+      });
+
+      console.log(`Invoice email sent successfully to ${email}`);
+      res.json({ success: true, message: "Email sent successfully" });
+    } catch (error) {
+      console.error("Error sending invoice email:", error);
+      res.status(500).json({ error: "Failed to send email" });
+    }
+  });
+
+  // Admin Login Endpoint
+  app.post("/api/admin/login", (req, res) => {
+    try {
+      const { password } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!password || password !== adminPassword) {
+        return res.status(401).json({ success: false, error: "Unauthorized: Invalid password" });
+      }
+
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Admin login API error:", err);
+      res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
+  // Gated Admin orders operations bypassing client-side security restrictions via Client SDK
+  app.post("/api/admin/subscribe-to-topic", async (req, res) => {
+    try {
+      const { token, topic } = req.body;
+      if (!token || !topic) {
+        return res.status(400).json({ error: "Missing token or topic" });
+      }
+      
+      const app = getAdminApp();
+      await getMessaging(app).subscribeToTopic(token, topic);
+      console.log(`Successfully subscribed token to topic ${topic}`);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error subscribing to topic:", err);
+      res.status(500).json({ error: "Failed to subscribe" });
+    }
+  });
+
+  app.post("/api/admin/orders", async (req, res) => {
+    try {
+      const { password, action, orderId, data } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!password || password !== adminPassword) {
+        return res.status(401).json({ error: "Unauthorized: Invalid password" });
+      }
+
+      if (action === "fetch") {
+        const orders: Record<string, unknown>[] = [];
+        try {
+          const adminDb = getFirestore();
+          const snapshot = await adminDb.collection("orders").orderBy("createdAt", "desc").get();
+          snapshot.forEach((docSnap) => {
+            const docData = docSnap.data();
+            const createdAt = docData.createdAt as { seconds?: number; nanoseconds?: number } | null;
+            orders.push({
+              id: docSnap.id,
+              ...docData,
+              createdAt: createdAt ? {
+                seconds: createdAt.seconds,
+                nanoseconds: createdAt.nanoseconds
+              } : null
+            });
+          });
+        } catch (dbErr) {
+          console.warn("Firestore fetch failed, relying on local backup:", dbErr);
+        }
+
+        // Merge with local orders
+        const localOrders = getLocalOrders();
+        localOrders.forEach((localOrder) => {
+          if (!orders.some(o => o.id === localOrder.id)) {
+            orders.push(localOrder);
+          }
+        });
+
+        // Sort merged orders by createdAt descending
+        orders.sort((a, b) => {
+          interface OrderWithTimestamp {
+            createdAt?: { seconds?: number; nanoseconds?: number } | null;
+          }
+          const secA = ((a as unknown) as OrderWithTimestamp).createdAt?.seconds || 0;
+          const secB = ((b as unknown) as OrderWithTimestamp).createdAt?.seconds || 0;
+          return secB - secA;
+        });
+
+        return res.json({ success: true, orders });
+      }
+
+      if (action === "update") {
+        if (!orderId || !data) {
+          return res.status(400).json({ error: "Missing orderId or data for update" });
+        }
+        
+        let updatedInFirestore = false;
+        try {
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).update(data));
+          updatedInFirestore = true;
+        } catch (dbErr) {
+          console.warn("Firestore update failed after retries, relying on local backup:", dbErr);
+        }
+
+        // Also update in local orders
+        const localOrders = getLocalOrders();
+        const localIndex = localOrders.findIndex(o => o.id === orderId);
+        if (localIndex !== -1) {
+          localOrders[localIndex] = {
+            ...localOrders[localIndex],
+            ...data
+          };
+          saveLocalOrders(localOrders);
+        } else if (!updatedInFirestore) {
+          const newLocalOrder = {
+            id: orderId,
+            ...data,
+            createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }
+          };
+          localOrders.push(newLocalOrder);
+          saveLocalOrders(localOrders);
+        }
+
+        // Trigger Google Calendar sync for updated order
+        syncGoogleCalendarEvent(orderId).catch(err => {
+          console.error("Background Google Calendar event sync error during admin update:", err);
+        });
+
+        return res.json({ success: true });
+      }
+
+      if (action === "delete") {
+        if (!orderId) {
+          return res.status(400).json({ error: "Missing orderId for delete" });
+        }
+        
+        try {
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).delete());
+        } catch (dbErr) {
+          console.warn("Firestore delete failed after retries, relying on local backup:", dbErr);
+        }
+
+        // Also delete in local orders
+        const localOrders = getLocalOrders();
+        const filtered = localOrders.filter(o => o.id !== orderId);
+        if (filtered.length !== localOrders.length) {
+          saveLocalOrders(filtered);
+        }
+
+        return res.json({ success: true });
+      }
+
+      return res.status(400).json({ error: "Invalid action" });
+    } catch (err) {
+      console.error("Admin orders API error:", err);
+      res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
+  // Vite middleware for development - check if we are in production
+  const isProduction = process.env.NODE_ENV === "production" && fs.existsSync(path.join(process.cwd(), "dist/index.html"));
+
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*all', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
