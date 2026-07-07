@@ -64,7 +64,7 @@ export default function HeroSection() {
           </h1>
 
           {/* Tagline */}
-          <p className="hero-tagline font-body text-base md:text-lg text-zinc-300 leading-relaxed max-w-[560px] mx-auto mt-6">
+          <p className="hero-tagline font-['Montserrat',sans-serif] font-light uppercase tracking-[0.15em] text-[rgba(255,255,255,0.75)] text-[0.85rem] leading-relaxed max-w-[560px] mx-auto mt-6">
             Where Heritage Meets Flavor in the Heart of Putrajaya
           </p>
 
@@ -72,7 +72,7 @@ export default function HeroSection() {
           <div className="hero-buttons flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-10 w-full max-w-sm sm:max-w-none mx-auto">
             <Link
               to="/order"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-warm-gold text-charcoal font-body font-semibold text-sm uppercase tracking-[0.05em] rounded-lg hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] shadow-[0_4px_20px_rgba(212,168,83,0.3)]"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] shadow-[0_4px_20px_rgba(212,168,83,0.3)]"
             >
               Order Now
               <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -81,7 +81,7 @@ export default function HeroSection() {
             </Link>
             <a
               href="#menu"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 border border-warm-gold text-warm-gold font-body font-semibold text-sm uppercase tracking-[0.05em] rounded-lg hover:bg-warm-gold hover:text-charcoal transition-all duration-300"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 border border-warm-gold/80 text-warm-gold font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-warm-gold/5 hover:border-warm-gold transition-all duration-300"
             >
               View Our Menu
               <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -67,6 +67,15 @@ const MENU_ITEMS = [
     priceBm: 'Daripada RM 7',
     image: `/assets/nasi-goreng-kampung.jpg`,
   },
+  {
+    nameEn: 'Teh Tarik',
+    nameBm: 'Teh Tarik',
+    descEn: 'Authentic Malaysian pulled milk tea with a thick layer of frothy foam, perfectly brewed for a rich and creamy taste.',
+    descBm: 'Teh tarik asli Malaysia dengan lapisan buih tebal, dibancuh sempurna untuk rasa lemak berkrim yang memikat.',
+    priceEn: 'From RM 3',
+    priceBm: 'Daripada RM 3',
+    image: `/assets/teh-tarik.jpg`,
+  },
 ];
 
 export default function MenuSection() {
@@ -97,7 +106,7 @@ export default function MenuSection() {
           <h2 className="menu-header font-display font-semibold text-[36px] md:text-[56px] text-cream leading-[1.1] mb-6">
             {t('signature_dishes')}
           </h2>
-          <p className="menu-header font-body text-lg text-cream/70 leading-relaxed max-w-[640px] mx-auto">
+          <p className="menu-header font-body font-light text-lg text-cream/70 leading-relaxed max-w-[640px] mx-auto">
             {t('menu_subtitle')}
           </p>
         </div>

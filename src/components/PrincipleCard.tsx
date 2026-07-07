@@ -9,7 +9,7 @@ interface PrincipleCardProps {
 
 export default function PrincipleCard({ icon: Icon, name, malayName, description }: PrincipleCardProps) {
   return (
-    <div className="group bg-charcoal/40 border border-warm-gold/15 rounded-xl p-8 md:p-10 text-center transition-all duration-500 hover:-translate-y-2 hover:border-warm-gold/40 hover:bg-deep-brown/40 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex flex-col items-center h-full">
+    <div className="group bg-charcoal/40 border-[0.5px] border-white/5 rounded-xl p-8 md:p-10 text-center transition-all duration-500 hover:-translate-y-2 hover:border-warm-gold/30 hover:bg-deep-brown/40 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col items-center h-full">
       {/* Premium Circular Icon Shield */}
       <div className="w-20 h-20 rounded-full border border-warm-gold/20 bg-charcoal flex items-center justify-center transition-all duration-500 group-hover:border-warm-gold/50 group-hover:bg-deep-brown group-hover:scale-105 shadow-inner">
         <Icon className="w-8 h-8 text-warm-gold transition-transform duration-500 group-hover:rotate-6" strokeWidth={1.5} />
@@ -19,11 +19,11 @@ export default function PrincipleCard({ icon: Icon, name, malayName, description
         {name}
       </h3>
       
-      <span className="inline-block px-3 py-1 bg-warm-gold/10 rounded-full font-body font-semibold text-[11px] text-warm-gold uppercase tracking-[0.08em] mt-2">
+      <span className="inline-block px-3 py-1 bg-warm-gold/5 border-[0.5px] border-warm-gold/20 rounded-sm font-['Montserrat',sans-serif] font-medium text-[10px] text-warm-gold uppercase tracking-[0.15em] mt-3">
         {malayName}
       </span>
       
-      <p className="font-body text-sm text-cream/75 leading-relaxed mt-4 flex-grow font-light">
+      <p className="font-body text-[14px] text-cream/70 leading-relaxed mt-4 flex-grow font-light">
         {description}
       </p>
     </div>

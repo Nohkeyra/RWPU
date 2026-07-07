@@ -116,7 +116,7 @@ export default function Header() {
           {/* Order Now Button */}
           <Link
             to="/order"
-            className="hidden md:inline-flex items-center px-3.5 py-2 md:px-5 md:py-2.5 bg-warm-gold text-charcoal font-body font-semibold text-[11px] md:text-[13px] uppercase tracking-[0.05em] rounded-lg hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)]"
+            className="hidden md:inline-flex items-center px-4 py-2.5 md:px-6 md:py-3 bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[11px] md:text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)]"
           >
             {t('order_now')}
           </Link>
@@ -124,7 +124,7 @@ export default function Header() {
           {/* Contact Us Link */}
           <a
             href="#visit"
-            className="hidden lg:inline-flex items-center px-5 py-2.5 border border-cream/30 text-cream font-body font-semibold text-[13px] uppercase tracking-[0.05em] rounded-lg hover:bg-cream/10 hover:border-cream/50 transition-all duration-300"
+            className="hidden lg:inline-flex items-center px-6 py-3 border border-cream/50 text-cream font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-cream/5 hover:border-cream/80 transition-all duration-300"
           >
             {t('contact_us')}
           </a>

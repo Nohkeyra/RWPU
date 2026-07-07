@@ -37,13 +37,13 @@ export default function StorySection() {
             <h2 className="story-animate font-display font-semibold text-[32px] md:text-[48px] text-charcoal leading-[1.1] mb-8">
               {t('story_title')}
             </h2>
-            <p className="story-animate font-body text-lg text-deep-brown leading-relaxed mb-5">
+            <p className="story-animate font-body font-light text-lg text-deep-brown/80 leading-relaxed mb-5">
               {t('story_p1')}
             </p>
-            <p className="story-animate font-body text-lg text-deep-brown leading-relaxed mb-5">
+            <p className="story-animate font-body font-light text-lg text-deep-brown/80 leading-relaxed mb-5">
               {t('story_p2')}
             </p>
-            <p className="story-animate font-body text-lg text-deep-brown leading-relaxed mb-10">
+            <p className="story-animate font-body font-light text-lg text-deep-brown/80 leading-relaxed mb-10">
               {t('story_p3')}
             </p>
 
@@ -51,10 +51,10 @@ export default function StorySection() {
             <div className="story-animate flex flex-wrap gap-8 md:gap-12 mb-10">
               {STATS.map((stat) => (
                 <div key={stat.label}>
-                  <span className="font-display font-semibold text-4xl text-warm-gold">
+                  <span className="font-display font-medium text-4xl text-warm-gold tracking-tight">
                     {stat.number}
                   </span>
-                  <span className="block font-body text-sm text-warm-gray mt-1">
+                  <span className="block font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-warm-gray mt-2">
                     {stat.label}
                   </span>
                 </div>
@@ -80,7 +80,7 @@ export default function StorySection() {
             </div>
             {/* Decorative gold border offset */}
             <div
-              className="absolute -bottom-3 -right-3 w-full h-full border-[3px] border-warm-gold rounded-xl pointer-events-none"
+              className="absolute -bottom-3 -right-3 w-full h-full border-[0.5px] border-warm-gold/60 pointer-events-none"
               style={{ zIndex: -1 }}
             />
           </div>

@@ -17,8 +17,8 @@ export default function Button({
   className = '',
   small = false,
 }: ButtonProps) {
-  const base = `inline-flex items-center justify-center gap-2 rounded-lg font-body font-semibold text-sm uppercase tracking-[0.05em] transition-all duration-300 ease-out active:scale-[0.98] ${
-    small ? 'px-6 py-3 text-[13px]' : 'px-8 py-4'
+  const base = `inline-flex items-center justify-center gap-2 font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] transition-all duration-300 ease-out active:scale-[0.98] ${
+    small ? 'px-6 py-3' : 'px-8 py-4'
   }`;
 
   const variants = {

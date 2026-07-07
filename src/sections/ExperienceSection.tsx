@@ -81,7 +81,7 @@ export default function ExperienceSection() {
             <h2 className="exp-animate font-display font-semibold text-[32px] md:text-[48px] text-cream leading-[1.1] mb-6">
               {t('more_than_meal')}
             </h2>
-            <p className="exp-animate font-body text-lg text-cream/70 leading-relaxed max-w-[560px] mx-auto">
+            <p className="exp-animate font-body font-light text-lg text-cream/70 leading-relaxed max-w-[560px] mx-auto">
               {t('experience_p1')}
             </p>
           </div>

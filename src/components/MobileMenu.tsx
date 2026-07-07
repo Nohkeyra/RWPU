@@ -81,7 +81,7 @@ export default function MobileMenu({ isOpen, onClose, links }: MobileMenuProps) 
           <Link
             to="/order"
             onClick={onClose}
-            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-warm-gold text-charcoal font-body font-semibold text-xs uppercase tracking-[0.05em] rounded-lg hover:bg-[#E0BC74] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)] active:scale-[0.98]"
+            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)] active:scale-[0.98]"
           >
             {t('order_now')}
             <ArrowRight className="w-4 h-4" />

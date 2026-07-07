@@ -92,8 +92,8 @@ export default function ReviewsSection() {
                 <Star key={i} className="w-5 h-5 text-warm-gold fill-warm-gold" />
               ))}
             </div>
-            <span className="font-body font-semibold text-lg text-charcoal">4.9 {t('out_of')}</span>
-            <span className="font-body text-sm text-warm-gray">{t('based_on')}</span>
+            <span className="font-['Montserrat',sans-serif] font-medium text-lg text-charcoal">4.9 {t('out_of')}</span>
+            <span className="font-['Montserrat',sans-serif] font-light text-xs uppercase tracking-[0.1em] text-warm-gray">{t('based_on')}</span>
           </div>
         </div>
 
