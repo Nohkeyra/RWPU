@@ -308,11 +308,8 @@ async function syncGoogleCalendarEvent(orderId: string, passedOrderData?: OrderD
     const endDateTime = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000);
 
     const mealList = Array.isArray(orderData.meals) ? orderData.meals.join(", ") : (orderData.meals || "");
-    const summary = `[${(orderData.status || "pending").toUpperCase()}] Wawasan Order - ${orderData.name || "Customer"} (${orderData.quantity || ""} Pax)`;
-    const description = `${orderData.quantity || "N/A"} Pax
-Meal For: ${mealList || "N/A"}
-Event Location: ${orderData.location || "N/A"}
-Menu: ${orderData.menu || "N/A"}`;
+    const summary = `${orderData.quantity || ""} Pax | ${mealList || "N/A"} | ${orderData.location || "N/A"}`;
+    const description = `Menu: ${orderData.menu || "N/A"}`;
 
     const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
     const existingEventId = orderData.calendarEventIds?.[calendarId];
