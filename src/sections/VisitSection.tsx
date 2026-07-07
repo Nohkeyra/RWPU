@@ -72,6 +72,7 @@ export default function VisitSection() {
                 src="/assets/1764238200178_2.jpg"
                 alt="Come dine with us at Restoran Wawasan"
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover absolute inset-0"
               />
             </div>

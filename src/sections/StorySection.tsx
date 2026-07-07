@@ -75,6 +75,7 @@ export default function StorySection() {
                 src={`/assets/story-interior.jpg`}
                 alt="Restoran Wawasan Pak Usop interior with food display"
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 className="w-full aspect-[3/4] object-cover hover:scale-[1.03] transition-transform duration-500"
               />
             </div>

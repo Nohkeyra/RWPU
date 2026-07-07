@@ -17,6 +17,7 @@ export default function FoodCard({ name, description, price, image }: FoodCardPr
           src={image}
           alt={name}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
         />
         {/* Soft elegant shadow overlay inside image */}

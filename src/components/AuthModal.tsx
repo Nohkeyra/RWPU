@@ -17,9 +17,11 @@ import {
   Briefcase, 
   X, 
   ArrowRight, 
-  Loader2
+  Loader2,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SAVED_COMPANIES } from '@/constants/companies';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -41,6 +43,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [to, setTo] = useState(''); // Organization
+  const [selectedCompany, setSelectedCompany] = useState('');
   const [attn, setAttn] = useState(''); // Attn
 
   const resetForm = () => {
@@ -49,6 +52,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     setName('');
     setContact('');
     setTo('');
+    setSelectedCompany('');
     setAttn('');
   };
 
@@ -183,7 +187,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             {/* Header */}
             <div className="text-center mb-6">
               <h2 className="font-display text-2xl font-bold text-[#F4F4F6] tracking-wide">
-                {mode === 'signin' && t('Executive Sign In', 'Log Masuk Eksekutif')}
+                {mode === 'signin' && t('Sign In', 'Log Masuk')}
                 {mode === 'signup' && t('Register Account', 'Daftar Akaun Baru')}
                 {mode === 'forgot' && t('Reset Password', 'Set Semula Kata Laluan')}
               </h2>
@@ -238,15 +242,42 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                       {t('Organization / Company', 'Syarikat / Organisasi')}
                     </label>
                     <div className="relative">
-                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
-                      <input
-                        type="text"
-                        value={to}
-                        onChange={(e) => setTo(e.target.value)}
-                        placeholder="e.g. PMO Putrajaya"
-                        className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
-                      />
+                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" />
+                      <select
+                        value={selectedCompany}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedCompany(val);
+                          if (val === 'other') {
+                            setTo('');
+                          } else {
+                            setTo(val);
+                          }
+                        }}
+                        className="w-full h-11 pl-10 pr-10 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200 appearance-none"
+                      >
+                        <option value="" className="text-[#8E8E93] bg-[#0B0B0C]">-- {t('Select Company / Organization', 'Pilih Syarikat / Organisasi')} --</option>
+                        {SAVED_COMPANIES.map((company, idx) => (
+                          <option key={idx} value={company} className="text-[#F4F4F6] bg-[#0B0B0C]">
+                            {company}
+                          </option>
+                        ))}
+                        <option value="other" className="text-[#C5A059] bg-[#0B0B0C] font-semibold">{t('Other (Specify)', 'Lain-lain (Nyatakan)')}</option>
+                      </select>
+                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" />
                     </div>
+                    {selectedCompany === 'other' && (
+                      <div className="relative mt-2">
+                        <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+                        <input
+                          type="text"
+                          value={to}
+                          onChange={(e) => setTo(e.target.value)}
+                          placeholder={t('e.g. PMO Putrajaya', 'cth. PMO Putrajaya')}
+                          className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -326,9 +357,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {mode === 'signin' && t('Enter Executive Dashboard', 'Masuk ke Papan Pemuka')}
-                    {mode === 'signup' && t('Daftar Profil Korporat', 'Daftar Profil Korporat')}
-                    {mode === 'forgot' && t('Hantar Arahan Set Semula', 'Hantar Arahan Set Semula')}
+                    {mode === 'signin' && t('Enter Dashboard', 'Masuk ke Papan Pemuka')}
+                    {mode === 'signup' && t('Register Profile', 'Daftar Profil')}
+                    {mode === 'forgot' && t('Send Reset Instructions', 'Hantar Arahan Set Semula')}
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -344,7 +375,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                       onClick={() => handleModeChange('signup')}
                       className="text-[#C5A059] font-semibold hover:underline"
                     >
-                      {t('Register corporate account', 'Daftar akaun korporat')}
+                      {t('Register account', 'Daftar akaun')}
                     </button>
                   </p>
                 )}

@@ -60,6 +60,7 @@ export default function ExperienceSection() {
           src={`/assets/putrajaya-lake-view.jpg`}
           alt="Putrajaya lake and Putra Mosque view"
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover"
         />
         <div

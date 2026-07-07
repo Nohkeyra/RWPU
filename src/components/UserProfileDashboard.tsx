@@ -25,11 +25,13 @@ import {
   Edit3, 
   Check, 
   LogOut,
-  Sliders
+  Sliders,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { generateInvoicePDF } from '@/services/pdfService';
+import { SAVED_COMPANIES } from '@/constants/companies';
 
 interface UserProfile {
   name: string;
@@ -77,6 +79,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
   const [editName, setEditName] = useState('');
   const [editContact, setEditContact] = useState('');
   const [editTo, setEditTo] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
   const [editAttn, setEditAttn] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -94,6 +97,13 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
         setEditName(data.name || '');
         setEditContact(data.contact || '');
         setEditTo(data.to || '');
+        if (data.to && SAVED_COMPANIES.includes(data.to)) {
+          setSelectedCompany(data.to);
+        } else if (data.to) {
+          setSelectedCompany('other');
+        } else {
+          setSelectedCompany('');
+        }
         setEditAttn(data.attn || '');
       } else {
         // If profile doesn't exist yet, construct from Google login or defaults
@@ -192,7 +202,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
       console.error('Error updating profile:', err);
       toast({
         title: t('Update Failed', 'Kemaskini Gagal'),
-        description: t('Failed to update your corporate profile.', 'Gagal mengemaskini profil korporat anda.'),
+        description: t('Failed to update your profile.', 'Gagal mengemaskini profil anda.'),
         variant: 'destructive'
       });
     } finally {
@@ -343,7 +353,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
 
               <h3 className="text-xs uppercase tracking-wider font-bold text-[#C5A059] mb-4 flex items-center gap-2">
                 <Sliders className="w-4 h-4" />
-                {t('Billing Profile Details', 'Profil Pengebilan Korporat')}
+                {t('Billing Profile Details', 'Profil Pengebilan')}
               </h3>
 
               {isLoadingProfile ? (
@@ -375,12 +385,39 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] text-[#8E8E93] uppercase font-bold">{t('Organization', 'Syarikat')}</label>
-                      <input
-                        type="text"
-                        value={editTo}
-                        onChange={(e) => setEditTo(e.target.value)}
-                        className="w-full h-10 px-3 bg-[#141417] border border-[#222226] rounded-lg text-xs text-[#F4F4F6] focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none"
-                      />
+                      <div className="relative">
+                        <select
+                          value={selectedCompany}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedCompany(val);
+                            if (val === 'other') {
+                              setEditTo('');
+                            } else {
+                              setEditTo(val);
+                            }
+                          }}
+                          className="w-full h-10 pl-3 pr-8 bg-[#141417] border border-[#222226] rounded-lg text-xs text-[#F4F4F6] focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none appearance-none"
+                        >
+                          <option value="" className="text-[#8E8E93]">-- {t('Select Company / Organization', 'Pilih Syarikat / Organisasi')} --</option>
+                          {SAVED_COMPANIES.map((company, idx) => (
+                            <option key={idx} value={company} className="text-[#F4F4F6]">
+                              {company}
+                            </option>
+                          ))}
+                          <option value="other" className="text-[#C5A059] font-semibold">{t('Other (Specify)', 'Lain-lain (Nyatakan)')}</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" />
+                      </div>
+                      {selectedCompany === 'other' && (
+                        <input
+                          type="text"
+                          value={editTo}
+                          onChange={(e) => setEditTo(e.target.value)}
+                          placeholder={t('e.g. PMO Putrajaya', 'cth. PMO Putrajaya')}
+                          className="w-full h-10 px-3 mt-2 bg-[#141417] border border-[#222226] rounded-lg text-xs text-[#F4F4F6] focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none"
+                        />
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] text-[#8E8E93] uppercase font-bold">{t('Attention (Attn)', 'Untuk Perhatian')}</label>
