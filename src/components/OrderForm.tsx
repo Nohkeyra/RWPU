@@ -1047,7 +1047,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="quantity" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('quantity')} (Pax) <span className="text-[#C5A059]">*</span>
+                    {t('quantity')} <span className="text-[#C5A059]">*</span>
                   </Label>
                   <Input
                     id="quantity"

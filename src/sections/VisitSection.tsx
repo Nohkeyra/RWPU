@@ -95,7 +95,7 @@ export default function VisitSection() {
                     {t('location_detail')}
                   </p>
                   <a
-                    href="https://maps.app.goo.gl/6U5V1Q4m1Q2Q3Q4Q5"
+                    href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Menara+PjH+Putrajaya"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.1em] text-warm-gold hover:underline mt-4 group py-2 px-3 -mx-3 min-h-[44px]"
