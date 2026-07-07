@@ -64,7 +64,7 @@ export default function HeroSection() {
           </h1>
 
           {/* Tagline */}
-          <p className="hero-tagline font-body text-base md:text-xl text-cream/70 leading-relaxed max-w-[560px] mx-auto mt-6">
+          <p className="hero-tagline font-body text-base md:text-lg text-zinc-300 leading-relaxed max-w-[560px] mx-auto mt-6">
             Where Heritage Meets Flavor in the Heart of Putrajaya
           </p>
 

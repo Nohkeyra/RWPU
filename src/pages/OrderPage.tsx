@@ -1,11 +1,13 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Utensils } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import OrderForm from '@/components/OrderForm';
 
 export default function OrderPage() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const initialData = location.state?.reorderData;
 
   return (
     <div className="min-h-screen bg-cream">
@@ -56,7 +58,7 @@ export default function OrderPage() {
             <div className="h-1 bg-gradient-to-r from-warm-gold via-warm-gold/80 to-warm-gold/60" />
             
             <div className="p-6 md:p-10">
-              <OrderForm />
+              <OrderForm initialData={initialData} />
             </div>
           </div>
 

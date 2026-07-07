@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useLanguage } from '@/context/LanguageContext';
-import { Utensils, Menu, X, Languages } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Utensils, Menu, X, Languages, User as UserIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { auth } from '@/firebaseConfig';
 import MobileMenu from './MobileMenu';
-import SettingsDialog from './SettingsDialog';
+import AuthModal from './AuthModal';
+import UserProfileDashboard from './UserProfileDashboard';
 
 const NAV_LINKS = [
   { label: 'story', href: '#story' },
@@ -18,9 +21,29 @@ export default function Header() {
   const isScrolled = useHeaderScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [profileDashboardOpen, setProfileDashboardOpen] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'bm' : 'en');
+  };
+
+  const handleAuthClick = () => {
+    if (currentUser) {
+      setProfileDashboardOpen(true);
+    } else {
+      setAuthModalOpen(true);
+    }
   };
 
   return (
@@ -71,14 +94,29 @@ export default function Header() {
             <span className="uppercase tracking-wider">{language === 'en' ? 'BM' : 'EN'}</span>
           </button>
           
-          <SettingsDialog />
+          {/* Auth Button */}
+          <button
+            onClick={handleAuthClick}
+            className="p-2 text-cream hover:text-warm-gold transition-colors duration-300 flex items-center justify-center"
+            aria-label="User Profile"
+          >
+            {currentUser ? (
+              <div className="w-8 h-8 rounded-full bg-warm-gold text-charcoal flex items-center justify-center font-bold text-xs uppercase">
+                {currentUser.displayName ? currentUser.displayName.slice(0, 2) : currentUser.email?.slice(0, 2)}
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full border border-cream/30 flex items-center justify-center group-hover:border-warm-gold transition-colors">
+                <UserIcon className="w-4 h-4" />
+              </div>
+            )}
+          </button>
 
           <div className="hidden md:block w-[1px] h-6 bg-cream/20" />
 
           {/* Order Now Button */}
           <Link
             to="/order"
-            className="inline-flex items-center px-3.5 py-2 md:px-5 md:py-2.5 bg-warm-gold text-charcoal font-body font-semibold text-[11px] md:text-[13px] uppercase tracking-[0.05em] rounded-lg hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)]"
+            className="hidden md:inline-flex items-center px-3.5 py-2 md:px-5 md:py-2.5 bg-warm-gold text-charcoal font-body font-semibold text-[11px] md:text-[13px] uppercase tracking-[0.05em] rounded-lg hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 shadow-[0_4px_12px_rgba(212,168,83,0.2)]"
           >
             {t('order_now')}
           </Link>
@@ -106,6 +144,20 @@ export default function Header() {
         isOpen={mobileOpen} 
         onClose={() => setMobileOpen(false)} 
         links={NAV_LINKS.map(link => ({ ...link, label: t(link.label) }))}
+      />
+
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+        onSuccess={() => setProfileDashboardOpen(true)}
+      />
+      
+      <UserProfileDashboard 
+        isOpen={profileDashboardOpen} 
+        onClose={() => setProfileDashboardOpen(false)} 
+        onReorder={(orderData) => {
+          navigate('/order', { state: { reorderData: orderData } });
+        }}
       />
     </>
   );

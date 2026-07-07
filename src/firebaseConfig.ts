@@ -7,12 +7,13 @@ import firebaseAppletConfig from "../firebase-applet-config.json";
 
 // Production configuration for the live database used in compiling the app for the APK
 const prodConfig = {
-  apiKey: "AIzaSyCaCFMk6K8go9Wgt-jdNd6QTvD8JbsTkY4",
+  apiKey: "AIzaSyCsCFMk6K8goYWgt-jdNz6QTvD8JbsTcY4",
   authDomain: "restoran-wawasan.firebaseapp.com",
   projectId: "restoran-wawasan",
   storageBucket: "restoran-wawasan.firebasestorage.app",
   messagingSenderId: "1019707766959",
-  appId: "1:1019707766959:web:78644cddb16b67a69ffc5a",
+  appId: "1:1019707766959:web:78644cddb16b57a69ffc5a",
+  measurementId: "G-2WCBH62R2M",
   firestoreDatabaseId: undefined
 };
 

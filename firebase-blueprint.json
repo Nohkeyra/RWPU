@@ -28,12 +28,30 @@
         "billedAt": { "type": "string", "description": "Timestamp when billing/invoice email was sent" }
       },
       "required": ["name", "email", "contact", "location", "quantity", "meals", "status"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered customer profiles containing saved corporate and contact details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Contact person name" },
+        "email": { "type": "string", "description": "Contact email address" },
+        "contact": { "type": "string", "description": "Contact telephone number" },
+        "to": { "type": "string", "description": "Saved organization or company name" },
+        "attn": { "type": "string", "description": "Saved departmental attention details" },
+        "updatedAt": { "type": "string", "description": "Profile modification date" }
+      },
+      "required": ["name", "email", "contact"]
     }
   },
   "firestore": {
     "orders/{orderId}": {
       "schema": "Order",
       "description": "Collection storing catering booking orders"
+    },
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection storing customer profiles"
     }
   }
 }
