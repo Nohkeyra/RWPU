@@ -108,9 +108,9 @@ public class WidgetListFactory implements RemoteViewsService.RemoteViewsFactory 
         RemoteViews itemView = new RemoteViews(context.getPackageName(), R.layout.widget_order_item);
         OrderRow item = row.order;
 
-        itemView.setTextViewText(R.id.item_time_pax, item.time + "  •  " + item.quantity + " Pax");
-        itemView.setTextViewText(R.id.item_meal_location, item.meals + " | " + item.location);
-        itemView.setTextViewText(R.id.item_menu, item.menu);
+        itemView.setTextViewText(R.id.item_time_pax, item.quantity + " Pax | " + item.meals + " | " + item.location + "  •  " + item.time);
+        itemView.setTextViewText(R.id.item_meal_location, "Menu: " + item.menu);
+        itemView.setViewVisibility(R.id.item_menu, android.view.View.GONE);
 
         // Tapping an individual order card opens the app directly to /admin,
         // consistent with tapping the widget title.
@@ -130,6 +130,11 @@ public class WidgetListFactory implements RemoteViewsService.RemoteViewsFactory 
     @Override
     public int getViewTypeCount() {
         return 2;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return rows.get(position).type;
     }
 
     @Override

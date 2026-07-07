@@ -69,7 +69,7 @@ export default function VisitSection() {
           <div ref={imageRef} className="relative">
             <div className="relative rounded-xl overflow-hidden w-full h-full min-h-[300px] md:min-h-[400px]">
               <img
-                src="/assets/1764238200178_2.jpg"
+                src="/assets/restoran-exterior.jpg"
                 alt="Come dine with us at Restoran Wawasan"
                 loading="lazy"
                 referrerPolicy="no-referrer"

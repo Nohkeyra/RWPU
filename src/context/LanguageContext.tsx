@@ -226,7 +226,7 @@ const translations: Translation = {
   invalid_quantity: { en: 'Invalid Quantity', bm: 'Kuantiti Tidak Sah' },
   select_event_date: { en: 'Select Event Date', bm: 'Pilih Tarikh Majlis' },
   missing_location: { en: 'Missing Location', bm: 'Lokasi Kurang' },
-  pic_name_required: { en: 'PIC Name Required', bm: 'Nama PIC Diperlukan' },
+  pic_name_required: { en: 'Name Required', bm: 'Nama Diperlukan' },
   contact_required: { en: 'Contact Number Required', bm: 'Nombor Telefon Diperlukan' },
   email_required: { en: 'Email Required', bm: 'Emel Diperlukan' },
   email_mismatch_title: { en: 'Email Mismatch', bm: 'Emel Tidak Sepadan' },
