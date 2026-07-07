@@ -77,7 +77,7 @@ export default function Footer() {
             </Link>
           </div>
           <span className="font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.15em] text-warm-gold">
-            Halal Certified
+            {t('halal_certified')}
           </span>
         </div>
       </div>

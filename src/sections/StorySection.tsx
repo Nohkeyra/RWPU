@@ -1,5 +1,6 @@
 import SectionLabel from '@/components/SectionLabel';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -62,8 +63,11 @@ export default function StorySection() {
             </div>
 
             <div className="story-animate">
-              <Button variant="primary" href="#menu">
-                {t('explore_menu')}
+              <Button asChild className="bg-warm-gold text-charcoal hover:bg-[#E0BC74] hover:scale-[1.02] font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] px-8 py-6 h-auto rounded-none transition-all duration-300 group">
+                <a href="#menu">
+                  {t('explore_menu')}
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </a>
               </Button>
             </div>
           </div>

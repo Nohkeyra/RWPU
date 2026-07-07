@@ -171,7 +171,7 @@ export default function VisitSection() {
 
                   <div className="flex items-center gap-3 mt-5 text-cream/60">
                     <Mail className="w-4 h-4 text-warm-gold" />
-                    <span className="font-body font-light text-[14px]">mywawasan@pakusop.com</span>
+                    <span className="font-body font-light text-[14px]">wawasan.orders@gmail.com</span>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 mt-6">

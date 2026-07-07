@@ -104,7 +104,7 @@ const A4InvoiceSheet = ({
           <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('tarikh_acara')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">
-              <ShimmerText isTyping={isTyping.date} text={data.date ? format(data.date, 'dd/MM/yyyy') : '—'} />
+              <ShimmerText isTyping={isTyping.date} text={data.date && !isNaN(data.date.getTime()) ? format(data.date, 'dd/MM/yyyy') : '—'} />
             </span>
           </div>
         </div>
@@ -464,13 +464,34 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   // Map initial data (from saved profile or past order reorder)
   useEffect(() => {
     if (initialData) {
+      // Safely parse initial date which might be a Firestore Timestamp or ISO string
+      let parsedInitialDate: Date | undefined = undefined;
+      if (initialData.date) {
+        const rawDate = initialData.date as unknown;
+        if (rawDate instanceof Date) {
+          parsedInitialDate = rawDate;
+        } else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate && typeof (rawDate as { toDate: () => unknown }).toDate === 'function') {
+          const possibleDate = (rawDate as { toDate: () => unknown }).toDate();
+          if (possibleDate instanceof Date) {
+            parsedInitialDate = possibleDate;
+          }
+        } else if (rawDate && typeof rawDate === 'object' && 'seconds' in rawDate && typeof (rawDate as { seconds: unknown }).seconds === 'number') {
+          parsedInitialDate = new Date((rawDate as { seconds: number }).seconds * 1000);
+        } else {
+          const d = new Date(rawDate as string | number);
+          if (!isNaN(d.getTime())) {
+            parsedInitialDate = d;
+          }
+        }
+      }
+
       const parsedData = {
         to: initialData.to || '',
         attn: initialData.attn || '',
         name: initialData.name || '',
         contact: initialData.contact || '',
         email: initialData.email || '',
-        date: initialData.date ? new Date(initialData.date) : undefined,
+        date: parsedInitialDate,
         time: initialData.time || '12:00',
         location: initialData.location || '',
         quantity: initialData.quantity !== undefined ? Number(initialData.quantity) : '',
@@ -1060,7 +1081,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4 text-[#C5A059]" />
-                          {formData.date ? format(formData.date, 'PPP') : t('pick_a_date')}
+                          {formData.date && !isNaN(formData.date.getTime()) ? format(formData.date, 'PPP') : t('pick_a_date')}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 bg-[#141417] border border-[#222226]" align="start">
@@ -1162,7 +1183,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
             {/* Officer Information Section */}
             <div className="space-y-4 pt-4 border-t border-[#222226]">
               <div className="flex items-center gap-2 border-b border-[#222226] pb-2">
-                <User className="w-5 h-5 text-[#C5A059]" />
+                <UserIcon className="w-5 h-5 text-[#C5A059]" />
                 <h3 className="text-lg font-semibold text-[#F4F4F6] font-display">
                   {t('officer_info')}
                 </h3>

@@ -282,6 +282,34 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
     }
   };
 
+  const renderOrderDate = (dateVal: unknown) => {
+    if (!dateVal) return '—';
+    try {
+      let d: Date | null = null;
+      if (dateVal instanceof Date) {
+        d = dateVal;
+      } else if (dateVal && typeof dateVal === 'object' && 'toDate' in dateVal && typeof (dateVal as { toDate: () => unknown }).toDate === 'function') {
+        const possibleDate = (dateVal as { toDate: () => unknown }).toDate();
+        if (possibleDate instanceof Date) {
+          d = possibleDate;
+        }
+      } else if (dateVal && typeof dateVal === 'object' && 'seconds' in dateVal && typeof (dateVal as { seconds: unknown }).seconds === 'number') {
+        d = new Date((dateVal as { seconds: number }).seconds * 1000);
+      } else {
+        const parsed = new Date(dateVal as string | number);
+        if (!isNaN(parsed.getTime())) {
+          d = parsed;
+        }
+      }
+      if (d && !isNaN(d.getTime())) {
+        return format(d, 'dd/MM/yyyy');
+      }
+    } catch (err) {
+      console.error("renderOrderDate error:", err);
+    }
+    return '—';
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -515,7 +543,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-[#8E8E93] border-t border-[#222226] pt-3">
                         <div>
                           <span className="block text-[8px] text-[#8E8E93]/60 uppercase">{t('Event Date', 'Tarikh Acara')}</span>
-                          <span className="font-medium text-[#F4F4F6]">{order.date ? format(new Date(order.date), 'dd/MM/yyyy') : '—'}</span>
+                          <span className="font-medium text-[#F4F4F6]">{renderOrderDate(order.date)}</span>
                         </div>
                         <div>
                           <span className="block text-[8px] text-[#8E8E93]/60 uppercase">{t('Location', 'Lokasi')}</span>

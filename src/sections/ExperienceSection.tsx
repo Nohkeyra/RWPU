@@ -9,30 +9,34 @@ const PRINCIPLES = [
     icon: Sparkles,
     name: 'Cleanliness',
     malayName: 'Kebersihan Kedai',
-    description: 'Impeccable standards in every corner. A spotless environment for your dining comfort.',
+    descriptionEn: 'Impeccable standards in every corner. A spotless environment for your dining comfort.',
+    descriptionBm: 'Standard tanpa cela di setiap sudut. Persekitaran yang bersih untuk keselesaan menjamu selera anda.',
   },
   {
     icon: Heart,
     name: 'Excellent Service',
     malayName: 'Servis Terbaik Fasih',
-    description: 'Warm, attentive hospitality that makes every guest feel like family.',
+    descriptionEn: 'Warm, attentive hospitality that makes every guest feel like family.',
+    descriptionBm: 'Layanan yang mesra dan penuh perhatian yang membuatkan setiap tetamu merasa seperti keluarga.',
   },
   {
     icon: Flame,
     name: 'Lasting Taste',
     malayName: 'Kenikmatan Yang Kekal',
-    description: 'Recipes perfected over decades, delivering unforgettable flavors in every bite.',
+    descriptionEn: 'Recipes perfected over decades, delivering unforgettable flavors in every bite.',
+    descriptionBm: 'Resipi yang disempurnakan berdekad-dekad lamanya, memberikan rasa yang tidak dapat dilupakan dalam setiap suapan.',
   },
   {
     icon: HandHeart,
     name: 'Affordable Prices',
     malayName: 'Harga yang Berpatutan',
-    description: 'Exceptional quality at prices that welcome everyone — from ministers to families.',
+    descriptionEn: 'Exceptional quality at prices that welcome everyone — from ministers to families.',
+    descriptionBm: 'Kualiti luar biasa pada harga yang mengalu-alukan semua orang — dari menteri hingga keluarga.',
   },
 ];
 
 export default function ExperienceSection() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const imageRef = useScrollTrigger<HTMLDivElement>({
     animation: 'scale-up',
     duration: 1.2,
@@ -91,7 +95,12 @@ export default function ExperienceSection() {
           <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {PRINCIPLES.map((p) => (
               <div key={p.name} className="principle-card">
-                <PrincipleCard {...p} />
+                <PrincipleCard
+                  icon={p.icon}
+                  name={p.name}
+                  malayName={p.malayName}
+                  description={language === 'bm' ? p.descriptionBm : p.descriptionEn}
+                />
               </div>
             ))}
           </div>

@@ -3,8 +3,10 @@ import gsap from 'gsap';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function HeroSection() {
+  const { t } = useLanguage();
   const contentRef = useRef<HTMLDivElement>(null);
   const [scrollStarted, setScrollStarted] = useState(false);
 
@@ -65,7 +67,7 @@ export default function HeroSection() {
 
           {/* Tagline */}
           <p className="hero-tagline font-['Montserrat',sans-serif] font-light uppercase tracking-[0.15em] text-[rgba(255,255,255,0.75)] text-[0.85rem] leading-relaxed max-w-[560px] mx-auto mt-6">
-            Where Heritage Meets Flavor in the Heart of Putrajaya
+            {t('hero_tagline')}
           </p>
 
           {/* CTA Buttons */}
@@ -74,7 +76,7 @@ export default function HeroSection() {
               to="/order"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] shadow-[0_4px_20px_rgba(212,168,83,0.3)]"
             >
-              Order Now
+              {t('order_now')}
               <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
@@ -83,7 +85,7 @@ export default function HeroSection() {
               href="#menu"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 border border-warm-gold/80 text-warm-gold font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-warm-gold/5 hover:border-warm-gold transition-all duration-300"
             >
-              View Our Menu
+              {t('view_our_menu')}
               <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

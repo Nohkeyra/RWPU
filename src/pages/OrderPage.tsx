@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Utensils } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import OrderForm from '@/components/OrderForm';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function OrderPage() {
   const { t } = useLanguage();
@@ -34,7 +35,7 @@ export default function OrderPage() {
 
       {/* Main Content */}
       <main className="pt-24 pb-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="text-center mb-12 pt-8">
             <div className="inline-flex items-center gap-2 mb-4">
@@ -58,7 +59,9 @@ export default function OrderPage() {
             <div className="h-1 bg-gradient-to-r from-warm-gold via-warm-gold/80 to-warm-gold/60" />
             
             <div className="p-6 md:p-10">
-              <OrderForm initialData={initialData} />
+              <ErrorBoundary fallbackTitle="Catering Form Error">
+                <OrderForm initialData={initialData} />
+              </ErrorBoundary>
             </div>
           </div>
 

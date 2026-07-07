@@ -127,8 +127,10 @@ const translations: Translation = {
   // Hero Section
   hero_title: { en: 'Restoran Wawasan', bm: 'Restoran Wawasan' },
   hero_subtitle: { en: 'Est. 1986', bm: 'Ditubuh 1986' },
-  hero_tagline: { en: 'Heritage. Flavor. Legacy.', bm: 'Warisan. Rasa. Legasi.' },
+  hero_tagline: { en: 'Where Heritage Meets Flavor in the Heart of Putrajaya', bm: 'Tempat Warisan Bertemu Rasa di Tengah-Tengah Putrajaya' },
   hero_description: { en: 'Experience authentic Malaysian cuisine crafted with passion and tradition since 1986.', bm: 'Nikmati masakan Malaysia autentik yang disediakan dengan minat dan tradisi sejak 1986.' },
+  view_our_menu: { en: 'View Our Menu', bm: 'Lihat Menu Kami' },
+  halal_certified: { en: 'Halal Certified', bm: 'Disahkan Halal' },
   
   // Visit Section
   come_dine: { en: 'Come Dine With Us', bm: 'Mari Menjamu Selera' },
