@@ -938,6 +938,130 @@ async function startServer() {
     }
   });
 
+  // Specialized KWGT (Kustom Widget) endpoint for upcoming event
+  app.get("/api/widget/kwgt", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    try {
+      const now = new Date();
+      interface UpcomingOrder extends OrderData {
+        id: string;
+        computedDate?: Date;
+        eventTimestamp?: Timestamp;
+      }
+      let nextOrder: UpcomingOrder | null = null;
+
+      try {
+        const adminDb = getFirestore();
+        const nowTs = Timestamp.fromDate(now);
+        const snapshot = await adminDb
+          .collection("orders")
+          .where("eventTimestamp", ">=", nowTs)
+          .orderBy("eventTimestamp", "asc")
+          .limit(1)
+          .get();
+
+        if (!snapshot.empty) {
+          const docSnap = snapshot.docs[0];
+          nextOrder = { id: docSnap.id, ...docSnap.data() } as UpcomingOrder;
+        } else {
+          // Backward compatibility fallback for older orders without eventTimestamp
+          const legacySnap = await adminDb.collection("orders").get();
+          const legacyOrders: UpcomingOrder[] = [];
+          legacySnap.forEach((docSnap) => {
+            const d = docSnap.data() as OrderData;
+            const eventDate = d.dateTime
+              ? new Date(d.dateTime)
+              : d.date
+                ? new Date(`${d.date}T${d.time || "12:00"}:00+08:00`)
+                : null;
+            if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+              legacyOrders.push({
+                id: docSnap.id,
+                ...d,
+                computedDate: eventDate
+              });
+            }
+          });
+          if (legacyOrders.length > 0) {
+            legacyOrders.sort((a, b) => {
+              const aTime = a.computedDate?.getTime() || 0;
+              const bTime = b.computedDate?.getTime() || 0;
+              return aTime - bTime;
+            });
+            nextOrder = legacyOrders[0];
+          }
+        }
+      } catch (dbErr) {
+        console.warn("KWGT endpoint: Firestore fetch failed, falling back to local orders:", dbErr);
+        const localOrders = getLocalOrders() as unknown as (OrderData & { id: string })[];
+        const upcomingLocal: UpcomingOrder[] = [];
+        localOrders.forEach((d) => {
+          const eventDate = d.dateTime ? new Date(d.dateTime) : (d.date ? new Date(`${d.date}T${d.time || '12:00'}:00+08:00`) : null);
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+            upcomingLocal.push({
+              id: d.id,
+              ...d,
+              computedDate: eventDate
+            });
+          }
+        });
+        if (upcomingLocal.length > 0) {
+          upcomingLocal.sort((a, b) => {
+            const aTime = a.computedDate?.getTime() || 0;
+            const bTime = b.computedDate?.getTime() || 0;
+            return aTime - bTime;
+          });
+          nextOrder = upcomingLocal[0];
+        }
+      }
+
+      if (!nextOrder) {
+        return res.json({
+          status: "success",
+          title: "No Upcoming Events",
+          time: "--:--"
+        });
+      }
+
+      // Format time to GMT+8 (Malaysia time) "08:00 PM"
+      const eventDate = nextOrder.eventTimestamp?.toDate?.() ||
+        (nextOrder.dateTime ? new Date(nextOrder.dateTime) : nextOrder.date ? new Date(`${nextOrder.date}T${nextOrder.time || "12:00"}:00+08:00`) : null);
+
+      let timeStr = "--:--";
+      if (eventDate && !isNaN(eventDate.getTime())) {
+        const utc = eventDate.getTime() + eventDate.getTimezoneOffset() * 60000;
+        const myTime = new Date(utc + (3600000 * 8)); // UTC+8
+        
+        let hours = myTime.getHours();
+        const minutes = myTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // hour '0' should be '12'
+        
+        const minutesStr = String(minutes).padStart(2, "0");
+        const hoursStr = String(hours).padStart(2, "0");
+        timeStr = `${hoursStr}:${minutesStr} ${ampm}`;
+      }
+
+      const orderName = nextOrder.name || "Customer";
+      const orderMenu = nextOrder.menu || "Catering";
+      const orderQty = nextOrder.quantity || 0;
+      const titleStr = `${orderName} - ${orderMenu} (${orderQty} Pax)`;
+
+      res.json({
+        status: "success",
+        title: titleStr,
+        time: timeStr
+      });
+    } catch (err) {
+      console.error("KWGT endpoint error:", err);
+      res.status(500).json({ 
+        status: "error",
+        message: err instanceof Error ? err.message : "Internal server error" 
+      });
+    }
+  });
+
   // TEMPORARY DEBUG ENDPOINT - lists ALL orders with no date filter, to verify
   // Firestore actually contains test data. Remove this once debugging is done.
   if (process.env.ENABLE_DEBUG_ENDPOINTS === "true") {
