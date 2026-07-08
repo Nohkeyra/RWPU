@@ -596,7 +596,11 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
           <Button 
             variant="ghost" 
             className="text-cream/60 hover:text-red-400 hover:bg-red-500/10"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              localStorage.removeItem('wawasan_admin_authenticated');
+              localStorage.removeItem('wawasan_admin_password');
+              window.location.reload();
+            }}
           >
             <LogOut className="w-4 h-4 mr-2" />
             {t('logout')}

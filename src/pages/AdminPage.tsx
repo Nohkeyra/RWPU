@@ -7,10 +7,19 @@ import { Link } from 'react-router-dom';
 import AdminPanel from '@/components/AdminPanel';
 import { getApiUrl } from '@/lib/api';
 
+const ADMIN_AUTH_STORAGE_KEY = 'wawasan_admin_authenticated';
+const ADMIN_PASSWORD_STORAGE_KEY = 'wawasan_admin_password';
+
 export default function AdminPage() {
   const { t } = useLanguage();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  // Restore login state from localStorage so navigating away (e.g. the
+  // Android back button) and returning doesn't force a re-login every time.
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => localStorage.getItem(ADMIN_AUTH_STORAGE_KEY) === 'true'
+  );
+  const [password, setPassword] = useState(
+    () => localStorage.getItem(ADMIN_PASSWORD_STORAGE_KEY) || ''
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,6 +41,8 @@ export default function AdminPage() {
       
       if (response.ok && data.success) {
         setIsAuthenticated(true);
+        localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+        localStorage.setItem(ADMIN_PASSWORD_STORAGE_KEY, password);
       } else {
         setError(t('wrong_password') || 'Invalid password');
       }
