@@ -18,6 +18,7 @@ import { auth, db } from '@/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import AuthModal from './AuthModal';
 import { SAVED_COMPANIES } from '@/constants/companies';
+import { Capacitor } from '@capacitor/core';
 
 interface FormData {
   to: string;
@@ -357,11 +358,23 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   const [copied, setCopied] = useState(false);
   const [isBannerVisible, setIsBannerVisible] = useState(true);
 
+  // window.location.origin resolves to http://localhost inside the Capacitor
+  // WebView on native builds — that's meaningless to anyone the link gets
+  // shared with, since it points at their own device, not our server. Use
+  // the real production URL on native; window.location is still correct
+  // for the web build (Render serves the app from its own real domain there).
+  const getShareableUrl = () => {
+    if (Capacitor.isNativePlatform()) {
+      return 'https://restoran-wawasan-bio.onrender.com/' + window.location.hash;
+    }
+    return window.location.origin + '/' + window.location.hash;
+  };
+
   const handleShare = async () => {
     const shareData = {
       title: 'Restoran Wawasan Booking Form',
       text: 'Sila isi borang tempahan katering Restoran Wawasan di sini / Please fill in the Restoran Wawasan catering booking form here:',
-      url: window.location.origin + window.location.pathname,
+      url: getShareableUrl(),
     };
 
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
@@ -377,7 +390,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.origin + window.location.pathname);
+    navigator.clipboard.writeText(getShareableUrl());
     setCopied(true);
     toast({
       title: t('link_copied'),
