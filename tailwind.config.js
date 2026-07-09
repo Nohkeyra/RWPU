@@ -5,15 +5,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        charcoal: '#1A1816',
-        'warm-gold': '#D4A853',
+        charcoal: '#2B2118',
+        'warm-gold': '#7C9070',
         cream: '#F5F0E8',
-        terracotta: '#C17A5F',
-        'deep-brown': '#2D2520',
-        'muted-gold': '#B8934A',
+        terracotta: '#C86B3D',
+        'deep-brown': '#2B2118',
+        'muted-gold': '#6B7D5F',
         'warm-gray': '#8A8279',
         'light-cream': '#FAF7F2',
-        'soft-terracotta': '#D4957A',
+        'soft-terracotta': '#D98F63',
+        mustard: '#D9A441',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

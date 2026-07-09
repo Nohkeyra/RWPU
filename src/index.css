@@ -4,32 +4,33 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --background: 28.4 28.4% 13.1%;
+    --foreground: 36.9 39.4% 93.5%;
+    --card: 28.4 25% 16%;
+    --card-foreground: 36.9 39.4% 93.5%;
+    --popover: 28.4 25% 16%;
+    --popover-foreground: 36.9 39.4% 93.5%;
+    --primary: 97.5 12.6% 50.2%;
+    --primary-foreground: 36.9 39.4% 93.5%;
+    --secondary: 19.9 55.8% 51.2%;
+    --secondary-foreground: 36.9 39.4% 93.5%;
+    --muted: 28.4 20% 22%;
+    --muted-foreground: 36.9 15% 65%;
+    --accent: 19.9 55.8% 51.2%;
+    --accent-foreground: 36.9 39.4% 93.5%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 36.9 39.4% 93.5%;
+    --border: 28.4 20% 25%;
+    --input: 28.4 20% 25%;
+    --ring: 97.5 12.6% 50.2%;
     --radius: 0.625rem;
 
-    --color-charcoal: #1A1816;
-    --color-warm-gold: #D4A853;
+    --color-charcoal: #2B2118;
+    --color-warm-gold: #7C9070;
     --color-cream: #F5F0E8;
-    --color-terracotta: #C17A5F;
-    --color-deep-brown: #2D2520;
+    --color-terracotta: #C86B3D;
+    --color-deep-brown: #2B2118;
+    --color-mustard: #D9A441;
   }
 
   html {

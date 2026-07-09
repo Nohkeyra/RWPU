@@ -672,8 +672,6 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               <Table>
                 <TableHeader>
                   <TableRow className="border-warm-gold/10 hover:bg-transparent">
-                    <TableHead className="text-cream/60">{t('invoice_no')}</TableHead>
-                    <TableHead className="text-cream/60">{t('to')}</TableHead>
                     <TableHead className="text-cream/60">{t('date')}</TableHead>
                     <TableHead className="text-cream/60">{t('quantity')}</TableHead>
                     <TableHead className="text-cream/60">{t('status')}</TableHead>
@@ -683,20 +681,13 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-cream/40 py-12">
+                      <TableCell colSpan={4} className="text-center text-cream/40 py-12">
                         {t('no_orders')}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredOrders.map((order) => (
                       <TableRow key={order.id} className="border-warm-gold/10 hover:bg-warm-gold/5">
-                        <TableCell className="text-cream font-mono text-sm">
-                          {order.invoiceNo || `RW${order.id.substring(0, 6).toUpperCase()}`}
-                        </TableCell>
-                        <TableCell className="text-cream">
-                          <div className="font-medium">{order.to}</div>
-                          <div className="text-sm text-cream/50">{order.name}</div>
-                        </TableCell>
                         <TableCell className="text-cream/70">
                           {order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}
                         </TableCell>
