@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, CheckCircle, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -980,11 +981,9 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Label htmlFor="company-select" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
                     {t('to')} <span className="text-[#C5A059]">*</span>
                   </Label>
-                  <select
-                    id="company-select"
+                  <Select
                     value={selectedCompany}
-                    onChange={(e) => {
-                      const val = e.target.value;
+                    onValueChange={(val) => {
                       setSelectedCompany(val);
                       if (val === 'other') {
                         handleInputChange('to', '');
@@ -993,16 +992,21 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       }
                     }}
                     required
-                    className="w-full h-11 rounded-md border border-[#222226] bg-[#0B0B0C] px-3 py-2 text-base text-[#F4F4F6] focus:border-[#C5A059]/50 focus:outline-none focus:ring-2 focus:ring-[#C5A059]/20 shadow-sm font-sans transition-all duration-300"
                   >
-                    <option value="" className="text-[#8E8E93] bg-[#0B0B0C]">-- {t('select_company')} --</option>
-                    {SAVED_COMPANIES.map((company, idx) => (
-                      <option key={idx} value={company} className="text-[#F4F4F6] bg-[#0B0B0C]">
-                        {company}
-                      </option>
-                    ))}
-                    <option value="other" className="text-[#C5A059] bg-[#0B0B0C] font-semibold">{t('other_company')}</option>
-                  </select>
+                    <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-[#222226] bg-[#0B0B0C] px-3 py-2 text-base text-[#F4F4F6] focus:border-[#C5A059]/50 focus:outline-none focus:ring-2 focus:ring-[#C5A059]/20 shadow-sm font-sans transition-all duration-300">
+                      <SelectValue placeholder={`-- ${t('select_company')} --`} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0B0B0C] border-[#222226]">
+                      {SAVED_COMPANIES.map((company, idx) => (
+                        <SelectItem key={idx} value={company} className="text-[#F4F4F6] focus:bg-[#222226] focus:text-[#F4F4F6]">
+                          {company}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="other" className="text-[#C5A059] font-semibold focus:bg-[#222226] focus:text-[#C5A059]">
+                        {t('other_company')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
 
                   {selectedCompany === 'other' && (
                     <Input
