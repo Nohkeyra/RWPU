@@ -8,6 +8,7 @@ export const SAVED_COMPANIES = [
   'KLCC (Holdings) Sdn Bhd, Group Procurement, Level 34, Menara Dayabumi, Jalan Sultan Hishamuddin, Kuala Lumpur',
   'KLCC (Holdings) Sdn Bhd, Group Financial Services (GFS), Level 9, Menara Permata Sapura, Kuala Lumpur City Centre',
   'KLCC Property Holdings Sdn Bhd, Level 33 & 34, Menara Dayabumi, Jalan Sultan Hishamuddin, Kuala Lumpur',
+  'KLCC Projects Services Sdn Bhd',
   'KLCC Projects Services Sdn Bhd, Level 32, Kompleks Dayabumi, Jalan Sultan Hishamuddin, Kuala Lumpur',
   'KLCC Projeks Sdn Bhd, Level 4, Menara PjH, No 2 Jalan Tun Razak, Presint 2, 62100 Putrajaya',
 ];
