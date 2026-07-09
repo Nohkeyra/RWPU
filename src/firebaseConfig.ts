@@ -1,6 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import {
+  initializeAuth,
+  getAuth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+} from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { Capacitor } from '@capacitor/core';
 import firebaseAppletConfig from "../firebase-applet-config.json";
@@ -46,8 +53,31 @@ const firebaseConfig = isWorkspace ? sandboxConfig : prodConfig;
 const app = initializeApp(firebaseConfig);
 
 // Export Firestore with active database instance ID if specified
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); 
-export const auth = getAuth(app);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Auth persistence: keep customers logged in across app restarts and after they
+// swipe the app out of the recent-tasks list. We prefer indexedDBLocalPersistence,
+// which stores the session in durable on-device storage (survives process kill and
+// reboot) and is only cleared when the user logs out or clears the app's data.
+// The ordered list lets Firebase fall back gracefully if a persistence layer is
+// unavailable in a given WebView/browser; inMemoryPersistence is the last resort.
+// initializeAuth must run before any getAuth() call, so this is the single place
+// auth is created. If it has already been initialized (e.g. HMR), fall back to getAuth.
+export const auth = (() => {
+  try {
+    return initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+        inMemoryPersistence,
+      ],
+    });
+  } catch {
+    // Already initialized (e.g. during dev hot-reload) — reuse the existing instance.
+    return getAuth(app);
+  }
+})();
 export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 
 export default app;

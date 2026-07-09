@@ -119,6 +119,274 @@ async function sendNotificationToTopic(topic: string, title: string, body: strin
   }
 }
 
+// ---------------------------------------------------------------------------
+// Order status-change notifications (email + push to the customer)
+// ---------------------------------------------------------------------------
+// Feature: when an admin changes an order's status in the dashboard, notify the
+// customer by email (reliable) and, best-effort, by an FCM push notification.
+// All work here is wrapped in try/catch by callers so a notification failure can
+// NEVER break the underlying order update.
+
+const ENABLE_ORDER_STATUS_NOTIFICATIONS =
+  (process.env.ENABLE_ORDER_STATUS_NOTIFICATIONS || "true") !== "false";
+
+type NotifyLang = "en" | "bm";
+
+interface StatusCopy {
+  subject: string;
+  heading: string;
+  message: string;
+  pushTitle: string;
+  pushBody: string;
+}
+
+// Human-friendly, bilingual copy for each known status. Falls back to a generic
+// message for any unrecognized status value so new statuses still notify.
+function getStatusCopy(status: string, name: string, invoiceNo: string, lang: NotifyLang): StatusCopy {
+  const s = (status || "").toLowerCase();
+  const who = name || (lang === "bm" ? "Pelanggan" : "Customer");
+  const invoiceSuffix = invoiceNo ? (lang === "bm" ? ` (No. Invois: ${invoiceNo})` : ` (Invoice No: ${invoiceNo})`) : "";
+
+  const en: Record<string, StatusCopy> = {
+    pending: {
+      subject: `Your order is being reviewed${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Order Received — Pending Review",
+      message: `Hi ${who}, we've received your catering order${invoiceSuffix} and it is currently pending review. We'll update you as soon as it's confirmed.`,
+      pushTitle: "Order pending review",
+      pushBody: `Your order${invoiceSuffix} is pending review.`,
+    },
+    approved: {
+      subject: `Your order is approved${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Order Approved 🎉",
+      message: `Great news ${who}! Your catering order${invoiceSuffix} has been approved. We look forward to serving you.`,
+      pushTitle: "Order approved 🎉",
+      pushBody: `Your order${invoiceSuffix} has been approved.`,
+    },
+    billed: {
+      subject: `Your invoice is ready${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Invoice Issued",
+      message: `Hi ${who}, an invoice${invoiceSuffix} has been issued for your catering order. Please check your email for the invoice details.`,
+      pushTitle: "Invoice ready",
+      pushBody: `Your invoice${invoiceSuffix} is ready.`,
+    },
+    rejected: {
+      subject: `Update on your order${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Order Could Not Be Confirmed",
+      message: `Hi ${who}, unfortunately we were unable to confirm your catering order${invoiceSuffix} at this time. Please contact us if you'd like to discuss alternatives.`,
+      pushTitle: "Order update",
+      pushBody: `There's an update on your order${invoiceSuffix}.`,
+    },
+    completed: {
+      subject: `Thank you from Restoran Wawasan${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Order Completed — Thank You!",
+      message: `Hi ${who}, your catering order${invoiceSuffix} is now marked as completed. Thank you for choosing Restoran Wawasan — we hope to serve you again!`,
+      pushTitle: "Order completed",
+      pushBody: `Your order${invoiceSuffix} is completed. Thank you!`,
+    },
+  };
+
+  const bm: Record<string, StatusCopy> = {
+    pending: {
+      subject: `Pesanan anda sedang disemak${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Pesanan Diterima — Menunggu Semakan",
+      message: `Salam ${who}, kami telah menerima tempahan katering anda${invoiceSuffix} dan ia sedang menunggu semakan. Kami akan maklumkan sebaik sahaja ia disahkan.`,
+      pushTitle: "Pesanan menunggu semakan",
+      pushBody: `Pesanan anda${invoiceSuffix} sedang disemak.`,
+    },
+    approved: {
+      subject: `Pesanan anda telah diluluskan${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Pesanan Diluluskan 🎉",
+      message: `Berita baik ${who}! Tempahan katering anda${invoiceSuffix} telah diluluskan. Kami menantikan peluang untuk berkhidmat kepada anda.`,
+      pushTitle: "Pesanan diluluskan 🎉",
+      pushBody: `Pesanan anda${invoiceSuffix} telah diluluskan.`,
+    },
+    billed: {
+      subject: `Invois anda telah sedia${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Invois Dikeluarkan",
+      message: `Salam ${who}, satu invois${invoiceSuffix} telah dikeluarkan untuk tempahan katering anda. Sila semak e-mel anda untuk butiran invois.`,
+      pushTitle: "Invois sedia",
+      pushBody: `Invois anda${invoiceSuffix} telah sedia.`,
+    },
+    rejected: {
+      subject: `Kemas kini tempahan anda${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Tempahan Tidak Dapat Disahkan",
+      message: `Salam ${who}, malangnya kami tidak dapat mengesahkan tempahan katering anda${invoiceSuffix} pada masa ini. Sila hubungi kami jika anda ingin membincangkan pilihan lain.`,
+      pushTitle: "Kemas kini tempahan",
+      pushBody: `Terdapat kemas kini pada tempahan anda${invoiceSuffix}.`,
+    },
+    completed: {
+      subject: `Terima kasih daripada Restoran Wawasan${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Tempahan Selesai — Terima Kasih!",
+      message: `Salam ${who}, tempahan katering anda${invoiceSuffix} kini ditanda sebagai selesai. Terima kasih kerana memilih Restoran Wawasan — kami harap dapat berkhidmat lagi!`,
+      pushTitle: "Tempahan selesai",
+      pushBody: `Tempahan anda${invoiceSuffix} telah selesai. Terima kasih!`,
+    },
+  };
+
+  const table = lang === "bm" ? bm : en;
+  if (table[s]) return table[s];
+
+  // Generic fallback for any unknown status.
+  const prettyStatus = status || (lang === "bm" ? "dikemas kini" : "updated");
+  return lang === "bm"
+    ? {
+        subject: `Status tempahan anda telah dikemas kini${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+        heading: "Kemas Kini Status Tempahan",
+        message: `Salam ${who}, status tempahan katering anda${invoiceSuffix} kini ialah: ${prettyStatus}.`,
+        pushTitle: "Kemas kini status tempahan",
+        pushBody: `Status pesanan anda${invoiceSuffix}: ${prettyStatus}.`,
+      }
+    : {
+        subject: `Your order status was updated${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+        heading: "Order Status Update",
+        message: `Hi ${who}, the status of your catering order${invoiceSuffix} is now: ${prettyStatus}.`,
+        pushTitle: "Order status update",
+        pushBody: `Your order status${invoiceSuffix}: ${prettyStatus}.`,
+      };
+}
+
+function buildStatusEmailHtml(copy: StatusCopy, lang: NotifyLang): string {
+  const footerText =
+    lang === "bm"
+      ? "E-mel ini dijanakan secara automatik apabila status tempahan anda berubah. Sila hubungi kami jika terdapat sebarang pertanyaan."
+      : "This email is generated automatically when your order status changes. Please contact us if you have any questions.";
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f7fafc;margin:0;padding:20px;color:#2d3748;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;">
+    <div style="background-color:#1a202c;padding:30px;text-align:center;color:#ffffff;border-bottom:3px solid #D4AF37;">
+      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:0.05em;color:#D4AF37;">RESTORAN WAWASAN</h1>
+      <p style="margin:5px 0 0 0;color:#a0aec0;font-size:14px;text-transform:uppercase;letter-spacing:0.1em;">${copy.heading}</p>
+    </div>
+    <div style="padding:30px;">
+      <p style="font-size:16px;line-height:1.6;margin:0 0 25px 0;">${copy.message}</p>
+    </div>
+    <div style="background-color:#f7fafc;padding:20px 30px;text-align:center;color:#718096;font-size:12px;border-top:1px solid #e2e8f0;">
+      ${footerText}
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+// Send the status-change email to the customer. Reuses the same nodemailer
+// transporter already configured for invoices. Returns true if an email was sent.
+async function sendOrderStatusEmail(
+  transporter: nodemailer.Transporter,
+  order: Partial<OrderData> & { email?: string; name?: string; invoiceNo?: string; lang?: string },
+  newStatus: string
+): Promise<boolean> {
+  const to = order.email;
+  if (!to) {
+    console.warn("[StatusNotify] No customer email on order; skipping status email.");
+    return false;
+  }
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("[StatusNotify] SMTP not configured (SMTP_USER/SMTP_PASS); skipping status email.");
+    return false;
+  }
+
+  const lang: NotifyLang = order.lang === "bm" ? "bm" : "en";
+  const copy = getStatusCopy(newStatus, order.name || "", order.invoiceNo || "", lang);
+
+  await transporter.sendMail({
+    from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || process.env.SMTP_USER || "madnor.noisy@gmail.com"}>`,
+    to,
+    subject: copy.subject,
+    text: `${copy.heading}\n\n${copy.message}`,
+    html: buildStatusEmailHtml(copy, lang),
+  });
+  console.log(`[StatusNotify] Status email (${newStatus}) sent to ${to}.`);
+  return true;
+}
+
+// Resolve a customer's FCM device token. Prefers an explicit uid on the order,
+// otherwise falls back to matching a users document by email. Returns null if
+// no token can be found (in which case push is simply skipped).
+async function resolveCustomerFcmToken(order: Partial<OrderData> & { uid?: string; userId?: string | null; email?: string }): Promise<string | null> {
+  try {
+    const db = getFirestore();
+    // The order stores the customer's Firebase Auth uid as `userId` (sent by the
+    // app's OrderForm when logged in); also accept `uid` for robustness. This is
+    // the reliable path — a direct lookup of the customer's device token.
+    const customerUid = order.userId || order.uid;
+    if (customerUid) {
+      const snap = await db.collection("users").doc(customerUid).get();
+      const token = snap.exists ? (snap.data()?.fcmToken as string | undefined) : undefined;
+      if (token) return token;
+    }
+    // Fallback: match a users document by email (works only if that account is
+    // logged in on the app with the same email and has a stored token).
+    if (order.email) {
+      const q = await db.collection("users").where("email", "==", order.email).limit(1).get();
+      if (!q.empty) {
+        const token = q.docs[0].data()?.fcmToken as string | undefined;
+        if (token) return token;
+      }
+    }
+  } catch (err) {
+    console.warn("[StatusNotify] Could not resolve customer FCM token:", err);
+  }
+  return null;
+}
+
+// Best-effort direct push to the customer's device via FCM. Returns true if sent.
+async function sendOrderStatusPush(
+  order: Partial<OrderData> & { uid?: string; email?: string; name?: string; invoiceNo?: string; lang?: string; id?: string },
+  newStatus: string
+): Promise<boolean> {
+  const token = await resolveCustomerFcmToken(order);
+  if (!token) {
+    console.log("[StatusNotify] No FCM token for customer; skipping push (email still sent).");
+    return false;
+  }
+  const lang: NotifyLang = order.lang === "bm" ? "bm" : "en";
+  const copy = getStatusCopy(newStatus, order.name || "", order.invoiceNo || "", lang);
+  try {
+    const app = getAdminApp();
+    const response = await getMessaging(app).send({
+      token,
+      notification: { title: copy.pushTitle, body: copy.pushBody },
+      data: {
+        type: "order_status",
+        status: String(newStatus || ""),
+        orderId: String(order.id || ""),
+        invoiceNo: String(order.invoiceNo || ""),
+      },
+    });
+    console.log(`[StatusNotify] Status push (${newStatus}) sent to customer:`, response);
+    return true;
+  } catch (error) {
+    console.error("[StatusNotify] Error sending status push to customer:", error);
+    return false;
+  }
+}
+
+// Orchestrator: fire both channels without blocking or throwing. Safe to call
+// with `.catch()` from a request handler.
+async function notifyCustomerOfStatusChange(
+  transporter: nodemailer.Transporter,
+  order: Partial<OrderData> & { id?: string; uid?: string; email?: string; name?: string; invoiceNo?: string; lang?: string },
+  newStatus: string
+): Promise<void> {
+  if (!ENABLE_ORDER_STATUS_NOTIFICATIONS) {
+    console.log("[StatusNotify] Disabled via ENABLE_ORDER_STATUS_NOTIFICATIONS=false; skipping.");
+    return;
+  }
+  await Promise.allSettled([
+    sendOrderStatusEmail(transporter, order, newStatus).catch((err) =>
+      console.error("[StatusNotify] Email send failed:", err)
+    ),
+    sendOrderStatusPush(order, newStatus).catch((err) =>
+      console.error("[StatusNotify] Push send failed:", err)
+    ),
+  ]);
+}
+
 // Robust Firestore operation retry mechanism to minimize reliance on the transient file system
 async function runWithRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
   let lastError: unknown;
@@ -256,6 +524,11 @@ interface OrderData {
   totalAmount?: number;
   invoiceNo?: string;
   calendarEventIds?: Record<string, string>;
+  // Firebase Auth uid of the customer who placed the order (when logged in on the
+  // app). Persisted so status-change push notifications can target their device.
+  userId?: string | null;
+  // Preferred language for customer-facing notifications ("en" | "bm").
+  lang?: string;
 }
 
 async function syncGoogleCalendarEvent(orderId: string, passedOrderData?: OrderData) {
@@ -1496,7 +1769,26 @@ async function startServer() {
         if (!orderId || !data) {
           return res.status(400).json({ error: "Missing orderId or data for update" });
         }
-        
+
+        // Capture the order's status BEFORE applying the update so we can detect
+        // an actual status change and notify the customer. Read from Firestore
+        // first, then fall back to the local backup. Never let this block the update.
+        let previousOrder: Record<string, unknown> | undefined;
+        try {
+          const adminDb = getFirestore();
+          const beforeSnap = await adminDb.collection("orders").doc(orderId).get();
+          if (beforeSnap.exists) {
+            previousOrder = beforeSnap.data() as Record<string, unknown>;
+          }
+        } catch (readErr) {
+          console.warn("[StatusNotify] Could not read order before update (Firestore):", readErr);
+        }
+        if (!previousOrder) {
+          const localOrdersBefore = getLocalOrders();
+          previousOrder = localOrdersBefore.find(o => o.id === orderId);
+        }
+        const previousStatus = (previousOrder?.status as string | undefined) || "";
+
         let updatedInFirestore = false;
         try {
           const adminDb = getFirestore();
@@ -1529,6 +1821,21 @@ async function startServer() {
         syncGoogleCalendarEvent(orderId).catch(err => {
           console.error("Background Google Calendar event sync error during admin update:", err);
         });
+
+        // Notify the customer if the order STATUS actually changed.
+        // Fire-and-forget: this must never block or fail the admin update.
+        const newStatus = (data as Record<string, unknown>)?.status as string | undefined;
+        if (newStatus && newStatus !== previousStatus) {
+          const mergedOrder = {
+            ...(previousOrder || {}),
+            ...(data as Record<string, unknown>),
+            id: orderId,
+          } as Partial<OrderData> & { id?: string; uid?: string; email?: string; name?: string; invoiceNo?: string; lang?: string };
+          console.log(`[StatusNotify] Order ${orderId} status changed: "${previousStatus}" -> "${newStatus}". Notifying customer.`);
+          notifyCustomerOfStatusChange(transporter, mergedOrder, newStatus).catch(err => {
+            console.error("[StatusNotify] Background status notification error:", err);
+          });
+        }
 
         return res.json({ success: true });
       }
