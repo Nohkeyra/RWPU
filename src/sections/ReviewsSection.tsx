@@ -40,13 +40,9 @@ export default function ReviewsSection() {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSlidesToShow(1);
-      } else if (window.innerWidth < 1024) {
-        setSlidesToShow(2);
-      } else {
-        setSlidesToShow(3);
-      }
+      if (window.innerWidth < 768) setSlidesToShow(1);
+      else if (window.innerWidth < 1024) setSlidesToShow(2);
+      else setSlidesToShow(3);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -72,28 +68,45 @@ export default function ReviewsSection() {
   } = useCarousel({
     totalSlides: REVIEWS.length,
     slidesToShow,
-    autoPlayInterval: 5000,
+    autoPlayInterval: 6000,
   });
 
   return (
-    <section id="reviews" className="section-padding bg-cream">
+    <section id="reviews" className="section-padding bg-deep-forest">
       <div className="content-container">
         {/* Header */}
-        <div ref={headerRef} className="text-center mb-12">
-          <div className="review-header">
-            <SectionLabel text={t('testimonials')} />
-          </div>
-          <h2 className="review-header font-display font-semibold text-[32px] md:text-[48px] text-charcoal leading-[1.1] mb-6">
-            {t('guest_reviews')}
-          </h2>
-          <div className="review-header flex items-center justify-center gap-3">
-            <div className="flex gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="w-5 h-5 text-warm-gold fill-warm-gold" />
-              ))}
+        <div ref={headerRef} className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+          <div className="text-center md:text-left">
+            <div className="review-header flex justify-center md:justify-start">
+              <SectionLabel text={t('testimonials')} light />
             </div>
-            <span className="font-['Montserrat',sans-serif] font-medium text-lg text-charcoal">4.9 {t('out_of')}</span>
-            <span className="font-['Montserrat',sans-serif] font-light text-xs uppercase tracking-[0.1em] text-warm-gray">{t('based_on')}</span>
+            <h2 className="review-header font-display font-semibold text-[36px] md:text-[48px] text-cream leading-[1.1]">
+              {t('guest_reviews')}
+            </h2>
+          </div>
+          
+          <div className="review-header flex items-center justify-center gap-4 mt-6 md:mt-0">
+            <div className="flex items-center gap-2 bg-forest-green border border-cream/5 rounded-full px-4 py-2">
+              <Star className="w-4 h-4 text-honey fill-honey" />
+              <span className="font-medium text-cream text-sm">4.9</span>
+              <span className="text-cream/40 text-xs">/ 5</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={goPrev}
+                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-moss transition-colors"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="w-5 h-5 text-cream" />
+              </button>
+              <button
+                onClick={goNext}
+                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-moss transition-colors"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="w-5 h-5 text-cream" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -107,26 +120,9 @@ export default function ReviewsSection() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {/* Arrow buttons - desktop only */}
-          <button
-            onClick={goPrev}
-            className="hidden md:flex absolute -left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.1)] items-center justify-center hover:bg-warm-gold transition-colors duration-300"
-            aria-label="Previous review"
-          >
-            <ChevronLeft className="w-5 h-5 text-charcoal" />
-          </button>
-          <button
-            onClick={goNext}
-            className="hidden md:flex absolute -right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.1)] items-center justify-center hover:bg-warm-gold transition-colors duration-300"
-            aria-label="Next review"
-          >
-            <ChevronRight className="w-5 h-5 text-charcoal" />
-          </button>
-
-          {/* Slides */}
           <div className="overflow-hidden">
             <div
-              className="flex transition-transform duration-500 ease-out"
+              className="flex transition-transform duration-700 ease-out"
               style={{
                 transform: `translateX(-${currentIndex * (100 / slidesToShow)}%)`,
               }}
@@ -142,16 +138,16 @@ export default function ReviewsSection() {
             </div>
           </div>
 
-          {/* Dot indicators */}
-          <div className="flex justify-center gap-2 mt-8">
+          {/* Progress Dots */}
+          <div className="flex justify-center gap-2 mt-10">
             {Array.from({ length: Math.max(1, REVIEWS.length - slidesToShow + 1) }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-1.5 rounded-full transition-all duration-500 ${
                   i === currentIndex
-                    ? 'w-6 bg-warm-gold'
-                    : 'w-2 bg-charcoal/20 hover:bg-charcoal/40'
+                    ? 'w-8 bg-moss'
+                    : 'w-1.5 bg-cream/20 hover:bg-cream/40'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}
               />

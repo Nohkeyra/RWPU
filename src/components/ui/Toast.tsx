@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Leaf, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -82,17 +82,24 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
   const { id, title, description, variant = 'info' } = toast;
 
   const icons = {
-    success: <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />,
-    error: <XCircle className="w-5 h-5 text-rose-500 shrink-0" />,
-    warning: <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />,
-    info: <Info className="w-5 h-5 text-sky-500 shrink-0" />,
+    success: <CheckCircle2 className="w-5 h-5 text-fern shrink-0" />,
+    error: <XCircle className="w-5 h-5 text-burnt-orange shrink-0" />,
+    warning: <AlertTriangle className="w-5 h-5 text-amber shrink-0" />,
+    info: <Leaf className="w-5 h-5 text-sage shrink-0" />,
   };
 
   const bgStyles = {
-    success: 'bg-white border-emerald-100 dark:bg-zinc-950 dark:border-emerald-950 shadow-emerald-100/10',
-    error: 'bg-white border-rose-100 dark:bg-zinc-950 dark:border-rose-950 shadow-rose-100/10',
-    warning: 'bg-white border-amber-100 dark:bg-zinc-950 dark:border-amber-950 shadow-amber-100/10',
-    info: 'bg-white border-sky-100 dark:bg-zinc-950 dark:border-sky-950 shadow-sky-100/10',
+    success: 'bg-forest-green border-fern/20 shadow-fern/5',
+    error: 'bg-forest-green border-burnt-orange/20 shadow-burnt-orange/5',
+    warning: 'bg-forest-green border-amber/20 shadow-amber/5',
+    info: 'bg-forest-green border-sage/20 shadow-sage/5',
+  };
+
+  const stripeColors = {
+    success: 'bg-fern',
+    error: 'bg-burnt-orange',
+    warning: 'bg-amber',
+    info: 'bg-sage',
   };
 
   return (
@@ -106,33 +113,24 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
         bgStyles[variant]
       )}
     >
-      {/* Decorative vertical colored stripe */}
-      <div 
-        className={cn(
-          "absolute left-0 top-0 bottom-0 w-1",
-          variant === 'success' && "bg-emerald-500",
-          variant === 'error' && "bg-rose-500",
-          variant === 'warning' && "bg-amber-500",
-          variant === 'info' && "bg-sky-500"
-        )}
-      />
+      <div className={cn("absolute left-0 top-0 bottom-0 w-1", stripeColors[variant])} />
 
       <div className="pl-1 shrink-0">{icons[variant]}</div>
 
       <div className="flex-1 flex flex-col justify-center min-w-0 pr-4">
         {title && (
-          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight mb-1">
+          <h4 className="text-sm font-bold text-cream leading-tight mb-1">
             {title}
           </h4>
         )}
-        <p className="text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed break-words">
+        <p className="text-xs text-stone font-sans leading-relaxed break-words">
           {description}
         </p>
       </div>
 
       <button
         onClick={() => onDismiss(id)}
-        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors shrink-0"
+        className="text-stone/50 hover:text-cream p-0.5 rounded-lg hover:bg-cream/5 transition-colors shrink-0"
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />

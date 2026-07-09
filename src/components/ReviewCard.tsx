@@ -8,35 +8,42 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ text, name, rating }: ReviewCardProps) {
   return (
-    <div className="bg-[#FAF8F5] rounded-xl p-8 md:p-10 border-[0.5px] border-warm-gold/20 shadow-[0_6px_20px_rgba(45,37,32,0.03)] min-h-[300px] flex flex-col transition-all duration-500 hover:-translate-y-2 hover:border-warm-gold/40 hover:shadow-[0_12px_32px_rgba(45,37,32,0.08)] relative">
-      {/* Absolute background card accent for luxury feel */}
-      <div className="absolute top-0 left-0 w-full h-[3px] bg-warm-gold/60" />
+    <div className="group relative bg-forest-green rounded-2xl p-8 min-h-[320px] flex flex-col transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.4)] border border-cream/5 hover:border-moss/20">
+      {/* Top Accent */}
+      <div className="absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-moss/40 to-transparent" />
       
-      <div className="flex justify-between items-start mb-5">
-        <Quote className="w-10 h-10 text-warm-gold/40" strokeWidth={1} />
-        <div className="flex gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={`w-4 h-4 ${
-                i < rating ? 'text-warm-gold fill-warm-gold' : 'text-gray-300'
-              }`}
-            />
-          ))}
-        </div>
+      {/* Quote Icon */}
+      <div className="mb-5">
+        <Quote className="w-8 h-8 text-moss/30" strokeWidth={1.5} />
+      </div>
+      
+      {/* Stars */}
+      <div className="flex gap-1 mb-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            className={`w-3.5 h-3.5 transition-all duration-300 ${
+              i < rating ? 'text-honey fill-honey' : 'text-cream/10'
+            }`}
+          />
+        ))}
       </div>
 
-      <p className="font-body font-light text-[1.05rem] text-deep-brown/80 leading-relaxed italic flex-1">
-        &ldquo;{text}&rdquo;
+      {/* Review Text */}
+      <p className="font-body font-light text-[15px] text-cream/80 leading-[1.7] italic flex-1">
+        "{text}"
       </p>
 
-      <div className="mt-6 pt-5 border-t-[0.5px] border-warm-gold/10 flex items-center justify-between">
+      {/* Author */}
+      <div className="mt-6 pt-5 border-t border-cream/5 flex items-center justify-between">
         <div>
-          <span className="block font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.15em] text-warm-gray">Verified Guest</span>
-          <p className="font-display font-medium text-[16px] text-charcoal mt-1 tracking-tight">{name}</p>
+          <p className="font-display font-medium text-[15px] text-cream">{name}</p>
+          <span className="font-['Montserrat',sans-serif] text-[10px] text-stone uppercase tracking-wider">
+            Verified Guest
+          </span>
         </div>
-        <div className="w-6 h-6 rounded-full bg-warm-gold/10 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-warm-gold">W</span>
+        <div className="w-10 h-10 rounded-full bg-moss/10 flex items-center justify-center">
+          <span className="font-display text-sm text-moss">{name.charAt(0)}</span>
         </div>
       </div>
     </div>

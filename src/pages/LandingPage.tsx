@@ -18,7 +18,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-charcoal">
+    <div className="min-h-screen bg-deep-forest">
       <Header />
       <main>
         <HeroSection />

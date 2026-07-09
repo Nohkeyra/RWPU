@@ -9,23 +9,30 @@ interface PrincipleCardProps {
 
 export default function PrincipleCard({ icon: Icon, name, malayName, description }: PrincipleCardProps) {
   return (
-    <div className="group bg-charcoal/40 border-[0.5px] border-white/5 rounded-xl p-8 md:p-10 text-center transition-all duration-500 hover:-translate-y-2 hover:border-warm-gold/30 hover:bg-deep-brown/40 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col items-center h-full">
-      {/* Premium Circular Icon Shield */}
-      <div className="w-20 h-20 rounded-full border border-warm-gold/20 bg-charcoal flex items-center justify-center transition-all duration-500 group-hover:border-warm-gold/50 group-hover:bg-deep-brown group-hover:scale-105 shadow-inner">
-        <Icon className="w-8 h-8 text-warm-gold transition-transform duration-500 group-hover:rotate-6" strokeWidth={1.5} />
+    <div className="group relative bg-deep-forest/60 rounded-2xl p-8 text-center transition-all duration-500 hover:-translate-y-2 hover:bg-forest-green/80 hover:shadow-[0_12px_40px_-8px_rgba(74,124,89,0.2)] flex flex-col items-center h-full border border-cream/5 hover:border-moss/20">
+      {/* Icon with Glow Effect */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 bg-moss/20 rounded-full blur-xl group-hover:bg-moss/30 transition-all duration-500" />
+        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-moss/20 to-moss/5 border border-moss/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+          <Icon className="w-7 h-7 text-moss" strokeWidth={1.5} />
+        </div>
       </div>
       
-      <h3 className="font-display font-semibold text-[22px] text-cream mt-6 group-hover:text-warm-gold transition-colors duration-300">
-        {name}
-      </h3>
-      
-      <span className="inline-block px-3 py-1 bg-warm-gold/5 border-[0.5px] border-warm-gold/20 rounded-sm font-['Montserrat',sans-serif] font-medium text-[10px] text-warm-gold uppercase tracking-[0.15em] mt-3">
+      {/* Malay Name Badge */}
+      <span className="inline-block px-3 py-1 bg-moss/10 rounded-full font-['Montserrat',sans-serif] font-medium text-[9px] text-moss uppercase tracking-[0.15em] mb-3">
         {malayName}
       </span>
       
-      <p className="font-body text-[14px] text-cream/70 leading-relaxed mt-4 flex-grow font-light">
+      <h3 className="font-display font-semibold text-lg text-cream mb-3">
+        {name}
+      </h3>
+      
+      <p className="font-body text-[13px] text-cream/60 leading-relaxed flex-grow">
         {description}
       </p>
+      
+      {/* Bottom Accent Line */}
+      <div className="mt-6 w-12 h-[2px] bg-gradient-to-r from-transparent via-moss/50 to-transparent group-hover:w-20 transition-all duration-500" />
     </div>
   );
 }

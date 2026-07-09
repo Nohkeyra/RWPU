@@ -40,12 +40,12 @@ export default function VisitSection() {
   });
 
   return (
-    <section id="visit" className="section-padding bg-charcoal relative overflow-hidden">
+    <section id="visit" className="section-padding bg-deep-forest relative overflow-hidden">
       {/* Subtle radial gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(45,37,32,0.5) 0%, rgba(26,24,22,0) 70%)',
+          background: 'radial-gradient(ellipse at center, rgba(15,31,23,0.5) 0%, rgba(15,31,23,0) 70%)',
         }}
       />
 
@@ -81,11 +81,11 @@ export default function VisitSection() {
           {/* Right: Info Cards */}
           <div ref={cardsRef} className="flex flex-col gap-6">
             {/* Address Card */}
-            <div className="info-card bg-deep-brown rounded-xl border border-warm-gold/15 p-6 md:p-8">
+            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
               <div className="flex items-start gap-4">
-                <MapPin className="w-6 h-6 text-warm-gold flex-shrink-0 mt-0.5" />
+                <MapPin className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-warm-gold mb-3">{t('address')}</h3>
+                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-3">{t('address')}</h3>
                   <p className="font-body font-light text-base text-cream leading-relaxed">
                     <strong>Unit 3, Level B3, Menara PjH (Putrajaya Holdings),</strong><br />
                     Jalan P2A, Presint 2,<br />
@@ -98,9 +98,9 @@ export default function VisitSection() {
                     href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Menara+PjH+Putrajaya"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.1em] text-warm-gold hover:underline mt-4 group py-2 px-3 -mx-3 min-h-[44px]"
+                    className="inline-flex items-center gap-2 font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.1em] text-moss hover:underline mt-4 group py-2 px-3 -mx-3 min-h-[44px]"
                   >
-                    <MapPin className="w-3.5 h-3.5" />
+                    <MapPin className="w-3.5 h-3.5 text-moss" />
                     {t('get_directions')}
                   </a>
                 </div>
@@ -108,11 +108,11 @@ export default function VisitSection() {
             </div>
 
             {/* Hours Card */}
-            <div className="info-card bg-deep-brown rounded-xl border border-warm-gold/15 p-6 md:p-8">
+            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
               <div className="flex items-start gap-4">
-                <Clock className="w-6 h-6 text-warm-gold flex-shrink-0 mt-0.5" />
+                <Clock className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-warm-gold mb-4">{t('hours')}</h3>
+                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-4">{t('hours')}</h3>
                   <div className="space-y-3">
                     {HOURS.map((h) => (
                       <div key={h.day} className="flex justify-between items-baseline border-b-[0.5px] border-white/5 pb-2 last:border-0 last:pb-0">
@@ -120,7 +120,7 @@ export default function VisitSection() {
                         <div className="text-right">
                           <span className="font-body font-light text-[14px] text-cream/90">{h.time}</span>
                           {h.note && (
-                            <span className="block font-body font-light text-xs text-warm-gold/80 italic mt-0.5">
+                            <span className="block font-body font-light text-xs text-moss/80 italic mt-0.5">
                               *{h.note}
                             </span>
                           )}
@@ -133,23 +133,23 @@ export default function VisitSection() {
             </div>
 
             {/* Contact Card */}
-            <div className="info-card bg-deep-brown rounded-xl border border-warm-gold/15 p-6 md:p-8">
+            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
               <div className="flex items-start gap-4">
-                <Phone className="w-6 h-6 text-warm-gold flex-shrink-0 mt-0.5" />
+                <Phone className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-warm-gold mb-4">{t('contact_us')}</h3>
+                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-4">{t('contact_us')}</h3>
                   
                   <div className="space-y-4">
                     <a
                       href="tel:+60178582642"
-                      className="flex items-center gap-3 text-[15px] text-cream hover:text-warm-gold transition-colors duration-300 group"
+                      className="flex items-center gap-3 text-[15px] text-cream hover:text-moss transition-colors duration-300 group"
                     >
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-warm-gold/10 text-warm-gold text-[10px] font-['Montserrat',sans-serif] font-medium">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-moss/10 text-moss text-[10px] font-['Montserrat',sans-serif] font-medium">
                         C
                       </span>
                       <span className="font-body font-light">
                         {t('call_label')}{' '}
-                        <strong className="text-cream group-hover:text-warm-gold transition-colors font-medium">+6017-8582642</strong> <span className="opacity-60 text-sm">(Pak Usop)</span>
+                        <strong className="text-cream group-hover:text-moss transition-colors font-medium">+6017-8582642</strong> <span className="opacity-60 text-sm">(Pak Usop)</span>
                       </span>
                     </a>
                     
@@ -157,27 +157,27 @@ export default function VisitSection() {
                       href="https://wa.me/60173157721"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-[15px] text-cream hover:text-warm-gold transition-colors duration-300 group"
+                      className="flex items-center gap-3 text-[15px] text-cream hover:text-moss transition-colors duration-300 group"
                     >
                       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-['Montserrat',sans-serif] font-medium">
                         W
                       </span>
                       <span className="font-body font-light">
                         {t('whatsapp_label')}{' '}
-                        <strong className="text-cream group-hover:text-warm-gold transition-colors font-medium">+6017-3157721</strong> <span className="opacity-60 text-sm">(Mad)</span>
+                        <strong className="text-cream group-hover:text-moss transition-colors font-medium">+6017-3157721</strong> <span className="opacity-60 text-sm">(Mad)</span>
                       </span>
                     </a>
                   </div>
 
                   <div className="flex items-center gap-3 mt-5 text-cream/60">
-                    <Mail className="w-4 h-4 text-warm-gold" />
+                    <Mail className="w-4 h-4 text-moss" />
                     <span className="font-body font-light text-[14px]">wawasan.orders@gmail.com</span>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 mt-6">
                     <a
                       href="tel:+60178582642"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] bg-moss text-cream font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-fern hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                     >
                       {t('call_now')}
                       <ArrowRight className="w-4 h-4" />
@@ -186,7 +186,7 @@ export default function VisitSection() {
                       href="https://wa.me/60173157721"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] border-[0.5px] border-warm-gold/60 text-warm-gold font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-warm-gold/10 hover:border-warm-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] border-[0.5px] border-moss/60 text-moss font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-moss/10 hover:border-moss hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                     >
                       WhatsApp
                       <ArrowRight className="w-4 h-4" />
@@ -203,20 +203,20 @@ export default function VisitSection() {
           ref={ctaRef}
           className="mt-16 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6"
           style={{
-            background: 'linear-gradient(135deg, #D4A853 0%, #C17A5F 100%)',
+            background: 'linear-gradient(135deg, #4A7C59 0%, #B85C38 100%)',
           }}
         >
           <div>
-            <h3 className="font-display font-medium text-[24px] md:text-[28px] text-charcoal">
+            <h3 className="font-display font-medium text-[24px] md:text-[28px] text-cream">
               {t('cta_title')}
             </h3>
-            <p className="font-body text-base text-charcoal/70 mt-2">
+            <p className="font-body text-base text-cream/80 mt-2">
               {t('cta_subtitle')}
             </p>
           </div>
           <a
             href="tel:+60178582642"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 min-h-[44px] bg-charcoal text-warm-gold font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-deep-brown hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex-shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 min-h-[44px] bg-deep-forest text-cream font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-forest-green hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex-shrink-0"
           >
             {t('contact_pak_usop')}
             <ArrowRight className="w-4 h-4" />

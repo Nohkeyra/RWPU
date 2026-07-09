@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import ParticleCanvas from '@/components/ParticleCanvas';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -12,19 +12,16 @@ export default function HeroSection() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.3 });
+      const tl = gsap.timeline({ delay: 0.5 });
 
-      tl.fromTo('.hero-label', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' })
-        .fromTo('.hero-title', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out' }, '-=0.3')
-        .fromTo('.hero-tagline', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5')
-        .fromTo('.hero-buttons', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.3')
-        .fromTo('.hero-scroll', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.1');
+      tl.fromTo('.hero-label', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' })
+        .fromTo('.hero-title', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out' }, '-=0.5')
+        .fromTo('.hero-tagline', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+        .fromTo('.hero-cta', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.4')
+        .fromTo('.hero-scroll', { opacity: 0 }, { opacity: 1, duration: 0.6 }, '-=0.2');
     }, contentRef);
 
-    const onScroll = () => {
-      if (window.scrollY > 50) setScrollStarted(true);
-      else setScrollStarted(false);
-    };
+    const onScroll = () => setScrollStarted(window.scrollY > 50);
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
@@ -34,70 +31,62 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[100dvh] overflow-hidden bg-charcoal">
-      {/* Particle Canvas */}
+    <section className="relative w-full min-h-[100dvh] overflow-hidden bg-deep-forest">
       <ParticleCanvas />
-
-      {/* Gradient Overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(26,24,22,0.3) 0%, rgba(26,24,22,0.8) 100%)',
-          zIndex: 1,
-        }}
-      />
+      
+      {/* Gradient Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-deep-forest/50 via-transparent to-deep-forest pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-deep-forest/30 via-transparent to-deep-forest/30 pointer-events-none" />
 
       {/* Content */}
-      <div ref={contentRef} className="relative flex flex-col items-center justify-center min-h-[100dvh] px-6 text-center" style={{ zIndex: 2 }}>
-        <div className="max-w-[900px] pt-[72px]">
-          {/* Section Label */}
-          <div className="hero-label flex items-center justify-center gap-3 mb-6">
-            <span className="w-2 h-2 rounded-full bg-warm-gold" />
-            <span className="font-body font-medium text-xs uppercase tracking-[0.15em] text-warm-gold">
-              Est. 1986
+      <div ref={contentRef} className="relative flex flex-col items-center justify-center min-h-[100dvh] px-6 text-center">
+        <div className="max-w-[800px]">
+          {/* Label */}
+          <div className="hero-label inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-moss/10 border border-moss/20">
+            <span className="w-2 h-2 rounded-full bg-moss animate-pulse" />
+            <span className="font-body font-medium text-xs uppercase tracking-[0.2em] text-moss">
+              Est. 1986 • Putrajaya
             </span>
           </div>
 
-          {/* Hero Title */}
-          <h1 className="hero-title font-display font-bold text-cream leading-[1.05] tracking-[-0.02em] text-[44px] md:text-[80px]">
+          {/* Title */}
+          <h1 className="hero-title font-display font-bold text-cream leading-[0.95] tracking-[-0.02em] text-[48px] md:text-[88px] lg:text-[104px]">
             Restoran
             <br />
-            Wawasan
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-moss via-sage to-honey">
+              Wawasan
+            </span>
           </h1>
 
           {/* Tagline */}
-          <p className="hero-tagline font-['Montserrat',sans-serif] font-light uppercase tracking-[0.15em] text-[rgba(255,255,255,0.75)] text-[0.85rem] leading-relaxed max-w-[560px] mx-auto mt-6">
+          <p className="hero-tagline font-body font-light text-cream/60 text-lg md:text-xl leading-relaxed max-w-[500px] mx-auto mt-8">
             {t('hero_tagline')}
           </p>
 
-          {/* CTA Buttons */}
-          <div className="hero-buttons flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mt-10 w-full max-w-sm sm:max-w-none mx-auto">
+          {/* CTAs */}
+          <div className="hero-cta flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
             <Link
               to="/order"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-warm-gold text-charcoal font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-[#E0BC74] hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] shadow-[0_4px_20px_rgba(212,168,83,0.3)]"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-moss text-cream rounded-xl font-medium text-sm hover:bg-fern transition-all duration-300 hover:shadow-[0_8px_30px_rgba(74,124,89,0.4)] hover:-translate-y-0.5"
             >
               {t('order_now')}
-              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
               href="#menu"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 border border-warm-gold/80 text-warm-gold font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-warm-gold/5 hover:border-warm-gold transition-all duration-300"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 border border-cream/20 text-cream rounded-xl font-medium text-sm hover:bg-cream/5 hover:border-cream/30 transition-all duration-300"
             >
               {t('view_our_menu')}
-              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
             </a>
           </div>
         </div>
 
         {/* Scroll Indicator */}
-        <div
-          className={`hero-scroll absolute bottom-10 left-1/2 -translate-x-1/2 transition-opacity duration-300 ${scrollStarted ? 'opacity-0' : 'opacity-100'}`}
-        >
-          <ChevronDown className="w-6 h-6 text-cream/40 animate-bounce-down" />
+        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 transition-all duration-500 ${scrollStarted ? 'opacity-0 translate-y-4' : 'opacity-100'}`}>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-cream/40">Scroll</span>
+            <ChevronDown className="w-5 h-5 text-cream/40 animate-bounce" />
+          </div>
         </div>
       </div>
     </section>
