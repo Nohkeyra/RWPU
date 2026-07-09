@@ -8,8 +8,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-cream placeholder:text-stone/60 selection:bg-moss/30 selection:text-cream",
-        "bg-forest-green/50 border-cream/10 text-cream",
+        "file:text-cream placeholder:text-stone/50 selection:bg-moss/30 selection:text-cream",
+        "bg-deep-forest/70 border-cream/15 text-cream focus:border-moss/50 focus:ring-2 focus:ring-moss/20",
         "h-11 w-full min-w-0 rounded-lg border px-4 py-2 text-sm",
         "shadow-sm transition-all duration-300",
         "outline-none",

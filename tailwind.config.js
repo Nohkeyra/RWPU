@@ -71,10 +71,36 @@ module.exports = {
           "0%, 100%": { boxShadow: "0 0 20px rgba(74, 124, 89, 0.2)" },
           "50%": { boxShadow: "0 0 30px rgba(74, 124, 89, 0.4)" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "honey-drip": {
+          "0%": { transform: "scaleY(0)", transformOrigin: "top" },
+          "50%": { transform: "scaleY(1)", transformOrigin: "top" },
+          "100%": { transform: "scaleY(1)", transformOrigin: "bottom" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "leaf-sway": {
+          "0%, 100%": { transform: "rotate(-5deg)" },
+          "50%": { transform: "rotate(5deg)" },
+        },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
       },
       animation: {
         "bounce-down": "bounce-down 1.5s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
+        "honey-drip": "honey-drip 0.4s ease-out forwards",
+        "float": "float 3s ease-in-out infinite",
+        "leaf-sway": "leaf-sway 2s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease infinite",
       },
     },
   },

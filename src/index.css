@@ -70,11 +70,54 @@
 @layer components {
   .section-padding { @apply py-20 md:py-[120px]; }
   .content-container { @apply max-w-[1200px] mx-auto px-6 md:px-12; }
+  
   .nature-card {
     @apply bg-forest-green rounded-2xl border border-cream/10 shadow-[0_4px_40px_rgba(0,0,0,0.25)] overflow-hidden;
   }
+  
   .moss-glow { @apply animate-glow-pulse; }
+  
   .gradient-text {
     @apply bg-gradient-to-r from-sage via-honey to-amber bg-clip-text text-transparent;
+  }
+
+  /* Paper texture overlay */
+  .paper-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* Shimmer effect for buttons */
+  .shimmer-btn {
+    background: linear-gradient(90deg, var(--color-moss) 25%, var(--color-fern) 50%, var(--color-moss) 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  /* Honey drip container */
+  .honey-drip-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .honey-drip-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--color-honey), transparent);
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  
+  .honey-drip-container:active::after {
+    animation: honey-drip 0.4s ease-out forwards;
+  }
+
+  /* Organic flowing shape */
+  .organic-blob {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    animation: gradient-shift 8s ease infinite;
   }
 }

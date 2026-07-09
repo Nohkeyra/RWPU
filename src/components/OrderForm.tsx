@@ -948,7 +948,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <button
                     type="button"
                     onClick={() => setAuthModalOpen(true)}
-                    className="text-[#C5A059] font-bold hover:underline"
+                    className="text-moss hover:text-sage transition-colors cursor-pointer"
                   >
                     Click here to login
                   </button>{' '}
@@ -1340,13 +1340,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
             {debouncedFormData.quantity ? `${debouncedFormData.quantity} Pax / ` : ''}{debouncedFormData.meals.length} Meal(s)
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => setShowMobileDraft(true)}
-          className="px-4 py-2 bg-[#C5A059] text-[#0B0B0C] rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#E2C792] active:scale-[0.97] transition-all duration-200 shadow-lg shadow-[#C5A059]/10"
+          className="bg-moss text-cream hover:bg-fern"
         >
           {t('lihat_draf', 'Lihat Draf')}
-        </button>
+        </Button>
       </div>
 
       {/* Mobile Bottom Slide-up Sheet Modal */}

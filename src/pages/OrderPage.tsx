@@ -47,14 +47,14 @@ export default function OrderPage() {
             <h1 className="text-4xl md:text-5xl font-display font-bold text-cream mb-4 tracking-tight">
               {t('catering_order')}
             </h1>
-            <p className="text-stone text-lg max-w-xl mx-auto leading-relaxed">
+            <p className="text-cream/70 text-lg max-w-xl mx-auto leading-relaxed">
               {t('order_subtitle')}
             </p>
           </div>
 
-          <div className="nature-card">
+          <div className="nature-card shadow-[inset_0_2px_20px_rgba(0,0,0,0.2)]">
             <div className="h-1.5 bg-gradient-to-r from-moss via-fern to-honey/80" />
-            <div className="p-6 md:p-10">
+            <div className="p-6 md:p-10 bg-gradient-to-b from-forest-green/30 to-transparent">
               <ErrorBoundary fallbackTitle="Catering Form Error">
                 <OrderForm initialData={initialData} />
               </ErrorBoundary>

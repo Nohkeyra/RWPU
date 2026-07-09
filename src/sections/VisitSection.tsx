@@ -1,4 +1,4 @@
-import { MapPin, Clock, Phone, Mail, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, Phone, ArrowRight, Navigation } from 'lucide-react';
 import SectionLabel from '@/components/SectionLabel';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
@@ -9,7 +9,7 @@ export default function VisitSection() {
   const HOURS = [
     { day: t('mon_thu'), time: t('time_730_400') },
     { day: t('friday'), time: t('time_730_400'), note: t('rojak_note') },
-    { day: t('saturday'), time: t('time_730_400') },
+    { day: t('saturday'), time: t('closed') },
     { day: t('sunday'), time: t('closed') },
   ];
 
@@ -17,12 +17,6 @@ export default function VisitSection() {
     animation: 'fade-up',
     childSelector: '.visit-animate',
     stagger: 0.15,
-  });
-
-  const imageRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'slide-left',
-    x: 40,
-    duration: 1.0,
   });
 
   const cardsRef = useScrollTrigger<HTMLDivElement>({
@@ -40,14 +34,10 @@ export default function VisitSection() {
   });
 
   return (
-    <section id="visit" className="section-padding bg-deep-forest relative overflow-hidden">
-      {/* Subtle radial gradient */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(15,31,23,0.5) 0%, rgba(15,31,23,0) 70%)',
-        }}
-      />
+    <section id="visit" className="section-padding bg-deep-forest relative overflow-hidden paper-texture">
+      {/* Organic background blobs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-moss/5 organic-blob blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-honey/5 organic-blob blur-3xl pointer-events-none" style={{ animationDelay: '-4s' }} />
 
       <div className="content-container relative">
         {/* Header */}
@@ -55,172 +45,148 @@ export default function VisitSection() {
           <div className="visit-animate">
             <SectionLabel text={t('visit_us')} light />
           </div>
-          <h2 className="visit-animate font-display font-semibold text-[32px] md:text-[48px] text-cream leading-[1.1] mb-4">
+          <h2 className="visit-animate font-display font-semibold text-[36px] md:text-[52px] text-cream leading-[1.05] mb-4">
             {t('come_dine')}
           </h2>
-          <p className="visit-animate font-body text-lg text-cream/60">
+          <p className="visit-animate font-body text-lg text-cream/50 max-w-[500px]">
             {t('visit_subtitle')}
           </p>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-          {/* Left: Location Visual */}
-          <div ref={imageRef} className="relative">
-            <div className="relative rounded-xl overflow-hidden w-full h-full min-h-[300px] md:min-h-[400px]">
+        {/* Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Left - Image & Quick Info */}
+          <div className="lg:col-span-5">
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] mb-6 group">
               <img
                 src="/assets/restoran-exterior.jpg"
-                alt="Come dine with us at Restoran Wawasan"
+                alt="Restoran Wawasan"
                 loading="lazy"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover absolute inset-0"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-forest/80 via-transparent to-transparent" />
+              
+              {/* Floating Info with glass effect */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="bg-deep-forest/80 backdrop-blur-xl rounded-2xl p-5 border border-cream/10 shadow-xl group-hover:border-moss/20 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-moss/20 flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-moss" />
+                    </div>
+                    <div>
+                      <p className="text-cream font-medium">Menara PjH, Putrajaya</p>
+                      <p className="text-cream/50 text-sm">Level B3, Unit 3</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions with hover lift */}
+            <div className="flex gap-3">
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Menara+PjH+Putrajaya"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-moss text-cream rounded-xl font-medium text-sm hover:bg-fern hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(74,124,89,0.3)] transition-all"
+              >
+                <Navigation className="w-4 h-4" />
+                Directions
+              </a>
+              <a
+                href="tel:+60178582642"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-forest-green text-cream rounded-xl font-medium text-sm hover:bg-light-forest hover:-translate-y-0.5 transition-all border border-cream/10"
+              >
+                <Phone className="w-4 h-4" />
+                Call Now
+              </a>
             </div>
           </div>
 
-          {/* Right: Info Cards */}
-          <div ref={cardsRef} className="flex flex-col gap-6">
-            {/* Address Card */}
-            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
-              <div className="flex items-start gap-4">
-                <MapPin className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-3">{t('address')}</h3>
-                  <p className="font-body font-light text-base text-cream leading-relaxed">
-                    <strong>Unit 3, Level B3, Menara PjH (Putrajaya Holdings),</strong><br />
-                    Jalan P2A, Presint 2,<br />
-                    62100 Putrajaya
-                  </p>
-                  <p className="font-body font-light text-[13px] text-cream/50 mt-3">
-                    {t('location_detail')}
-                  </p>
-                  <a
-                    href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Menara+PjH+Putrajaya"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.1em] text-moss hover:underline mt-4 group py-2 px-3 -mx-3 min-h-[44px]"
-                  >
-                    <MapPin className="w-3.5 h-3.5 text-moss" />
-                    {t('get_directions')}
-                  </a>
+          {/* Right - Detailed Cards */}
+          <div ref={cardsRef} className="lg:col-span-7 flex flex-col gap-6">
+            {/* Hours */}
+            <div className="info-card bg-forest-green rounded-2xl p-6 md:p-8 border border-cream/5 hover:border-moss/20 transition-colors">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-moss/10 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-moss" />
                 </div>
+                <h3 className="font-display font-medium text-cream text-xl">Opening Hours</h3>
+              </div>
+              <div className="space-y-3">
+                {HOURS.map((h) => (
+                  <div key={h.day} className="flex justify-between items-center py-3 border-b border-cream/5 last:border-0 group">
+                    <span className="text-cream/60 group-hover:text-cream transition-colors">{h.day}</span>
+                    <div className="text-right">
+                      <span className={`font-medium ${h.time === 'Closed' ? 'text-burnt-orange' : 'text-cream'}`}>
+                        {h.time}
+                      </span>
+                      {h.note && <span className="block text-[10px] text-honey/70">*{h.note}</span>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Hours Card */}
-            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
-              <div className="flex items-start gap-4">
-                <Clock className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-4">{t('hours')}</h3>
-                  <div className="space-y-3">
-                    {HOURS.map((h) => (
-                      <div key={h.day} className="flex justify-between items-baseline border-b-[0.5px] border-white/5 pb-2 last:border-0 last:pb-0">
-                        <span className="font-body font-light text-[15px] text-cream">{h.day}</span>
-                        <div className="text-right">
-                          <span className="font-body font-light text-[14px] text-cream/90">{h.time}</span>
-                          {h.note && (
-                            <span className="block font-body font-light text-xs text-moss/80 italic mt-0.5">
-                              *{h.note}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {/* Contact */}
+            <div className="info-card bg-forest-green rounded-2xl p-6 md:p-8 border border-cream/5 hover:border-moss/20 transition-colors">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-moss/10 flex items-center justify-center">
+                  <Phone className="w-6 h-6 text-moss" />
                 </div>
+                <h3 className="font-display font-medium text-cream text-xl">Contact</h3>
               </div>
-            </div>
-
-            {/* Contact Card */}
-            <div className="info-card bg-forest-green rounded-xl border border-moss/15 p-6 md:p-8">
-              <div className="flex items-start gap-4">
-                <Phone className="w-6 h-6 text-moss flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-['Montserrat',sans-serif] font-medium text-[11px] uppercase tracking-[0.15em] text-sage mb-4">{t('contact_us')}</h3>
-                  
-                  <div className="space-y-4">
-                    <a
-                      href="tel:+60178582642"
-                      className="flex items-center gap-3 text-[15px] text-cream hover:text-moss transition-colors duration-300 group"
-                    >
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-moss/10 text-moss text-[10px] font-['Montserrat',sans-serif] font-medium">
-                        C
-                      </span>
-                      <span className="font-body font-light">
-                        {t('call_label')}{' '}
-                        <strong className="text-cream group-hover:text-moss transition-colors font-medium">+6017-8582642</strong> <span className="opacity-60 text-sm">(Pak Usop)</span>
-                      </span>
-                    </a>
-                    
-                    <a
-                      href="https://wa.me/60173157721"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-[15px] text-cream hover:text-moss transition-colors duration-300 group"
-                    >
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-['Montserrat',sans-serif] font-medium">
-                        W
-                      </span>
-                      <span className="font-body font-light">
-                        {t('whatsapp_label')}{' '}
-                        <strong className="text-cream group-hover:text-moss transition-colors font-medium">+6017-3157721</strong> <span className="opacity-60 text-sm">(Mad)</span>
-                      </span>
-                    </a>
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-5 text-cream/60">
-                    <Mail className="w-4 h-4 text-moss" />
-                    <span className="font-body font-light text-[14px]">wawasan.orders@gmail.com</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                    <a
-                      href="tel:+60178582642"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] bg-moss text-cream font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-fern hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-                    >
-                      {t('call_now')}
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                    <a
-                      href="https://wa.me/60173157721"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] border-[0.5px] border-moss/60 text-moss font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-moss/10 hover:border-moss hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-                    >
-                      WhatsApp
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                  </div>
+              <div className="space-y-4">
+                <a href="tel:+60178582642" className="flex items-center gap-4 text-cream hover:text-moss transition-colors group">
+                  <span className="text-sm text-cream/40 w-16 group-hover:text-moss transition-colors">Call</span>
+                  <span className="font-medium">+6017-8582642</span>
+                  <span className="text-xs text-cream/30">(Pak Usop)</span>
+                </a>
+                <a href="https://wa.me/60173157721" className="flex items-center gap-4 text-cream hover:text-moss transition-colors group">
+                  <span className="text-sm text-cream/40 w-16 group-hover:text-moss transition-colors">WhatsApp</span>
+                  <span className="font-medium">+6017-3157721</span>
+                  <span className="text-xs text-cream/30">(Mad)</span>
+                </a>
+                <div className="flex items-center gap-4 text-cream/40">
+                  <span className="text-sm w-16">Email</span>
+                  <span>wawasan.orders@gmail.com</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom CTA Banner */}
+        {/* Bottom CTA with organic shape */}
         <div
           ref={ctaRef}
-          className="mt-16 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6"
-          style={{
-            background: 'linear-gradient(135deg, #4A7C59 0%, #B85C38 100%)',
-          }}
+          className="mt-16 relative rounded-3xl p-8 md:p-12 overflow-hidden group"
         >
-          <div>
-            <h3 className="font-display font-medium text-[24px] md:text-[28px] text-cream">
-              {t('cta_title')}
-            </h3>
-            <p className="font-body text-base text-cream/80 mt-2">
-              {t('cta_subtitle')}
-            </p>
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-moss via-fern to-honey animate-gradient-shift bg-[length:200%_auto]" />
+          
+          {/* Pattern overlay */}
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v4h-4v-4h4zm4 4v4h-4v-4h4zM6 34v4H2v-4h4zm4 4v4H6v-4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
+          
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="font-display font-semibold text-2xl md:text-3xl text-cream">
+                {t('cta_title')}
+              </h3>
+              <p className="text-cream/70 mt-2">
+                {t('cta_subtitle')}
+              </p>
+            </div>
+            <a
+              href="tel:+60178582642"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-deep-forest text-cream rounded-xl font-medium hover:bg-forest-green hover:-translate-y-0.5 transition-all shadow-lg group-hover:shadow-xl"
+            >
+              {t('contact_pak_usop')}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </a>
           </div>
-          <a
-            href="tel:+60178582642"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 min-h-[44px] bg-deep-forest text-cream font-['Montserrat',sans-serif] font-medium text-[12px] uppercase tracking-[0.15em] hover:bg-forest-green hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex-shrink-0"
-          >
-            {t('contact_pak_usop')}
-            <ArrowRight className="w-4 h-4" />
-          </a>
         </div>
       </div>
     </section>
