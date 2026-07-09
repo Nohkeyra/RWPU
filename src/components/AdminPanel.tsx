@@ -61,7 +61,7 @@ interface Order {
   meals: string[];
   menu: string;
   notes: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'billed' | 'cancelled' | 'rejected';
   prices: Record<string, number>;
   totalAmount: number;
   lang: 'en' | 'bm';
@@ -541,9 +541,11 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'billed':
-        return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Billed</Badge>;
+        return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{t('billed')}</Badge>;
       case 'approved':
         return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('approved')}</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">{t('cancelled')}</Badge>;
       case 'rejected':
         return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{t('rejected')}</Badge>;
       default:

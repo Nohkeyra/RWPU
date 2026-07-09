@@ -72,6 +72,8 @@ const translations: Translation = {
   status: { en: 'Status', bm: 'Status' },
   pending: { en: 'Pending', bm: 'Menunggu' },
   approved: { en: 'Approved', bm: 'Diluluskan' },
+  billed: { en: 'Billed', bm: 'Diinvois' },
+  cancelled: { en: 'Cancelled', bm: 'Dibatalkan' },
   rejected: { en: 'Rejected', bm: 'Ditolak' },
   generate_invoice: { en: 'Generate Invoice', bm: 'Jana Invois' },
   invoice_generated: { en: 'Invoice Generated', bm: 'Invois Dijana' },

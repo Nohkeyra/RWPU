@@ -7,13 +7,17 @@ service cloud.firestore {
       allow create: if 
         // ID bounds to prevent traversal/poisoning
         orderId.size() >= 5 && orderId.size() <= 50 &&
-        
-        // Status must be pending on creation
-        request.resource.data.status == 'pending' &&
-        
-        // totalAmount must be 0 on creation
+
+        // Status on creation. In this business flow the customer is vetted over
+        // WhatsApp BEFORE submitting, so a new order is created as 'approved'.
+        // 'pending' remains valid but means "awaiting the admin's billed invoice
+        // total" on the customer side — NOT awaiting approval.
+        request.resource.data.status in ['approved', 'pending'] &&
+
+        // At creation the admin has not entered the billed total yet, so
+        // totalAmount must still be 0 (unbilled).
         request.resource.data.totalAmount == 0 &&
-        
+
         // Timestamp must be exactly server request time
         request.resource.data.createdAt == request.time &&
         
