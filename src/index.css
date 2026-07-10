@@ -121,3 +121,45 @@
     animation: gradient-shift 8s ease infinite;
   }
 }
+
+@layer base {
+  /* Touch targets for mobile */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better focus visible for keyboard navigation */
+  *:focus-visible {
+    outline: none;
+    ring: 2px;
+    ring-color: rgba(74, 124, 89, 0.5);
+    ring-offset: 2px;
+    ring-offset-color: #0F1F17;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on buttons */
+  button, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-success-pop {
+    animation: success-pop 0.5s ease-out;
+  }
+
+  @keyframes success-pop {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}

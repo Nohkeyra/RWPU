@@ -144,7 +144,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       toast({
         title: t('Authentication Failed', 'Ralat Autentikasi'),
         description: errMsg,
-        variant: 'error'
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);

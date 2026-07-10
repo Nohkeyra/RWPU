@@ -88,6 +88,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

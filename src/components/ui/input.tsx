@@ -13,8 +13,9 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "shadow-sm transition-all duration-300",
         "outline-none",
         "focus-visible:border-moss/40 focus-visible:bg-forest-green focus-visible:shadow-[0_0_0_3px_rgba(74,124,89,0.15)]",
-        "aria-invalid:border-burnt-orange aria-invalid:shadow-[0_0_0_3px_rgba(184,92,56,0.1)]",
+        "aria-invalid:border-burnt-orange aria-invalid:shadow-[0_0_0_3px_rgba(184,92,56,0.15)] aria-invalid:text-cream",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "touch-target", // Mobile touch target
         className
       )}
       {...props}

@@ -101,6 +101,16 @@ module.exports = {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
+        "success-pop": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "50%": { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)", opacity: "1" }
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" }
+        },
       },
       animation: {
         "bounce-down": "bounce-down 1.5s ease-in-out infinite",
@@ -110,6 +120,8 @@ module.exports = {
         "float": "float 3s ease-in-out infinite",
         "leaf-sway": "leaf-sway 2s ease-in-out infinite",
         "gradient-shift": "gradient-shift 3s ease infinite",
+        "success-pop": "success-pop 0.5s ease-out",
+        "shake": "shake 0.3s ease-in-out",
       },
     },
   },

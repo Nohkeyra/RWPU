@@ -17,6 +17,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead

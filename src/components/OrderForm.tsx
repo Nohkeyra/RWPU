@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Input } from '@/components/ui/input';
+import { FormError } from '@/components/ui/FormError';
+import { SuccessState } from '@/components/ui/SuccessState';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -508,7 +510,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         date: parsedInitialDate,
         time: initialData.time || '12:00',
         location: initialData.location || '',
-        quantity: (initialData.quantity !== undefined && initialData.quantity !== null && initialData.quantity !== '' ? Number(initialData.quantity) : '') as number | "",
+        quantity: initialData.quantity !== undefined ? Number(initialData.quantity) : '',
         meals: Array.isArray(initialData.meals) ? initialData.meals : ['breakfast'],
         menu: initialData.menu || 'Set box Makanan & Minuman',
         notes: initialData.notes || '',
@@ -849,16 +851,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
   if (isSuccess) {
     return (
-      <div className="py-12 text-center max-w-lg mx-auto bg-white p-8 rounded-2xl border border-charcoal/10 shadow-sm">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle className="w-10 h-10 text-green-600" />
-        </div>
-        <h3 className="text-2xl font-display font-bold text-charcoal mb-2">
-          {t('success')}!
-        </h3>
-        <p className="text-charcoal/70 mb-6 font-medium">
-          {t('order_success')}
-        </p>
+      <div className="py-12 max-w-lg mx-auto">
+        <SuccessState 
+          title={t('success') + '!'} 
+          subtitle={t('order_success')}
+          showConfetti={true}
+          className="mb-6"
+        />
         
         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-left space-y-3">
           <p className="text-xs text-charcoal/40 font-bold uppercase tracking-wider">
@@ -891,12 +890,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
             )}
 
             {emailStatus === 'failed' && (
-              <p className="flex items-start gap-2 text-red-600">
-                <span className="text-red-500 font-bold">⚠️</span>
-                <span>
-                  {t('email_failed').replace('{email}', formData.email)}
-                </span>
-              </p>
+              <FormError message={t('email_failed').replace('{email}', formData.email)} />
             )}
           </div>
         </div>
@@ -1347,9 +1341,9 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         <Button
           type="button"
           onClick={() => setShowMobileDraft(true)}
-          className="bg-moss text-cream hover:bg-fern"
+          variant="moss"
         >
-          {t('lihat_draf')}
+          {t('lihat_draf', 'Lihat Draf')}
         </Button>
       </div>
 
@@ -1376,8 +1370,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               {/* Header bar of mobile draft */}
               <div className="sticky top-0 bg-[#141417] border-b border-[#222226] p-4 flex items-center justify-between text-[#F4F4F6] z-10">
                 <div>
-                  <h3 className="font-display font-bold text-sm text-[#C5A059]">{t('live_preview')}</h3>
-                  <p className="text-[10px] text-[#8E8E93]">{t('preview_desc')}</p>
+                  <h3 className="font-display font-bold text-sm text-[#C5A059]">{t('live_preview', 'Live Preview')}</h3>
+                  <p className="text-[10px] text-[#8E8E93]">{t('preview_desc', 'Draf Invois Semasa / Current Invoice Draft')}</p>
                 </div>
                 <button
                   type="button"
