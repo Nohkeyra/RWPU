@@ -17,6 +17,15 @@ module.exports = {
         'walnut': '#5C4033',
         'cream': '#F5F0E8',
         'stone': '#C4B8A8',
+        // Backward-compatible aliases — older components (AdminPanel.tsx,
+        // OrderForm.tsx, AdminPage.tsx) still reference these class names.
+        // Mapped to the closest equivalent in the new nature palette so
+        // those 58+ existing references keep working without editing every
+        // file. Semantically: charcoal/deep-brown -> deep-forest (main dark
+        // background), warm-gold -> sage (accent/highlight color).
+        'charcoal': '#0F1F17',
+        'deep-brown': '#0F1F17',
+        'warm-gold': '#87A878',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
