@@ -54,6 +54,7 @@ export default function Header() {
             ? 'bg-deep-forest/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
             : 'bg-transparent'
         }`}
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 h-[72px] flex items-center justify-between">
           {/* Logo */}

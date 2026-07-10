@@ -51,10 +51,14 @@ export default function MobileMenu({ isOpen, onClose, links }: MobileMenuProps) 
       ref={overlayRef}
       className="fixed inset-0 z-[2000] bg-charcoal/98 backdrop-blur-xl opacity-0 pointer-events-none md:hidden"
     >
-      <div className="flex flex-col items-center justify-between h-full py-16 px-6 overflow-y-auto">
+      <div 
+        className="flex flex-col items-center justify-between h-full py-16 px-6 overflow-y-auto"
+        style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
+      >
           <button
             onClick={onClose}
-            className="absolute top-5 right-6 text-cream p-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.98]"
+            className="absolute right-6 text-cream p-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.98]"
+            style={{ top: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}
             aria-label="Close menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
