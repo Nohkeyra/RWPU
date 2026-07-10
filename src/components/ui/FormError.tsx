@@ -8,7 +8,7 @@ interface FormErrorProps {
 
 export function FormError({ message, className }: FormErrorProps) {
   return (
-    <p className={cn("text-burnt-orange text-xs mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1", className)}>
+    <p className={cn("text-tomato-burst text-xs mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1", className)}>
       <AlertTriangle className="w-3 h-3 shrink-0" />
       {message}
     </p>

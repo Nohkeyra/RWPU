@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, AlertTriangle, XCircle, Leaf, X } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Leaf, X, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -82,24 +82,24 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
   const { id, title, description, variant = 'info' } = toast;
 
   const icons = {
-    success: <CheckCircle2 className="w-5 h-5 text-fern shrink-0" />,
-    error: <XCircle className="w-5 h-5 text-burnt-orange shrink-0" />,
-    warning: <AlertTriangle className="w-5 h-5 text-amber shrink-0" />,
-    info: <Leaf className="w-5 h-5 text-sage shrink-0" />,
+    success: <CheckCircle2 className="w-5 h-5 text-kiwi shrink-0" />,
+    error: <XCircle className="w-5 h-5 text-tomato-burst shrink-0" />,
+    warning: <AlertTriangle className="w-5 h-5 text-sunshine shrink-0" />,
+    info: <Sun className="w-5 h-5 text-sunshine shrink-0" />,
   };
 
   const bgStyles = {
-    success: 'bg-forest-green border-fern/20 shadow-fern/5',
-    error: 'bg-forest-green border-burnt-orange/20 shadow-burnt-orange/5',
-    warning: 'bg-forest-green border-amber/20 shadow-amber/5',
-    info: 'bg-forest-green border-sage/20 shadow-sage/5',
+    success: 'bg-forest-green border-kiwi/20 shadow-kiwi/5',
+    error: 'bg-forest-green border-tomato-burst/20 shadow-tomato-burst/5',
+    warning: 'bg-forest-green border-sunshine/20 shadow-sunshine/5',
+    info: 'bg-forest-green border-sunshine/20 shadow-sunshine/5',
   };
 
   const stripeColors = {
-    success: 'bg-fern',
-    error: 'bg-burnt-orange',
-    warning: 'bg-amber',
-    info: 'bg-sage',
+    success: 'bg-kiwi',
+    error: 'bg-tomato-burst',
+    warning: 'bg-sunshine',
+    info: 'bg-sunshine',
   };
 
   return (

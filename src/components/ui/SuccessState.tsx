@@ -22,7 +22,7 @@ export function SuccessState({ title, subtitle, className, showConfetti = false 
         animate={{ scale: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
       >
-        <CheckCircle2 className="w-12 h-12 text-fern mx-auto mb-3" />
+        <CheckCircle2 className="w-12 h-12 text-kiwi mx-auto mb-3" />
       </motion.div>
       
       <h2 className="font-display text-2xl text-cream mb-2">{title}</h2>
@@ -35,7 +35,7 @@ export function SuccessState({ title, subtitle, className, showConfetti = false 
           transition={{ delay: 0.4 }}
           className="mt-4"
         >
-          <PartyPopper className="w-6 h-6 text-honey mx-auto" />
+          <PartyPopper className="w-6 h-6 text-sunshine mx-auto" />
         </motion.div>
       )}
     </motion.div>
