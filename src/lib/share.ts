@@ -45,7 +45,7 @@ export const shareOrderForm = async (
   }
 
   // Last resort: copy to clipboard
-  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    await navigator.clipboard.writeText(url);
+  if (typeof navigator !== 'undefined' && (navigator as any).clipboard) {
+    await (navigator as any).clipboard.writeText(url);
   }
 };

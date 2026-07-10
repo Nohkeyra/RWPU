@@ -53,7 +53,9 @@ const firebaseConfig = isWorkspace ? sandboxConfig : prodConfig;
 const app = initializeApp(firebaseConfig);
 
 // Export Firestore with active database instance ID if specified
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId 
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 
 // Auth persistence: keep customers logged in across app restarts and after they
 // swipe the app out of the recent-tasks list. We prefer indexedDBLocalPersistence,

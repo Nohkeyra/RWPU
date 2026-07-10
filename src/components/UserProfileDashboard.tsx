@@ -56,6 +56,7 @@ interface OrderRecord {
   menu: string;
   notes: string;
   status?: string;
+  invoiceNo?: string;
   createdAt?: { seconds: number; nanoseconds: number };
 }
 
@@ -203,7 +204,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
       toast({
         title: t('Update Failed', 'Kemaskini Gagal'),
         description: t('Failed to update your profile.', 'Gagal mengemaskini profil anda.'),
-        variant: 'destructive'
+        variant: 'error'
       });
     } finally {
       setIsSaving(false);
@@ -229,7 +230,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
       toast({
         title: t('Downloading PDF...', 'Memuat Turun PDF...'),
         description: t('Generating your official preliminary document.', 'Menjana dokumen awal rasmi anda.'),
-        variant: 'default'
+        variant: 'info'
       });
 
       // Standardize date and initial values
@@ -245,7 +246,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
       toast({
         title: t('Download Failed', 'Muat Turun Gagal'),
         description: t('Could not generate PDF document.', 'Gagal menjana dokumen PDF.'),
-        variant: 'destructive'
+        variant: 'error'
       });
     }
   };
@@ -534,8 +535,8 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
                             {order.menu || 'Set box katering'} ({order.quantity} Pax)
                           </span>
                         </div>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
-                          {getStatusText(order.status)}
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${getStatusColor(order.status || '')}`}>
+                          {getStatusText(order.status || '')}
                         </span>
                       </div>
 

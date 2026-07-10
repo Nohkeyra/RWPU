@@ -1,5 +1,4 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
@@ -8,8 +7,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-cream placeholder:text-stone/50 selection:bg-moss/30 selection:text-cream",
-        "bg-deep-forest/70 border-cream/15 text-cream focus:border-moss/50 focus:ring-2 focus:ring-moss/20",
+        "file:text-cream placeholder:text-stone/60 selection:bg-moss/30 selection:text-cream",
+        "bg-light-forest/40 border-cream/15 text-cream",
         "h-11 w-full min-w-0 rounded-lg border px-4 py-2 text-sm",
         "shadow-sm transition-all duration-300",
         "outline-none",

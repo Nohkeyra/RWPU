@@ -508,7 +508,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         date: parsedInitialDate,
         time: initialData.time || '12:00',
         location: initialData.location || '',
-        quantity: initialData.quantity !== undefined ? Number(initialData.quantity) : '',
+        quantity: (initialData.quantity !== undefined && initialData.quantity !== null && initialData.quantity !== '' ? Number(initialData.quantity) : '') as number | "",
         meals: Array.isArray(initialData.meals) ? initialData.meals : ['breakfast'],
         menu: initialData.menu || 'Set box Makanan & Minuman',
         notes: initialData.notes || '',
@@ -949,7 +949,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <button
                     type="button"
                     onClick={() => setAuthModalOpen(true)}
-                    className="text-moss hover:text-sage transition-colors cursor-pointer"
+                    className="text-moss hover:text-sage hover:underline transition-colors cursor-pointer"
                   >
                     Click here to login
                   </button>{' '}
@@ -1349,7 +1349,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
           onClick={() => setShowMobileDraft(true)}
           className="bg-moss text-cream hover:bg-fern"
         >
-          {t('lihat_draf', 'Lihat Draf')}
+          {t('lihat_draf')}
         </Button>
       </div>
 
@@ -1376,8 +1376,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               {/* Header bar of mobile draft */}
               <div className="sticky top-0 bg-[#141417] border-b border-[#222226] p-4 flex items-center justify-between text-[#F4F4F6] z-10">
                 <div>
-                  <h3 className="font-display font-bold text-sm text-[#C5A059]">{t('live_preview', 'Live Preview')}</h3>
-                  <p className="text-[10px] text-[#8E8E93]">{t('preview_desc', 'Draf Invois Semasa / Current Invoice Draft')}</p>
+                  <h3 className="font-display font-bold text-sm text-[#C5A059]">{t('live_preview')}</h3>
+                  <p className="text-[10px] text-[#8E8E93]">{t('preview_desc')}</p>
                 </div>
                 <button
                   type="button"
