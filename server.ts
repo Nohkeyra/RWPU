@@ -766,6 +766,57 @@ async function startServer() {
     }
   });
 
+  // Diagnostics endpoint: verifies SMTP is configured and can send a test email.
+  app.post("/api/diagnostics/email", async (req, res) => {
+    try {
+      const { password, testEmail } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!password || password !== adminPassword) {
+        return res.status(401).json({ error: "Unauthorized: Invalid password" });
+      }
+
+      if (!testEmail) {
+        return res.status(400).json({ error: "Missing testEmail" });
+      }
+
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        return res.status(500).json({ 
+          ok: false, 
+          error: "SMTP is not fully configured (missing SMTP_USER or SMTP_PASS environment variables)." 
+        });
+      }
+
+      const info = await transporter.sendMail({
+        from: `"Restoran Wawasan (Test)" <${process.env.SMTP_USER}>`,
+        to: testEmail,
+        subject: "Wawasan Pak Usop Catering App - SMTP Test Email",
+        text: `Hello,\n\nThis is a diagnostics test email sent from the Restoran Wawasan Pak Usop Admin Panel.\nIf you received this, your SMTP configuration is 100% WORKING!\n\nSent at: ${new Date().toLocaleString()}\n\nBest regards,\nRestoran Wawasan Pak Usop Server`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: 0 auto; background-color: #f9f9f9;">
+            <h2 style="color: #0f3d2a; margin-top: 0;">Restoran Wawasan Putrajaya</h2>
+            <p style="font-size: 16px; color: #333;">Hello,</p>
+            <p style="font-size: 14px; line-height: 1.5; color: #555;">
+              This is a diagnostics test email sent from the <strong>Restoran Wawasan Pak Usop Catering App</strong> Admin Panel.
+            </p>
+            <div style="background-color: #d1e7dd; color: #0f5132; padding: 12px; border-radius: 4px; font-weight: bold; margin: 15px 0;">
+              ✓ SMTP Configuration is 100% OPERATIONAL!
+            </div>
+            <p style="font-size: 12px; color: #888; margin-top: 25px; border-top: 1px solid #eee; padding-top: 10px;">
+              Sent at: ${new Date().toLocaleString()}<br>
+              Server Time: ${new Date().toISOString()}
+            </p>
+          </div>
+        `
+      });
+
+      res.json({ ok: true, messageId: info.messageId });
+    } catch (err) {
+      console.error("Email diagnostics failed:", err);
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
   // Lightweight endpoint for the Android home-screen widget.
   // Returns only the fields the widget needs (pax, meal, location, menu, date),
   // sorted by event date ascending, limited to the nearest upcoming orders.

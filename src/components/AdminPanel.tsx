@@ -36,7 +36,12 @@ import {
   ArrowLeft,
   Send,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Activity,
+  Wifi,
+  Database,
+  Cpu,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { Link } from 'react-router-dom';
@@ -110,6 +115,170 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     error?: string;
     loading: boolean;
   }>({ ok: false, loading: true });
+
+  const [activeTab, setActiveTab] = useState<'orders' | 'diagnostics'>('orders');
+
+  // Diagnostics states
+  const [diagFirebase, setDiagFirebase] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string; projectId?: string }>({ status: 'idle' });
+  const [diagCalendar, setDiagCalendar] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string; calendarsReturned?: number }>({ status: 'idle' });
+  const [diagEmail, setDiagEmail] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string }>({ status: 'idle' });
+  const [diagPdf, setDiagPdf] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string }>({ status: 'idle' });
+  const [diagNative, setDiagNative] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; details?: Record<string, unknown> }>({ status: 'idle' });
+  
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+
+  const runFirebaseDiag = async () => {
+    setDiagFirebase({ status: 'running' });
+    try {
+      const response = await fetch(getApiUrl('/api/diagnostics/firebase'));
+      if (response.ok) {
+        const data = await response.json();
+        setDiagFirebase({ status: 'pass', projectId: data.projectId });
+      } else {
+        const data = await response.json();
+        setDiagFirebase({ status: 'fail', message: data.error || 'Failed to authenticate/write to Firestore' });
+      }
+    } catch (err: unknown) {
+      setDiagFirebase({ status: 'fail', message: err instanceof Error ? err.message : 'Network connection failed' });
+    }
+  };
+
+  const runCalendarDiag = async () => {
+    setDiagCalendar({ status: 'running' });
+    try {
+      const response = await fetch(getApiUrl('/api/diagnostics/calendar'));
+      if (response.ok) {
+        const data = await response.json();
+        setDiagCalendar({ status: 'pass', calendarsReturned: data.calendarsReturned });
+      } else {
+        const data = await response.json();
+        setDiagCalendar({ status: 'fail', message: data.message || data.error || 'Google Calendar API connection failed' });
+      }
+    } catch (err: unknown) {
+      setDiagCalendar({ status: 'fail', message: err instanceof Error ? err.message : 'Network connection failed' });
+    }
+  };
+
+  const runNativeDiag = async () => {
+    setDiagNative({ status: 'running' });
+    try {
+      const isNative = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      const hasFilesystem = typeof Filesystem !== 'undefined';
+      const hasShare = typeof Share !== 'undefined';
+      
+      setDiagNative({
+        status: 'pass',
+        details: {
+          isNative,
+          platform,
+          hasFilesystem,
+          hasShare,
+          userAgent: navigator.userAgent
+        }
+      });
+    } catch (err: unknown) {
+      setDiagNative({ status: 'fail', details: { error: err instanceof Error ? err.message : String(err) } });
+    }
+  };
+
+  const runPdfDiag = async () => {
+    setDiagPdf({ status: 'running' });
+    try {
+      const pdfData = {
+        id: 'diag_' + Math.random().toString(36).substring(2, 8),
+        to: 'Pejabat Pentadbiran Diagnostik',
+        attn: 'Bahagian Teknologi Maklumat',
+        name: 'Sistem Diagnostik Wawasan',
+        contact: '03-88880000',
+        email: 'diagnostic-test@wawasan.com',
+        dateTime: new Date().toISOString(),
+        location: 'Blok B, Kompleks Kerajaan, Putrajaya',
+        quantity: 50,
+        meals: ['breakfast', 'lunch'],
+        menu: 'Nasi Lemak Ayam Goreng, Teh Tarik, Buah-buahan',
+        notes: 'Ujian diagnostik in-memory PDF generator.',
+        status: 'approved' as const,
+        prices: { breakfast: 7.50, lunch: 12.50 },
+        totalAmount: 1000.00,
+        lang: 'bm' as const,
+        invoiceNo: 'DIAG-2026-0001'
+      };
+
+      const pdfDoc = generateInvoicePDF(pdfData as unknown as Parameters<typeof generateInvoicePDF>[0], true, 'bm');
+      const dataUri = pdfDoc.output('datauristring');
+      if (dataUri && dataUri.startsWith('data:application/pdf')) {
+        setDiagPdf({ status: 'pass', message: 'PDF generated successfully (Size: ' + Math.round(dataUri.length / 1024) + ' KB)' });
+      } else {
+        setDiagPdf({ status: 'fail', message: 'PDF output is invalid' });
+      }
+    } catch (err: unknown) {
+      setDiagPdf({ status: 'fail', message: err instanceof Error ? err.message : 'PDF Generation threw an unexpected exception' });
+    }
+  };
+
+  const runSendTestEmail = async () => {
+    if (!testEmailAddress) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a test recipient email address',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    setDiagEmail({ status: 'running' });
+    try {
+      const activePassword = localStorage.getItem('wawasan_admin_password') || adminPassword || '';
+      const response = await fetch(getApiUrl('/api/diagnostics/email'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          password: activePassword,
+          testEmail: testEmailAddress
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDiagEmail({ status: 'pass', message: `Test email sent! Message ID: ${data.messageId}` });
+        toast({
+          title: 'Email Sent',
+          description: 'Diagnostics test email dispatched successfully',
+          variant: 'success'
+        });
+      } else {
+        const data = await response.json();
+        setDiagEmail({ status: 'fail', message: data.error || 'SMTP failed' });
+        toast({
+          title: 'Email Failed',
+          description: data.error || 'Failed to send test email',
+          variant: 'destructive'
+        });
+      }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Network error';
+      setDiagEmail({ status: 'fail', message: errorMsg });
+      toast({
+        title: 'Network Error',
+        description: errorMsg,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
+  const runAllDiagnostics = () => {
+    runFirebaseDiag();
+    runCalendarDiag();
+    runNativeDiag();
+    runPdfDiag();
+  };
 
   const fetchCalendarState = async () => {
     try {
@@ -657,113 +826,414 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             )}
           </div>
 
-          {/* Search */}
-          <div className="mb-6 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/40" />
-            <Input
-              placeholder={t('search_placeholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-deep-brown border-warm-gold/20 text-cream placeholder:text-cream/30 focus:border-warm-gold/50"
-            />
+          {/* Tab Navigation */}
+          <div className="flex border-b border-warm-gold/10 mb-8">
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
+                activeTab === 'orders'
+                  ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
+                  : 'border-transparent text-cream/50 hover:text-cream/80 hover:bg-cream/5'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>{t('orders') || 'Orders'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('diagnostics');
+                runAllDiagnostics();
+              }}
+              className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
+                activeTab === 'diagnostics'
+                  ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
+                  : 'border-transparent text-cream/50 hover:text-cream/80 hover:bg-cream/5'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>Diagnostics</span>
+            </button>
           </div>
 
-          {/* Orders Table */}
-          <div className="bg-deep-brown rounded-xl border border-warm-gold/10 overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-warm-gold/10 hover:bg-transparent">
-                    <TableHead className="text-cream/60">{t('date')}</TableHead>
-                    <TableHead className="text-cream/60">{t('quantity')}</TableHead>
-                    <TableHead className="text-cream/60">{t('status')}</TableHead>
-                    <TableHead className="text-cream/60 text-right">{t('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-cream/40 py-12">
-                        {t('no_orders')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <TableRow key={order.id} className="border-warm-gold/10 hover:bg-warm-gold/5">
-                        <TableCell className="text-cream/70">
-                          {order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}
-                        </TableCell>
-                        <TableCell className="text-cream/70">
-                          {order.quantity} pax
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(order.status)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title={t('view_edit_details')}
-                              className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
-                              onClick={() => openOrderDetail(order)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title={t('preview_pdf')}
-                              className="text-cream/60 hover:text-blue-400 hover:bg-blue-500/10"
-                              onClick={() => handlePreviewPDF(order, order.status === 'approved')}
-                            >
-                              <FileText className="w-4 h-4" />
-                            </Button>
+          {activeTab === 'orders' ? (
+            <>
+              {/* Search */}
+              <div className="mb-6 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/40" />
+                <Input
+                  placeholder={t('search_placeholder')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-deep-brown border-warm-gold/20 text-cream placeholder:text-cream/30 focus:border-warm-gold/50"
+                />
+              </div>
 
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title={t('download_pdf')}
-                              className="text-cream/60 hover:text-green-400 hover:bg-green-500/10"
-                              onClick={() => handleDownloadPDF(order, order.status === 'approved')}
-                              disabled={generatingInvoice === order.id}
-                            >
-                              {generatingInvoice === order.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <FileDown className="w-4 h-4" />
-                              )}
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title={t('send_pdf')}
-                              className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
-                              onClick={() => openSendDialog(order)}
-                            >
-                              <Send className="w-4 h-4" />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title={t('delete_order')}
-                              className="text-cream/60 hover:text-red-400 hover:bg-red-500/10"
-                              onClick={() => handleDelete(order.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+              {/* Orders Table */}
+              <div className="bg-deep-brown rounded-xl border border-warm-gold/10 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-warm-gold/10 hover:bg-transparent">
+                        <TableHead className="text-cream/60">{t('date')}</TableHead>
+                        <TableHead className="text-cream/60">{t('quantity')}</TableHead>
+                        <TableHead className="text-cream/60">{t('status')}</TableHead>
+                        <TableHead className="text-cream/60 text-right">{t('actions')}</TableHead>
                       </TableRow>
-                    ))
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-cream/40 py-12">
+                            {t('no_orders')}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredOrders.map((order) => (
+                          <TableRow key={order.id} className="border-warm-gold/10 hover:bg-warm-gold/5">
+                            <TableCell className="text-cream/70">
+                              {order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}
+                            </TableCell>
+                            <TableCell className="text-cream/70">
+                              {order.quantity} pax
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(order.status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title={t('view_edit_details')}
+                                  className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  onClick={() => openOrderDetail(order)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title={t('preview_pdf')}
+                                  className="text-cream/60 hover:text-blue-400 hover:bg-blue-500/10"
+                                  onClick={() => handlePreviewPDF(order, order.status === 'approved')}
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title={t('download_pdf')}
+                                  className="text-cream/60 hover:text-green-400 hover:bg-green-500/10"
+                                  onClick={() => handleDownloadPDF(order, order.status === 'approved')}
+                                  disabled={generatingInvoice === order.id}
+                                >
+                                  {generatingInvoice === order.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <FileDown className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title={t('send_pdf')}
+                                  className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  onClick={() => openSendDialog(order)}
+                                >
+                                  <Send className="w-4 h-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title={t('delete_order')}
+                                  className="text-cream/60 hover:text-red-400 hover:bg-red-500/10"
+                                  onClick={() => handleDelete(order.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-charcoal/50 border border-warm-gold/10 rounded-xl gap-4">
+                <div>
+                  <h3 className="font-display font-bold text-cream text-lg">System Diagnostics</h3>
+                  <p className="text-xs text-cream/50 mt-1">Verify health and credentials of automated backend services and PDF capabilities.</p>
+                </div>
+                <Button 
+                  onClick={runAllDiagnostics}
+                  className="bg-warm-gold hover:bg-[#E0BC74] text-charcoal font-semibold flex items-center gap-2 text-xs"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Run All Diagnostics
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Firebase Connectivity */}
+                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-yellow-500/10 text-yellow-500 rounded-lg">
+                        <Database className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-cream">Firestore Database</h4>
+                        <p className="text-xs text-cream/40">Writes/reads of orders & invoice counters</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={runFirebaseDiag}
+                      disabled={diagFirebase.status === 'running'}
+                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                    >
+                      Test
+                    </Button>
+                  </div>
+
+                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
+                    <span className="text-cream/50">Status:</span>
+                    {diagFirebase.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                    {diagFirebase.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagFirebase.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Connected</span>}
+                    {diagFirebase.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
+                  </div>
+
+                  {diagFirebase.status === 'pass' && (
+                    <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-lg text-xs font-mono text-green-300">
+                      <div>✓ Production Firebase Access</div>
+                      <div className="mt-1 text-[10px] opacity-70">Project ID: {diagFirebase.projectId}</div>
+                    </div>
                   )}
-                </TableBody>
-              </Table>
+
+                  {diagFirebase.status === 'fail' && (
+                    <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-xs font-mono text-red-300 break-all">
+                      <div>✕ Connection Error</div>
+                      <div className="mt-1 text-[10px] opacity-70">{diagFirebase.message}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Google Calendar Sync */}
+                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-lg">
+                        <Wifi className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-cream">Google Calendar API</h4>
+                        <p className="text-xs text-cream/40">Automated event publishing</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={runCalendarDiag}
+                      disabled={diagCalendar.status === 'running'}
+                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                    >
+                      Test
+                    </Button>
+                  </div>
+
+                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
+                    <span className="text-cream/50">Status:</span>
+                    {diagCalendar.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                    {diagCalendar.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagCalendar.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Online</span>}
+                    {diagCalendar.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
+                  </div>
+
+                  {diagCalendar.status === 'pass' && (
+                    <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-lg text-xs font-mono text-green-300">
+                      <div>✓ Service Account authenticated</div>
+                      <div className="mt-1 text-[10px] opacity-70">Calendars found: {diagCalendar.calendarsReturned}</div>
+                    </div>
+                  )}
+
+                  {diagCalendar.status === 'fail' && (
+                    <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-xs font-mono text-red-300 break-all">
+                      <div>✕ Authentication / Scope Issue</div>
+                      <div className="mt-1 text-[10px] opacity-70">{diagCalendar.message}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* PDF Generation Integrity */}
+                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-rose-500/10 text-rose-500 rounded-lg">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-cream">Client PDF Engine</h4>
+                        <p className="text-xs text-cream/40">In-memory jsPDF & formatting engine</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={runPdfDiag}
+                      disabled={diagPdf.status === 'running'}
+                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                    >
+                      Test
+                    </Button>
+                  </div>
+
+                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
+                    <span className="text-cream/50">Status:</span>
+                    {diagPdf.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                    {diagPdf.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagPdf.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
+                    {diagPdf.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
+                  </div>
+
+                  {diagPdf.status === 'pass' && (
+                    <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-lg text-xs font-mono text-green-300">
+                      <div>✓ PDF logic generated layout cleanly</div>
+                      <div className="mt-1 text-[10px] opacity-70">{diagPdf.message}</div>
+                    </div>
+                  )}
+
+                  {diagPdf.status === 'fail' && (
+                    <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-xs font-mono text-red-300 break-all">
+                      <div>✕ PDF Service Error</div>
+                      <div className="mt-1 text-[10px] opacity-70">{diagPdf.message}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Native / APK Integration Info */}
+                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                        <Cpu className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-cream">App Environment</h4>
+                        <p className="text-xs text-cream/40">WebView context & Native APIs</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={runNativeDiag}
+                      disabled={diagNative.status === 'running'}
+                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                    >
+                      Test
+                    </Button>
+                  </div>
+
+                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
+                    <span className="text-cream/50">Status:</span>
+                    {diagNative.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                    {diagNative.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagNative.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
+                    {diagNative.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
+                  </div>
+
+                  {diagNative.status === 'pass' && diagNative.details && (
+                    <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-lg text-xs font-mono text-green-300 space-y-1">
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Context:</span>
+                        <span>{diagNative.details.isNative ? 'Native (APK)' : 'Web Browser'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Platform:</span>
+                        <span>{diagNative.details.platform}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Filesystem:</span>
+                        <span>{diagNative.details.hasFilesystem ? 'Available' : 'Unavailable'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-60">Share API:</span>
+                        <span>{diagNative.details.hasShare ? 'Available' : 'Unavailable'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Brevo SMTP Diagnostic Mailer */}
+              <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-500/10 text-purple-500 rounded-lg">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-cream">SMTP Relay (Brevo SMTP via Render)</h4>
+                    <p className="text-xs text-cream/40">Sends actual HTML emails to customers on approval</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-cream/5 space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1">
+                      <Input
+                        type="email"
+                        placeholder="Enter test recipient email address"
+                        value={testEmailAddress}
+                        onChange={(e) => setTestEmailAddress(e.target.value)}
+                        className="bg-charcoal/30 border-warm-gold/20 text-cream text-xs placeholder:text-cream/30 h-10"
+                      />
+                    </div>
+                    <Button
+                      onClick={runSendTestEmail}
+                      disabled={isSendingTestEmail || !testEmailAddress}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs h-10 px-6 shrink-0 flex items-center gap-2"
+                    >
+                      {isSendingTestEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Send Test Email
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-cream/50">SMTP Test Status:</span>
+                    {diagEmail.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Not Tested</span>}
+                    {diagEmail.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Sending...</span>}
+                    {diagEmail.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Email Dispatched Successfully</span>}
+                    {diagEmail.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
+                  </div>
+
+                  {diagEmail.status === 'pass' && (
+                    <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-lg text-xs font-mono text-green-300">
+                      <div>✓ SMTP Handshake & Dispatch complete. Message ID received.</div>
+                      <div className="mt-1 text-[10px] opacity-70">{diagEmail.message}</div>
+                    </div>
+                  )}
+
+                  {diagEmail.status === 'fail' && (
+                    <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-xs font-mono text-red-300 break-all">
+                      <div>✕ SMTP Transport Error</div>
+                      <p className="mt-1 text-[10px] opacity-70 leading-relaxed">
+                        Render blocks outbound port 587. Ensure SMTP_PORT is set to 2525 for Brevo. Details: {diagEmail.message}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
