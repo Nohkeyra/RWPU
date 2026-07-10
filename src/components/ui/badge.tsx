@@ -15,13 +15,22 @@ const badgeVariants = cva(
         secondary:
           "border-transparent bg-forest-green text-cream border border-cream/10 [a&]:hover:bg-light-forest",
         destructive:
-          "border-transparent bg-burnt-orange text-cream [a&]:hover:bg-burnt-orange/90",
+          "border-transparent bg-tomato-burst text-cream [a&]:hover:bg-tomato-burst/90",
         outline:
-          "text-cream border-cream/20 [a&]:hover:bg-cream/5 [a&]:hover:text-sage",
+          "text-cream border-cream/20 [a&]:hover:bg-cream/5 [a&]:hover:text-kiwi",
+        // Brand-specific variants.
         honey:
           "border-transparent bg-honey/15 text-honey border border-honey/20 [a&]:hover:bg-honey/25",
         sage:
           "border-transparent bg-sage/15 text-sage border border-sage/20 [a&]:hover:bg-sage/25",
+        sunshine:
+          "border-transparent bg-sunshine/15 text-sunshine border border-sunshine/30 [a&]:hover:bg-sunshine/25",
+        kiwi:
+          "border-transparent bg-kiwi/15 text-kiwi border border-kiwi/30 [a&]:hover:bg-kiwi/25",
+        carrot:
+          "border-transparent bg-crisp-carrot/15 text-crisp-carrot border border-crisp-carrot/30 [a&]:hover:bg-crisp-carrot/25",
+        tomato:
+          "border-transparent bg-tomato-burst/15 text-tomato-burst border border-tomato-burst/30 [a&]:hover:bg-tomato-burst/25",
       },
     },
     defaultVariants: {

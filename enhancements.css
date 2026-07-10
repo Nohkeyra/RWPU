@@ -1,0 +1,683 @@
+/* =============================================================
+   Wawasan Pak Usop — UI/UX Enhancements
+   Professional design polish layered on top of the bundled
+   Tailwind CSS file. Last-appended wins (CSS cascade), so this
+   file is meant to be appended to the existing index-*.css
+   bundle shipped inside the Capacitor assets.
+
+   What this layer adds:
+     1.  A11Y foundation
+          - WCAG 2.2 AA :focus-visible rings (3px, gold)
+          - 44×44 minimum touch targets on interactive controls
+          - prefers-reduced-motion support
+          - prefers-color-scheme dark refinements
+          - Forced-colors / high-contrast support
+     2.  Typography polish
+          - Fluid display scale (clamp()) for hero headings
+          - Better text rendering on Android WebView
+          - Numerals: tabular for prices/quantities
+     3.  Micro-interactions
+          - Spring-like button press
+          - Subtle elevation on cards/rows
+          - Smooth image zoom-on-hover
+     4.  Malay-inspired decorative utilities
+          - .kp-songkok  — corner ornament (gradient arcs)
+          - .kp-batik    — repeating batik motif border
+          - .kp-divider  — ornamental section divider
+     5.  Print & PDF polish
+          - Print-ready classes for invoice / receipt pages
+     6.  Mobile-first container & safe-area handling
+   ============================================================= */
+
+
+/* ---------- 1.  A11Y foundation ---------- */
+
+/* High-visibility keyboard focus on every interactive element.
+   Gold #D4A853 on charcoal #1A1816 = 6.4:1 contrast (AAA). */
+:where(a, button, [role="button"], input, select, textarea,
+       [tabindex], summary, .kp-focusable):focus-visible {
+  outline: 3px solid #D4A853;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Remove default focus ring only when not keyboard-driven */
+:where(a, button, input, select, textarea):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Honour user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip-to-content link — hidden until focused */
+.kp-skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 12px 20px;
+  background: #D4A853;
+  color: #1A1816;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+.kp-skip:focus { top: 0; }
+
+/* Minimum touch target (Apple HIG / Material) */
+.kp-touch {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* High-contrast / forced-colors mode */
+@media (forced-colors: active) {
+  .kp-card, .kp-btn {
+    border: 1px solid CanvasText !important;
+  }
+  :focus-visible { outline-color: Highlight !important; }
+}
+
+/* Visually hidden but available to screen readers */
+.kp-sr {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+
+/* ---------- 2.  Typography polish ---------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: geometricPrecision;
+}
+
+/* Fluid display headings — clamp(min, fluid, max) */
+.kp-display-1 { font-size: clamp(2.5rem, 4vw + 1rem, 5rem);    line-height: 1.05; letter-spacing: -0.02em; }
+.kp-display-2 { font-size: clamp(2rem, 3vw + 0.75rem, 3.75rem); line-height: 1.1;  letter-spacing: -0.015em; }
+.kp-display-3 { font-size: clamp(1.5rem, 2vw + 0.5rem, 2.5rem);  line-height: 1.15; letter-spacing: -0.01em; }
+
+/* Tabular numerals — for prices, quantities, order IDs */
+.kp-num, .kp-price, .kp-qty {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Better long-text wrapping */
+.kp-prose p { max-width: 65ch; }
+.kp-prose p + p { margin-top: 0.75em; }
+
+
+/* ---------- 3.  Micro-interactions ---------- */
+
+/* Premium press feedback on buttons */
+.kp-press {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+  will-change: transform;
+}
+.kp-press:active { transform: scale(0.97); }
+
+/* Card lift on hover (used on menu items, admin rows) */
+.kp-lift {
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+.kp-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* Subtle image zoom inside card */
+.kp-zoom { overflow: hidden; }
+.kp-zoom img,
+.kp-zoom .kp-zoom-target {
+  transition: transform 0.6s cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+.kp-zoom:hover img,
+.kp-zoom:hover .kp-zoom-target {
+  transform: scale(1.06);
+}
+
+/* Underline-from-left link affordance */
+.kp-link {
+  position: relative;
+  display: inline-block;
+}
+.kp-link::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.kp-link:hover::after,
+.kp-link:focus-visible::after { transform: scaleX(1); }
+
+/* Smooth state colour transition for nav links */
+.kp-nav-link {
+  position: relative;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+.kp-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 2px;
+  background: #D4A853;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+  transform-origin: center;
+}
+.kp-nav-link[aria-current="page"]::after,
+.kp-nav-link.is-active::after { transform: scaleX(1); }
+
+
+/* ---------- 4.  Malay-inspired decorative utilities ---------- */
+
+/* Ornamental section divider — slim gold gradient with diamond marker */
+.kp-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #D4A853;
+  font-size: 0.875rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin: 3rem 0;
+}
+.kp-divider::before,
+.kp-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg,
+              transparent 0%,
+              rgba(212, 168, 83, 0.5) 50%,
+              transparent 100%);
+}
+.kp-divider::before { background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.5)); }
+.kp-divider::after  { background: linear-gradient(90deg, rgba(212, 168, 83, 0.5), transparent); }
+
+/* Songkok-corner ornament — applies a subtle gold arc to top-right */
+.kp-songkok {
+  position: relative;
+  overflow: hidden;
+}
+.kp-songkok::before {
+  content: "";
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle at top right,
+              rgba(212, 168, 83, 0.18) 0%,
+              transparent 60%);
+  pointer-events: none;
+}
+.kp-songkok::after {
+  content: "";
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle at bottom left,
+              rgba(193, 122, 95, 0.12) 0%,
+              transparent 65%);
+  pointer-events: none;
+}
+
+/* Subtle batik-pattern background (SVG data-uri, 64px tile) */
+.kp-batik {
+  background-color: #1A1816;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='none' stroke='%23D4A853' stroke-width='0.6' stroke-opacity='0.08'><circle cx='32' cy='32' r='14'/><circle cx='32' cy='32' r='6'/><path d='M32 4 L32 60 M4 32 L60 32'/><path d='M11 11 L53 53 M53 11 L11 53'/></g></svg>");
+  background-repeat: repeat;
+}
+
+/* Subtle grain/noise overlay for premium feel on hero sections */
+.kp-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+
+/* ---------- 5.  Card & surface polish ---------- */
+
+.kp-card {
+  background: rgba(45, 37, 32, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.4);
+}
+
+.kp-card--elevated {
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.55),
+              0 2px 8px -2px rgba(212, 168, 83, 0.08);
+}
+
+/* Glassy top bar that stays legible over photos */
+.kp-glass {
+  background: rgba(26, 24, 22, 0.72);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+
+/* ---------- 6.  Buttons ---------- */
+
+.kp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+              background-color 0.2s ease,
+              box-shadow 0.2s ease,
+              color 0.2s ease;
+  min-height: 44px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.kp-btn:active { transform: scale(0.97); }
+
+.kp-btn--primary {
+  background: #D4A853;
+  color: #1A1816;
+  box-shadow: 0 6px 18px -6px rgba(212, 168, 83, 0.55);
+}
+.kp-btn--primary:hover {
+  background: #E0BC74;
+  box-shadow: 0 10px 24px -8px rgba(212, 168, 83, 0.7);
+}
+
+.kp-btn--ghost {
+  background: transparent;
+  color: #F5F0E8;
+  border: 1px solid rgba(245, 240, 232, 0.2);
+}
+.kp-btn--ghost:hover {
+  background: rgba(245, 240, 232, 0.08);
+  border-color: rgba(245, 240, 232, 0.4);
+}
+
+.kp-btn--terracotta {
+  background: #C17A5F;
+  color: #F5F0E8;
+}
+.kp-btn--terracotta:hover { background: #D08C70; }
+
+.kp-btn[disabled],
+.kp-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* ---------- 7.  Form polish ---------- */
+
+.kp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.kp-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(245, 240, 232, 0.85);
+  letter-spacing: 0.01em;
+}
+.kp-input,
+.kp-select,
+.kp-textarea {
+  background: rgba(245, 240, 232, 0.06);
+  border: 1px solid rgba(245, 240, 232, 0.15);
+  color: #F5F0E8;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  min-height: 44px;
+}
+.kp-input::placeholder,
+.kp-textarea::placeholder {
+  color: rgba(245, 240, 232, 0.4);
+}
+.kp-input:hover,
+.kp-select:hover,
+.kp-textarea:hover {
+  border-color: rgba(245, 240, 232, 0.3);
+  background: rgba(245, 240, 232, 0.08);
+}
+.kp-input:focus,
+.kp-select:focus,
+.kp-textarea:focus {
+  outline: none;
+  border-color: #D4A853;
+  background: rgba(245, 240, 232, 0.1);
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.2);
+}
+.kp-textarea { min-height: 96px; resize: vertical; }
+
+.kp-field--error .kp-input,
+.kp-field--error .kp-textarea,
+.kp-field--error .kp-select {
+  border-color: #E07060;
+  box-shadow: 0 0 0 3px rgba(224, 112, 96, 0.2);
+}
+.kp-field__error {
+  font-size: 0.8125rem;
+  color: #F2A39A;
+  margin-top: 0.125rem;
+}
+
+
+/* ---------- 8.  Badges & status pills ---------- */
+
+.kp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.kp-badge--gold    { background: rgba(212, 168, 83, 0.15); color: #E0BC74; border-color: rgba(212, 168, 83, 0.3); }
+.kp-badge--green   { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; border-color: rgba(16, 185, 129, 0.3); }
+.kp-badge--amber   { background: rgba(245, 158, 11, 0.15); color: #FCD34D; border-color: rgba(245, 158, 11, 0.3); }
+.kp-badge--red     { background: rgba(239, 68, 68, 0.15);  color: #FCA5A5; border-color: rgba(239, 68, 68, 0.3); }
+.kp-badge--sky     { background: rgba(14, 165, 233, 0.15); color: #7DD3FC; border-color: rgba(14, 165, 233, 0.3); }
+.kp-badge--neutral { background: rgba(245, 240, 232, 0.08); color: rgba(245, 240, 232, 0.7); border-color: rgba(245, 240, 232, 0.15); }
+
+
+/* ---------- 9.  Menu item card polish ---------- */
+
+.kp-menu-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(45, 37, 32, 0.5);
+  border: 1px solid rgba(212, 168, 83, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+.kp-menu-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 168, 83, 0.4);
+  box-shadow: 0 20px 50px -16px rgba(0, 0, 0, 0.5);
+}
+.kp-menu-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #2D2520;
+}
+.kp-menu-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.2, 0, 0, 1);
+}
+.kp-menu-card:hover .kp-menu-card__media img { transform: scale(1.08); }
+.kp-menu-card__price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #D4A853;
+  letter-spacing: -0.01em;
+}
+
+
+/* ---------- 10.  Order step indicator ---------- */
+
+.kp-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.kp-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(245, 240, 232, 0.4);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.kp-step__num {
+  width: 28px; height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.25s ease;
+}
+.kp-step.is-active { color: #D4A853; }
+.kp-step.is-active .kp-step__num {
+  background: #D4A853;
+  color: #1A1816;
+  border-color: #D4A853;
+}
+.kp-step.is-done { color: #6EE7B7; }
+.kp-step.is-done .kp-step__num {
+  background: #6EE7B7;
+  color: #1A1816;
+  border-color: #6EE7B7;
+}
+.kp-steps__sep {
+  flex: 1;
+  height: 1px;
+  background: rgba(245, 240, 232, 0.15);
+  min-width: 16px;
+}
+
+
+/* ---------- 11.  Skeleton loading states ---------- */
+
+@keyframes kp-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.kp-skeleton {
+  background: linear-gradient(90deg,
+              rgba(245, 240, 232, 0.04) 0%,
+              rgba(245, 240, 232, 0.12) 50%,
+              rgba(245, 240, 232, 0.04) 100%);
+  background-size: 200% 100%;
+  animation: kp-shimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+
+/* ---------- 12.  Toast / notification polish ---------- */
+
+.kp-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(45, 37, 32, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+  border-left: 3px solid #D4A853;
+  border-radius: 10px;
+  color: #F5F0E8;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  max-width: 380px;
+}
+.kp-toast--success { border-left-color: #10B981; }
+.kp-toast--error   { border-left-color: #EF4444; }
+.kp-toast--info    { border-left-color: #0EA5E9; }
+
+
+/* ---------- 13.  Safe-area & mobile shell ---------- */
+
+.kp-safe-top    { padding-top:    max(env(safe-area-inset-top),     0.5rem); }
+.kp-safe-bottom { padding-bottom: max(env(safe-area-inset-bottom),  0.5rem); }
+.kp-safe-x      { padding-left:  max(env(safe-area-inset-left),    1rem);
+                  padding-right: max(env(safe-area-inset-right),   1rem); }
+
+/* Bottom-bar respects Android gesture nav */
+.kp-bottom-bar {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+
+/* ---------- 14.  Print / PDF receipts ---------- */
+
+@media print {
+  .kp-no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .kp-print-area { padding: 0 !important; }
+}
+
+
+/* ---------- 15.  Dark-mode refinement (system) ---------- */
+
+@media (prefers-color-scheme: light) {
+  /* App is dark by design — opt-out of OS light inversion */
+  html { color-scheme: dark; }
+}
+
+
+/* ---------- 16.  Scroll affordances ---------- */
+
+.kp-scroll-snap-x {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.kp-scroll-snap-x > * { scroll-snap-align: start; flex-shrink: 0; }
+.kp-scroll-snap-x::-webkit-scrollbar { display: none; }
+
+
+/* ---------- 17.  Selection ---------- */
+
+::selection {
+  background: rgba(212, 168, 83, 0.35);
+  color: #F5F0E8;
+}
+::-moz-selection {
+  background: rgba(212, 168, 83, 0.35);
+  color: #F5F0E8;
+}
+
+
+/* ---------- 18.  Loading dots (chat / “AI is typing”) ---------- */
+
+@keyframes kp-dot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40%           { transform: scale(1);   opacity: 1;   }
+}
+.kp-dots { display: inline-flex; gap: 4px; align-items: center; }
+.kp-dots span {
+  width: 6px; height: 6px;
+  background: currentColor;
+  border-radius: 9999px;
+  animation: kp-dot 1.2s ease-in-out infinite;
+}
+.kp-dots span:nth-child(2) { animation-delay: 0.15s; }
+.kp-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+
+/* ---------- 19.  Hero gradient overlay (landing) ---------- */
+
+.kp-hero {
+  position: relative;
+  isolation: isolate;
+}
+.kp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at top, rgba(212, 168, 83, 0.15), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(193, 122, 95, 0.18), transparent 60%),
+    linear-gradient(180deg, transparent 0%, rgba(26, 24, 22, 0.4) 50%, rgba(26, 24, 22, 0.95) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+
+/* ---------- 20.  Status dot indicator ---------- */
+
+.kp-dot-indicator {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 9999px;
+  background: currentColor;
+  position: relative;
+}
+.kp-dot-indicator--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: kp-pulse-ring 1.6s ease-out infinite;
+}
+@keyframes kp-pulse-ring {
+  0%   { transform: scale(0.7); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0;   }
+}

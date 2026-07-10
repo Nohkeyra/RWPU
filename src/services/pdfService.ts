@@ -19,6 +19,27 @@ interface Order {
   lang?: 'en' | 'bm';
 }
 
+const formatDateSafe = (dateString: string | undefined, lang: 'en' | 'bm'): string => {
+  if (!dateString) return '-';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '-';
+    
+    const day = d.getDate().toString().padStart(2, '0');
+    
+    const monthsBM = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+    const monthsEN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const monthName = lang === 'bm' ? monthsBM[d.getMonth()] : monthsEN[d.getMonth()];
+    const year = d.getFullYear();
+    
+    return `${day} ${monthName} ${year}`;
+  } catch (e) {
+    console.error('Date parsing error:', e);
+    return '-';
+  }
+};
+
 // Map meal values to dual labels
 const mealLabelsMap: Record<string, string> = {
   breakfast: 'Breakfast',
@@ -113,9 +134,7 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  const formattedInvoiceDate = order.dateTime 
-    ? new Date(order.dateTime).toLocaleDateString(lang === 'bm' ? 'ms-MY' : 'en-MY')
-    : new Date().toLocaleDateString(lang === 'bm' ? 'ms-MY' : 'en-MY');
+  const formattedInvoiceDate = formatDateSafe(order.dateTime || new Date().toISOString(), lang);
   doc.text(`Tarikh / Date: ${formattedInvoiceDate}`, 195, 33, { align: 'right' });
 
   // --- 2. GRID INFO BOXES ---
@@ -123,9 +142,7 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   const invoiceNoVal = order.invoiceNo || 'PENDING';
   drawCreamBox(doc, 15, 42, 87, 15, 'INVOICE NO.', `RW — ${invoiceNoVal}`, true);
   
-  const formattedEventDate = order.dateTime 
-    ? new Date(order.dateTime).toLocaleDateString(lang === 'bm' ? 'ms-MY' : 'en-MY')
-    : '-';
+  const formattedEventDate = formatDateSafe(order.dateTime, lang);
   drawCreamBox(doc, 108, 42, 87, 15, 'TARIKH ACARA / EVENT DATE', formattedEventDate, true);
 
   // Row 2: Kepada / To (Full-Width)
@@ -208,8 +225,10 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
 
     doc.setFont('helvetica', 'normal');
     const hasPrice = isFinal && order.prices && order.prices[meal] !== undefined;
-    const priceVal = hasPrice ? order.prices![meal] : 0;
-    const subtotal = priceVal * order.quantity;
+    const priceValRaw = hasPrice ? order.prices![meal] : 0;
+    const priceVal = typeof priceValRaw === 'number' ? priceValRaw : parseFloat(priceValRaw as unknown as string) || 0;
+    const quantityNum = typeof order.quantity === 'number' ? order.quantity : parseInt(order.quantity as unknown as string, 10) || 0;
+    const subtotal = priceVal * quantityNum;
 
     if (isFinal) {
       doc.text(priceVal.toFixed(2), 137.5, currentY + 4.8, { align: 'center' });
@@ -232,8 +251,10 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.setFontSize(8.5);
   doc.text('JUMLAH KESELURUHAN / GRAND TOTAL', 18, currentY + 4.8);
 
-  if (isFinal && order.totalAmount) {
-    doc.text(`RM ${order.totalAmount.toFixed(2)}`, 192, currentY + 4.8, { align: 'right' });
+  const totalAmountNum = typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount as unknown as string) || 0;
+
+  if (isFinal && totalAmountNum > 0) {
+    doc.text(`RM ${totalAmountNum.toFixed(2)}`, 192, currentY + 4.8, { align: 'right' });
   } else {
     doc.text('RM —', 192, currentY + 4.8, { align: 'right' });
   }
@@ -245,8 +266,8 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.setFont('helvetica', 'bolditalic');
   doc.setFontSize(8.5);
 
-  if (isFinal && order.totalAmount) {
-    const spelledWords = numberToWords(order.totalAmount, lang).toUpperCase();
+  if (isFinal && totalAmountNum > 0) {
+    const spelledWords = numberToWords(totalAmountNum, lang).toUpperCase();
     doc.text(spelledWords, 15, textNoteY);
   } else {
     if (lang === 'en') {

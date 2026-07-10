@@ -35,9 +35,10 @@ export default function VisitSection() {
 
   return (
     <section id="visit" className="section-padding bg-deep-forest relative overflow-hidden paper-texture">
-      {/* Organic background blobs */}
+      {/* Organic background blobs — moss, carrot, kiwi */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-moss/5 organic-blob blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-honey/5 organic-blob blur-3xl pointer-events-none" style={{ animationDelay: '-4s' }} />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-crisp-carrot/5 organic-blob blur-3xl pointer-events-none" style={{ animationDelay: '-4s' }} />
+      <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-kiwi/5 organic-blob blur-3xl pointer-events-none" style={{ animationDelay: '-6s' }} />
 
       <div className="content-container relative">
         {/* Header */}
@@ -119,10 +120,10 @@ export default function VisitSection() {
                   <div key={h.day} className="flex justify-between items-center py-3 border-b border-cream/5 last:border-0 group">
                     <span className="text-cream/60 group-hover:text-cream transition-colors">{h.day}</span>
                     <div className="text-right">
-                      <span className={`font-medium ${h.time === 'Closed' ? 'text-burnt-orange' : 'text-cream'}`}>
+                      <span className={`font-medium ${h.time === 'Closed' ? 'text-tomato-burst' : 'text-cream'}`}>
                         {h.time}
                       </span>
-                      {h.note && <span className="block text-[10px] text-honey/70">*{h.note}</span>}
+                      {h.note && <span className="block text-[10px] text-sunshine/80 font-accent">*{h.note}</span>}
                     </div>
                   </div>
                 ))}
@@ -162,8 +163,8 @@ export default function VisitSection() {
           ref={ctaRef}
           className="mt-16 relative rounded-3xl p-8 md:p-12 overflow-hidden group"
         >
-          {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-moss via-fern to-honey animate-gradient-shift bg-[length:200%_auto]" />
+          {/* Animated brand gradient background — moss → fern → sunshine → carrot */}
+          <div className="absolute inset-0 bg-gradient-to-r from-moss via-fern via-sunshine to-crisp-carrot animate-gradient-shift bg-[length:200%_auto]" />
           
           {/* Pattern overlay */}
           <div className="absolute inset-0 opacity-10" style={{

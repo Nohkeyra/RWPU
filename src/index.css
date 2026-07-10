@@ -4,47 +4,65 @@
 
 @layer base {
   :root {
-    /* Palette 1 HSL Values */
-    --background: 150 45% 6%;          /* deep-forest */
-    --foreground: 42 45% 90%;          /* cream */
-    --card: 150 40% 10%;               /* forest-green tinted */
-    --card-foreground: 42 45% 90%;     /* cream */
-    --popover: 150 40% 10%;            /* forest-green tinted */
-    --popover-foreground: 42 45% 90%;  /* cream */
-    --primary: 135 55% 25%;            /* forest-green */
-    --primary-foreground: 42 45% 90%;  /* cream */
-    --secondary: 150 30% 14%;          /* light-forest */
-    --secondary-foreground: 42 45% 90%;/* cream */
-    --muted: 150 20% 16%;              /* muted forest */
-    --muted-foreground: 35 20% 60%;    /* stone */
-    --accent: 45 100% 58%;             /* sunshine */
-    --accent-foreground: 150 45% 6%;   /* deep-forest */
-    --destructive: 4 75% 47%;          /* tomato-burst */
-    --destructive-foreground: 42 45% 90%;/* cream */
-    --border: 150 20% 18%;             /* subtle green border */
-    --input: 150 20% 18%;              /* input border */
-    --ring: 135 55% 25%;               /* forest-green focus */
-    --radius: 0.75rem;
+    /* ============================================================
+       Brand palette — Restoran Wawasan Pak Usop
+       Inspired by warm spice, fresh produce, and forest greens.
+       ============================================================ */
 
-    /* Raw Palette 1 Colors */
-    --color-deep-forest: #0A1F12;
-    --color-forest-green: #195328;
-    --color-light-forest: #1E3D2F;
-    --color-moss: #2D6A3F;
-    --color-fern: #4A8C5A;
-    --color-sage: #87A878;
-    --color-kiwi: #9ABC04;
-    --color-sunshine: #FFCA26;
-    --color-honey: #FFB800;
-    --color-crisp-carrot: #F86015;
-    --color-tomato-burst: #D42518;
-    --color-cream: #F3E8CC;
-    --color-stone: #C4B8A8;
-    --color-walnut: #5C4033;
+    /* shadcn HSL tokens (kept in sync with colors above) */
+    --background:           150 45% 6%;        /* deep-forest */
+    --foreground:           42  45% 90%;       /* cream */
+    --card:                 150 40% 10%;       /* forest-green tinted */
+    --card-foreground:      42  45% 90%;
+    --popover:              150 40% 10%;
+    --popover-foreground:   42  45% 90%;
+    --primary:              135 55% 25%;       /* forest-green */
+    --primary-foreground:   42  45% 90%;
+    --secondary:            150 30% 14%;       /* light-forest */
+    --secondary-foreground: 42  45% 90%;
+    --muted:                150 20% 16%;
+    --muted-foreground:     35  20% 60%;       /* stone */
+    --accent:               45  100% 58%;      /* sunshine */
+    --accent-foreground:    150 45% 6%;
+    --destructive:          16  88% 48%;       /* carrot-burst */
+    --destructive-foreground: 42 45% 90%;
+    --border:               150 20% 18%;
+    --input:                150 20% 18%;
+    --ring:                 135 55% 25%;
+    --radius:               0.75rem;
+
+    /* Raw brand hex tokens — single source of truth. */
+    --color-deep-forest:    #0A1F12;
+    --color-forest-green:   #19532B;
+    --color-light-forest:   #1E3D2F;
+    --color-moss:           #2D6A3F;
+    --color-fern:           #4A8C5A;
+    --color-sage:           #87A878;
+    --color-kiwi:           #9ABC04;
+    --color-sunshine:       #FFCA26;
+    --color-honey:          #FFB800;
+    --color-crisp-carrot:   #F86015;
+    --color-tomato-burst:   #D42518;
+    --color-cream:          #F3E8CC;
+    --color-stone:          #C4B8A8;
+    --color-walnut:         #5C4033;
+    --color-burnt-orange:   #B85C38;
+
+    /* RGB variants — for rgba() with opacity. */
+    --rgb-sunshine:         255 202 38;
+    --rgb-honey:            255 184 0;
+    --rgb-kiwi:             154 188 4;
+    --rgb-carrot:           248 96 21;
+    --rgb-tomato:           212 37 24;
+    --rgb-moss:             45 106 63;
+    --rgb-fern:             74 140 90;
+    --rgb-sage:             135 168 120;
+    --rgb-cream:            243 232 204;
+    --rgb-stone:            196 184 168;
   }
 
-  html { 
-    scroll-behavior: auto; 
+  html {
+    scroll-behavior: auto;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -64,35 +82,26 @@
   }
 
   ::selection {
-    background-color: rgba(154, 188, 4, 0.35);  /* kiwi tint */
+    background-color: rgba(var(--rgb-kiwi), 0.35);
     color: #F3E8CC;
   }
 
-  ::-webkit-scrollbar { 
-    width: 8px; 
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--color-deep-forest); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-moss);
+    border-radius: 4px;
   }
-  ::-webkit-scrollbar-track { 
-    background: var(--color-deep-forest); 
-  }
-  ::-webkit-scrollbar-thumb { 
-    background: var(--color-forest-green); 
-    border-radius: 4px; 
-  }
-  ::-webkit-scrollbar-thumb:hover { 
-    background: var(--color-moss); 
-  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-fern); }
 
-  /* Touch targets for mobile */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
+  /* Touch targets for mobile (accessibility) */
+  .touch-target { min-height: 44px; min-width: 44px; }
 
-  /* Better focus visible */
+  /* Better focus visible (accessibility) */
   *:focus-visible {
     outline: none;
     ring: 2px;
-    ring-color: rgba(45, 106, 63, 0.5);
+    ring-color: rgba(var(--rgb-moss), 0.5);
     ring-offset: 2px;
     ring-offset-color: #0A1F12;
   }
@@ -105,75 +114,140 @@
 }
 
 @layer components {
-  .section-padding { 
-    @apply py-20 md:py-[120px]; 
-  }
-  .content-container { 
-    @apply max-w-[1200px] mx-auto px-6 md:px-12; 
-  }
+  /* ---------- Layout helpers ---------- */
+  .section-padding    { @apply py-20 md:py-[120px]; }
+  .content-container  { @apply max-w-[1200px] mx-auto px-6 md:px-12; }
+
+  /* ---------- Brand surfaces ---------- */
   .nature-card {
     @apply bg-forest-green rounded-2xl border border-cream/10 shadow-[0_4px_40px_rgba(0,0,0,0.25)] overflow-hidden;
   }
-  .moss-glow { 
-    @apply animate-glow-pulse; 
-  }
+  .moss-glow     { @apply animate-glow-pulse; }
+  .kiwi-pulse    { @apply animate-kiwi-pulse; }
+  .sunshine-pulse{ @apply animate-sunshine-pulse; }
+
+  /* ---------- Brand gradient text + glows ---------- */
   .gradient-text {
-    @apply bg-gradient-to-r from-sage via-sunshine to-crisp-carrot bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-moss via-sunshine to-crisp-carrot bg-clip-text text-transparent;
+  }
+  .gradient-text-warm {
+    @apply bg-gradient-to-r from-sunshine via-crisp-carrot to-tomato-burst bg-clip-text text-transparent;
+  }
+  .gradient-text-cool {
+    @apply bg-gradient-to-r from-fern via-sage to-kiwi bg-clip-text text-transparent;
   }
   .kiwi-accent {
     @apply text-kiwi drop-shadow-[0_0_8px_rgba(154,188,4,0.3)];
   }
+  .carrot-accent {
+    @apply text-crisp-carrot drop-shadow-[0_0_8px_rgba(248,96,21,0.3)];
+  }
+  .sunshine-accent {
+    @apply text-sunshine drop-shadow-[0_0_8px_rgba(255,202,38,0.3)];
+  }
 
-  /* Paper texture overlay */
+  /* ---------- Section label (decorative dots + line) ---------- */
+  .section-label-line {
+    @apply h-[1px] bg-gradient-to-r from-kiwi/60 via-moss/40 to-transparent;
+  }
+  .section-label-line-right {
+    @apply h-[1px] bg-gradient-to-l from-kiwi/60 via-moss/40 to-transparent;
+  }
+
+  /* ---------- Paper texture overlay (subtle grain) ---------- */
   .paper-texture {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   }
 
-  /* Shimmer effect for buttons */
+  /* ---------- Button utilities ---------- */
   .shimmer-btn {
     background: linear-gradient(90deg, var(--color-moss) 25%, var(--color-fern) 50%, var(--color-moss) 75%);
     background-size: 200% 100%;
     @apply animate-shimmer;
   }
+  .shimmer-sunshine {
+    background: linear-gradient(90deg, var(--color-sunshine) 25%, var(--color-honey) 50%, var(--color-sunshine) 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+  .shimmer-carrot {
+    background: linear-gradient(90deg, var(--color-crisp-carrot) 25%, var(--color-tomato-burst) 50%, var(--color-crisp-carrot) 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
 
-  /* Honey drip container */
+  /* ---------- Brand CTA panel ---------- */
+  .brand-cta-panel {
+    background-image: linear-gradient(90deg,
+      var(--color-moss) 0%,
+      var(--color-fern) 35%,
+      var(--color-sunshine) 70%,
+      var(--color-crisp-carrot) 100%);
+    background-size: 200% auto;
+    @apply animate-gradient-shift;
+  }
+
+  /* ---------- Honey drip container ---------- */
   .honey-drip-container {
     position: relative;
     overflow: hidden;
   }
-  
   .honey-drip-container::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 50%;
-    width: 4px;
-    height: 100%;
+    top: 0; left: 50%;
+    width: 4px; height: 100%;
     background: linear-gradient(to bottom, var(--color-honey), transparent);
     transform: scaleY(0);
     transform-origin: top;
   }
-  
   .honey-drip-container:active::after {
     animation: honey-drip 0.4s ease-out forwards;
   }
 
-  /* Organic flowing shape */
+  /* ---------- Organic flowing shape ---------- */
   .organic-blob {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
     animation: gradient-shift 8s ease infinite;
   }
+
+  /* ---------- Soft floating chip (used for "Halal", "Est. 1986", etc.) ---------- */
+  .brand-chip {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+           bg-moss/10 border border-moss/20 backdrop-blur-sm
+           text-moss text-[10px] uppercase tracking-[0.2em] font-medium;
+  }
+  .brand-chip-kiwi {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+           bg-kiwi/10 border border-kiwi/30 backdrop-blur-sm
+           text-kiwi text-[10px] uppercase tracking-[0.2em] font-medium;
+  }
+  .brand-chip-sunshine {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+           bg-sunshine/10 border border-sunshine/30 backdrop-blur-sm
+           text-sunshine text-[10px] uppercase tracking-[0.2em] font-medium;
+  }
+  .brand-chip-carrot {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+           bg-crisp-carrot/10 border border-crisp-carrot/30 backdrop-blur-sm
+           text-crisp-carrot text-[10px] uppercase tracking-[0.2em] font-medium;
+  }
 }
 
 @layer utilities {
-  /* Animation utilities */
-  .animate-success-pop {
-    animation: success-pop 0.5s ease-out;
-  }
+  .animate-success-pop { animation: success-pop 0.5s ease-out; }
+
+  /* Brand-tinted text colors with stronger visibility. */
+  .text-brand-kiwi     { color: var(--color-kiwi); }
+  .text-brand-sunshine { color: var(--color-sunshine); }
+  .text-brand-carrot   { color: var(--color-crisp-carrot); }
+  .text-brand-tomato   { color: var(--color-tomato-burst); }
+  .text-brand-sage     { color: var(--color-sage); }
+  .text-brand-cream    { color: var(--color-cream); }
 
   @keyframes success-pop {
-    0% { transform: scale(0.8); opacity: 0; }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
+    0%   { transform: scale(0.8); opacity: 0; }
+    50%  { transform: scale(1.05); }
+    100% { transform: scale(1);   opacity: 1; }
   }
 }

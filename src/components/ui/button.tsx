@@ -5,23 +5,37 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-moss/50 focus-visible:ring-offset-2 focus-visible:ring-offset-deep-forest touch-target",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-kiwi/50 focus-visible:ring-offset-2 focus-visible:ring-offset-deep-forest touch-target",
   {
     variants: {
       variant: {
-        default: "bg-moss text-cream hover:bg-fern hover:shadow-[0_0_20px_rgba(45,106,63,0.3)]",
+        default:
+          "bg-moss text-cream hover:bg-fern hover:shadow-moss-glow",
         destructive:
-          "bg-tomato-burst text-cream hover:bg-tomato-burst/90 shadow-[0_0_15px_rgba(212,37,24,0.2)]",
+          "bg-tomato-burst text-cream hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
         outline:
-          "border border-cream/15 bg-transparent text-cream hover:bg-cream/5 hover:border-moss/30",
+          "border border-cream/15 bg-transparent text-cream hover:bg-cream/5 hover:border-kiwi/40 hover:text-kiwi",
         secondary:
           "bg-forest-green text-cream border border-cream/10 hover:bg-light-forest hover:border-cream/15",
         ghost:
-          "text-stone hover:text-cream hover:bg-cream/5",
-        link: "text-moss underline-offset-4 hover:underline hover:text-sage",
-        moss: "bg-moss text-cream hover:bg-fern hover:shadow-[0_0_20px_rgba(45,106,63,0.3)]",
-        sunshine: "bg-sunshine text-deep-forest hover:bg-honey hover:shadow-[0_0_20px_rgba(255,202,38,0.3)] font-semibold",
-        kiwi: "bg-kiwi text-deep-forest hover:bg-[#8BA803] hover:shadow-[0_0_20px_rgba(154,188,4,0.3)] font-semibold",
+          "text-stone hover:text-kiwi hover:bg-cream/5",
+        link:
+          "text-kiwi underline-offset-4 hover:underline hover:text-sunshine",
+        // Brand-specific variants.
+        moss:
+          "bg-moss text-cream hover:bg-fern hover:shadow-moss-glow",
+        sunshine:
+          "bg-sunshine text-deep-forest hover:bg-honey hover:shadow-sunshine-glow font-semibold",
+        carrot:
+          "bg-crisp-carrot text-cream hover:bg-crisp-carrot/90 hover:shadow-carrot-glow font-semibold",
+        kiwi:
+          "bg-kiwi text-deep-forest hover:bg-[#8BA803] hover:shadow-kiwi-glow font-semibold",
+        tomato:
+          "bg-tomato-burst text-cream hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
+        "sunshine-outline":
+          "border border-sunshine/40 bg-sunshine/5 text-sunshine hover:bg-sunshine/15 hover:border-sunshine/70 hover:shadow-sunshine-glow font-semibold",
+        "kiwi-outline":
+          "border border-kiwi/40 bg-kiwi/5 text-kiwi hover:bg-kiwi/15 hover:border-kiwi/70 hover:shadow-kiwi-glow font-semibold",
       },
       size: {
         default: "h-11 px-5 has-[>svg]:px-4",
@@ -54,8 +68,6 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      data-variant={variant}
-      data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

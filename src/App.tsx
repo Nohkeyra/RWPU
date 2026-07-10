@@ -52,8 +52,10 @@ function AppContent() {
       <SmoothScrollHandler />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/main" element={<LandingPage />} />
         <Route path="/order" element={<OrderPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     </>
   );

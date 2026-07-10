@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, AlertTriangle, XCircle, Leaf, X, Sun } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, X, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';

@@ -1,6 +1,6 @@
 import SectionLabel from '@/components/SectionLabel';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Leaf } from 'lucide-react';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -52,14 +52,14 @@ export default function StorySection() {
               </p>
             </div>
 
-            {/* Stats */}
+            {/* Stats — sunshine numbers + sage labels */}
             <div className="story-animate flex justify-center lg:justify-start gap-10 mb-10">
               {STATS.map((stat) => (
                 <div key={stat.label} className="relative pl-0 lg:first:pl-0">
-                  <span className="font-display font-medium text-4xl text-moss tracking-tight">
+                  <span className="font-display font-semibold text-4xl tracking-tight bg-gradient-to-br from-sunshine to-crisp-carrot bg-clip-text text-transparent">
                     {stat.number}
                   </span>
-                  <span className="block font-['Montserrat',sans-serif] font-medium text-[10px] uppercase tracking-[0.15em] text-stone mt-2">
+                  <span className="block font-accent font-medium text-[10px] uppercase tracking-[0.15em] text-stone mt-2">
                     {stat.label}
                   </span>
                 </div>
@@ -89,15 +89,15 @@ export default function StorySection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-deep-forest/40 to-transparent" />
               </div>
-              {/* Floating Badge */}
-              <div className="absolute -bottom-6 -left-6 bg-forest-green rounded-xl p-5 border border-moss/20 shadow-xl hidden sm:block">
+              {/* Floating Badge — kiwi/kiwi accent + carrot ring */}
+              <div className="absolute -bottom-6 -left-6 bg-forest-green rounded-xl p-5 border border-kiwi/30 shadow-xl hidden sm:block hover:border-kiwi/60 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-moss/20 flex items-center justify-center">
-                    <span className="text-lg">🌿</span>
+                  <div className="w-10 h-10 rounded-full bg-kiwi/15 border border-kiwi/40 flex items-center justify-center">
+                    <Leaf className="w-5 h-5 text-kiwi" strokeWidth={1.5} />
                   </div>
                   <div>
                     <p className="font-display font-medium text-cream text-sm">Halal Certified</p>
-                    <p className="text-[10px] text-stone uppercase tracking-wider">Since 1986</p>
+                    <p className="text-[10px] text-kiwi/80 uppercase tracking-wider font-accent">Since 1986</p>
                   </div>
                 </div>
               </div>

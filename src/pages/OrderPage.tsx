@@ -14,20 +14,20 @@ export default function OrderPage() {
     <div className="min-h-screen bg-deep-forest">
       <header className="fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-6 md:px-12 bg-forest-green/80 backdrop-blur-2xl border-b border-cream/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-moss/20 flex items-center justify-center group-hover:bg-moss/30 transition-colors">
-            <Leaf className="w-4 h-4 text-moss group-hover:text-sage transition-colors" strokeWidth={2} />
+          <div className="w-9 h-9 rounded-xl bg-kiwi/20 border border-kiwi/30 flex items-center justify-center group-hover:bg-kiwi/30 group-hover:border-kiwi/60 transition-colors">
+            <Leaf className="w-4 h-4 text-kiwi transition-colors" strokeWidth={2} />
           </div>
           <div>
             <span className="font-display font-semibold text-xl text-cream leading-none tracking-tight">
               Restoran
             </span>
-            <span className="block font-body text-[10px] text-stone uppercase tracking-[0.15em] leading-tight mt-0.5">
+            <span className="block font-accent text-[10px] text-kiwi/80 uppercase tracking-[0.15em] leading-tight mt-0.5">
               Wawasan
             </span>
           </div>
         </Link>
         <Link to="/">
-          <Button variant="ghost" className="text-stone hover:text-cream hover:bg-cream/5 rounded-lg">
+          <Button variant="ghost" className="text-stone hover:text-kiwi hover:bg-cream/5 rounded-lg">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('back')}
           </Button>
@@ -38,14 +38,14 @@ export default function OrderPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 pt-10">
             <div className="inline-flex items-center gap-3 mb-5">
-              <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-moss/60" />
-              <span className="text-sage text-xs font-medium tracking-[0.2em] uppercase">
+              <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-kiwi/60" />
+              <span className="text-kiwi text-xs font-accent font-semibold tracking-[0.2em] uppercase">
                 Catering
               </span>
-              <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-moss/60" />
+              <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-kiwi/60" />
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-cream mb-4 tracking-tight">
-              {t('catering_order')}
+              <span className="bg-gradient-to-r from-sunshine via-crisp-carrot to-tomato-burst bg-clip-text text-transparent">{t('catering_order')}</span>
             </h1>
             <p className="text-cream/70 text-lg max-w-xl mx-auto leading-relaxed">
               {t('order_subtitle')}
@@ -53,7 +53,7 @@ export default function OrderPage() {
           </div>
 
           <div className="nature-card shadow-[inset_0_2px_20px_rgba(0,0,0,0.2)]">
-            <div className="h-1.5 bg-gradient-to-r from-moss via-fern to-honey/80" />
+            <div className="h-1.5 bg-gradient-to-r from-moss via-fern via-sunshine to-crisp-carrot" />
             <div className="p-6 md:p-10 bg-gradient-to-b from-forest-green/30 to-transparent">
               <ErrorBoundary fallbackTitle="Catering Form Error">
                 <OrderForm initialData={initialData} />

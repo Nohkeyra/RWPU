@@ -114,7 +114,7 @@ export default function MenuSection() {
         {/* Featured Item - Large */}
         <div className="mb-8">
           <div className="menu-card">
-            <div className="group relative bg-forest-green rounded-2xl overflow-hidden border border-cream/5 hover:border-moss/20 transition-all duration-500">
+            <div className="group relative bg-forest-green rounded-2xl overflow-hidden border border-cream/5 hover:border-crisp-carrot/30 transition-all duration-500">
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="aspect-[4/3] lg:aspect-auto overflow-hidden relative min-h-[300px]">
                   <img
@@ -125,19 +125,19 @@ export default function MenuSection() {
                   <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-forest-green/80 via-transparent to-transparent" />
                 </div>
                 <div className="p-8 md:p-12 flex flex-col justify-center relative">
-                  <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-moss/30 to-transparent lg:hidden" />
-                  
-                  <span className="inline-block w-fit px-3 py-1 bg-honey/10 border border-honey/20 text-honey rounded-full text-[10px] uppercase tracking-wider font-medium mb-4">
+                  <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-crisp-carrot/40 to-transparent lg:hidden" />
+
+                  <span className="inline-block w-fit px-3 py-1 bg-sunshine/15 border border-sunshine/30 text-sunshine rounded-full text-[10px] uppercase tracking-wider font-semibold mb-4 animate-sunshine-pulse">
                     Chef's Recommendation
                   </span>
-                  <h3 className="font-display font-semibold text-3xl text-cream mb-4">
+                  <h3 className="font-display font-semibold text-3xl text-cream mb-4 group-hover:text-sunshine transition-colors duration-500">
                     Asam Pedas
                   </h3>
                   <p className="font-body text-cream/60 leading-relaxed mb-6 font-light">
                     Our #1 crowd favorite — spicy tamarind fish stew with tangy, bold flavors. A true Malay classic that has been perfected over four decades.
                   </p>
                   <div className="flex items-center gap-4">
-                    <span className="font-['Montserrat',sans-serif] font-medium text-honey text-lg">From RM 8</span>
+                    <span className="font-accent font-semibold text-sunshine text-lg">From RM 8</span>
                     <div className="h-4 w-[1px] bg-cream/20" />
                     <span className="text-cream/40 text-sm">Best Seller</span>
                   </div>

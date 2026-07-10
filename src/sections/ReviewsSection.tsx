@@ -86,25 +86,25 @@ export default function ReviewsSection() {
           </div>
           
           <div className="review-header flex items-center justify-center gap-4 mt-6 md:mt-0">
-            <div className="flex items-center gap-2 bg-forest-green border border-cream/5 rounded-full px-4 py-2">
-              <Star className="w-4 h-4 text-honey fill-honey" />
-              <span className="font-medium text-cream text-sm">4.9</span>
+            <div className="flex items-center gap-2 bg-forest-green border border-sunshine/30 rounded-full px-4 py-2 shadow-sunshine-glow">
+              <Star className="w-4 h-4 text-sunshine fill-sunshine" />
+              <span className="font-semibold text-cream text-sm">4.9</span>
               <span className="text-cream/40 text-xs">/ 5</span>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={goPrev}
-                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-moss transition-colors"
+                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-kiwi hover:border-kiwi hover:text-deep-forest text-cream transition-all duration-300"
                 aria-label="Previous slide"
               >
-                <ChevronLeft className="w-5 h-5 text-cream" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={goNext}
-                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-moss transition-colors"
+                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-kiwi hover:border-kiwi hover:text-deep-forest text-cream transition-all duration-300"
                 aria-label="Next slide"
               >
-                <ChevronRight className="w-5 h-5 text-cream" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function ReviewsSection() {
                 onClick={() => goTo(i)}
                 className={`h-1.5 rounded-full transition-all duration-500 ${
                   i === currentIndex
-                    ? 'w-8 bg-moss'
+                    ? 'w-8 bg-kiwi shadow-kiwi-glow'
                     : 'w-1.5 bg-cream/20 hover:bg-cream/40'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}

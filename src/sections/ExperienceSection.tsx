@@ -73,9 +73,10 @@ export default function ExperienceSection() {
         {/* Overlay Content */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-6">
-            <span className="font-body text-moss text-sm uppercase tracking-[0.2em]">Our Promise</span>
+            <span className="font-accent text-kiwi text-sm uppercase tracking-[0.2em] font-medium">Our Promise</span>
             <h2 className="font-display font-bold text-cream text-4xl md:text-6xl mt-4">
-              Four Principles
+              <span className="bg-gradient-to-r from-sunshine via-crisp-carrot to-tomato-burst bg-clip-text text-transparent">Four</span>{' '}
+              Principles
             </h2>
           </div>
         </div>

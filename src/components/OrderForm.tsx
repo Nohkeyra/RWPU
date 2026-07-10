@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, CheckCircle, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X } from 'lucide-react';
+import { CalendarIcon, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { generateInvoicePDF } from '@/services/pdfService';
@@ -22,6 +22,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import AuthModal from './AuthModal';
 import { SAVED_COMPANIES } from '@/constants/companies';
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 interface FormData {
   to: string;
@@ -738,10 +740,27 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pdfDoc = generateInvoicePDF(pdfData as any, false, language);
         
-        // Download PDF on the client-side directly
-        pdfDoc.save(`Invois_Wawasan_${docRefId}.pdf`);
-
+        const fileName = `Invois_Wawasan_${docRefId}.pdf`;
         const pdfBase64 = pdfDoc.output('datauristring').split(',')[1];
+        
+        // Download/save PDF on the client-side
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const savedFile = await Filesystem.writeFile({
+              path: fileName,
+              data: pdfBase64,
+              directory: Directory.Cache
+            });
+            await Share.share({
+              title: fileName,
+              url: savedFile.uri,
+            });
+          } catch (shareErr) {
+            console.error('Error sharing PDF on mobile:', shareErr);
+          }
+        } else {
+          pdfDoc.save(fileName);
+        }
         
         // Send it via our Express backend
         const response = await fetch(getApiUrl('/api/send-invoice'), {

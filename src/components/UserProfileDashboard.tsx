@@ -32,6 +32,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { generateInvoicePDF } from '@/services/pdfService';
 import { SAVED_COMPANIES } from '@/constants/companies';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 interface UserProfile {
   name: string;
@@ -224,7 +227,7 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
     }
   };
 
-  const handleDownloadPDF = (order: OrderRecord) => {
+  const handleDownloadPDF = async (order: OrderRecord) => {
     try {
       toast({
         title: t('Downloading PDF...', 'Memuat Turun PDF...'),
@@ -239,7 +242,26 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
       };
 
       const pdfDoc = generateInvoicePDF(pdfData, false, language);
-      pdfDoc.save(`Invois_Wawasan_${order.id}.pdf`);
+      const fileName = `Invois_Wawasan_${order.id}.pdf`;
+
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const base64Data = pdfDoc.output('datauristring').split(',')[1];
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: Directory.Cache
+          });
+          await Share.share({
+            title: fileName,
+            url: savedFile.uri,
+          });
+        } catch (shareErr) {
+          console.error('Error sharing PDF on mobile:', shareErr);
+        }
+      } else {
+        pdfDoc.save(fileName);
+      }
     } catch (err) {
       console.error('Failed to generate PDF:', err);
       toast({

@@ -58,14 +58,14 @@ export default function Header() {
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 h-[72px] flex items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-moss/15 flex items-center justify-center group-hover:bg-moss/25 transition-all duration-300">
-              <Leaf className="w-5 h-5 text-moss" strokeWidth={2} />
+            <div className="w-10 h-10 rounded-xl bg-kiwi/15 border border-kiwi/30 flex items-center justify-center group-hover:bg-kiwi/25 group-hover:border-kiwi/60 transition-all duration-300">
+              <Leaf className="w-5 h-5 text-kiwi" strokeWidth={2} />
             </div>
             <div className="hidden sm:block">
               <span className="font-display font-semibold text-lg text-cream leading-none tracking-tight">
                 Restoran
               </span>
-              <span className="block font-body text-[10px] text-stone uppercase tracking-[0.15em] leading-tight mt-0.5">
+              <span className="block font-accent text-[10px] text-kiwi/80 uppercase tracking-[0.15em] leading-tight mt-0.5">
                 Wawasan
               </span>
             </div>
@@ -98,10 +98,11 @@ export default function Header() {
             {/* Auth */}
             <button
               onClick={handleAuthClick}
-              className="p-2 text-cream/70 hover:text-cream hover:bg-cream/5 rounded-lg transition-all duration-300"
+              className="p-2 text-cream/70 hover:text-kiwi hover:bg-cream/5 rounded-lg transition-all duration-300"
+              aria-label={currentUser ? 'Open profile' : 'Sign in'}
             >
               {currentUser ? (
-                <div className="w-8 h-8 rounded-full bg-moss text-cream flex items-center justify-center font-bold text-xs">
+                <div className="w-8 h-8 rounded-full bg-sunshine text-deep-forest flex items-center justify-center font-bold text-xs shadow-sunshine-glow">
                   {currentUser.displayName?.slice(0, 2) || currentUser.email?.slice(0, 2)}
                 </div>
               ) : (
@@ -109,10 +110,10 @@ export default function Header() {
               )}
             </button>
 
-            {/* CTA Button */}
+            {/* CTA Button — sunshine primary */}
             <Link
               to="/order"
-              className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-moss text-cream rounded-lg font-medium text-sm hover:bg-fern transition-all duration-300 hover:shadow-[0_4px_16px_rgba(74,124,89,0.3)]"
+              className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-sunshine text-deep-forest rounded-lg font-semibold text-sm hover:bg-honey transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
             >
               {t('order_now')}
             </Link>
