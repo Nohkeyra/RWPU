@@ -6,34 +6,36 @@ module.exports = {
     extend: {
       colors: {
         // ---------- Brand "Wawasan Pak Usop" palette ----------
-        // Earthy dark base (used for backgrounds & deep surfaces).
-        'deep-forest':   '#0A1F12', // body / app background
-        'forest-green':  '#19532B', // primary surface
-        'light-forest':  '#1E3D2F', // hover / raised surface
-        'moss':          '#2D6A3F', // primary accent
-        'fern':          '#4A8C5A', // hover accent
-        'sage':          '#87A878', // soft accent / muted highlight
-        // Warm fruit + spice accents.
-        'kiwi':          '#9ABC04', // sharp lime accent
-        'sunshine':      '#FFCA26', // primary CTA / "honey" highlight
-        'honey':         '#FFB800', // secondary warm yellow
-        'crisp-carrot':  '#F86015', // primary warm accent
-        'tomato-burst':  '#D42518', // destructive / heat
-        'burnt-orange':  '#B85C38', // warm earth red
-        'walnut':        '#5C4033', // wood tone
-        'cream':         '#F3E8CC', // light surface / text on dark
-        'stone':         '#C4B8A8', // muted text on dark
+        // Reworked to match the restaurant's real-world cues:
+        // dark kopi surfaces, brass-gold accents, sambal terracotta,
+        // and warm cream paper inspired by menu cards and invoices.
+        'deep-forest':   '#17110F', // kopi black / main background
+        'forest-green':  '#241A16', // espresso brown surface
+        'light-forest':  '#33231D', // raised wood-tone surface
+        'moss':          '#6E3E1E', // roasted spice brown
+        'fern':          '#8C5230', // copper hover accent
+        'sage':          '#D8B16A', // soft brass highlight
+        // Warm heritage accents.
+        'kiwi':          '#B85C38', // terracotta clay accent
+        'sunshine':      '#D4A853', // signature heritage gold
+        'honey':         '#E2BD74', // bright brass gold
+        'crisp-carrot':  '#C1673C', // sambal orange
+        'tomato-burst':  '#A84424', // chili red / destructive
+        'burnt-orange':  '#9D4B2B', // warm earth red
+        'walnut':        '#5B4030', // wood tone
+        'cream':         '#F6EFE2', // warm paper / text on dark
+        'stone':         '#CABBA7', // muted text on dark
         // Convenience aliases (old name -> brand color).
-        'amber':         '#FFCA26', // alias of sunshine
+        'amber':         '#D4A853', // alias of sunshine
         // Backward-compatible aliases — older components (AdminPanel.tsx,
         // OrderForm.tsx, AdminPage.tsx) still reference these class names.
         // Mapped to the closest equivalent in the new nature palette so
         // those 58+ existing references keep working without editing every
         // file. Semantically: charcoal/deep-brown -> deep-forest (main dark
         // background), warm-gold -> sage (accent/highlight color).
-        'charcoal':      '#0A1F12',
-        'deep-brown':    '#0A1F12',
-        'warm-gold':     '#87A878',
+        'charcoal':      '#17110F',
+        'deep-brown':    '#241A16',
+        'warm-gold':     '#D4A853',
         // ---------- shadcn tokens (HSL) ----------
         border:          "hsl(var(--border))",
         input:           "hsl(var(--input))",
@@ -83,11 +85,11 @@ module.exports = {
       },
       boxShadow: {
         // Brand-tinted glow shadows.
-        'moss-glow':    '0 8px 30px rgba(45, 106, 63, 0.4)',
-        'kiwi-glow':    '0 0 20px rgba(154, 188, 4, 0.4)',
-        'sunshine-glow':'0 8px 30px rgba(255, 202, 38, 0.35)',
-        'carrot-glow':  '0 8px 30px rgba(248, 96, 21, 0.35)',
-        'tomato-glow':  '0 0 20px rgba(212, 37, 24, 0.3)',
+        'moss-glow':    '0 8px 30px rgba(110, 62, 30, 0.35)',
+        'kiwi-glow':    '0 0 20px rgba(184, 92, 56, 0.35)',
+        'sunshine-glow':'0 8px 30px rgba(212, 168, 83, 0.35)',
+        'carrot-glow':  '0 8px 30px rgba(193, 103, 60, 0.35)',
+        'tomato-glow':  '0 0 20px rgba(168, 68, 36, 0.3)',
       },
       keyframes: {
         "bounce-down": {
@@ -153,11 +155,11 @@ module.exports = {
       },
       backgroundImage: {
         // Brand signature gradients (referenced in components + index.css).
-        'brand-gradient':         'linear-gradient(90deg, #19532B 0%, #2D6A3F 35%, #FFCA26 70%, #F86015 100%)',
-        'brand-gradient-soft':    'linear-gradient(90deg, #1E3D2F 0%, #2D6A3F 40%, #87A878 75%, #FFCA26 100%)',
-        'brand-cta':              'linear-gradient(90deg, #2D6A3F 0%, #4A8C5A 35%, #FFCA26 70%, #F86015 100%)',
-        'sunshine-shine':         'linear-gradient(135deg, #FFCA26 0%, #FFB800 50%, #F86015 100%)',
-        'forest-depth':           'linear-gradient(180deg, #0A1F12 0%, #19532B 50%, #1E3D2F 100%)',
+        'brand-gradient':         'linear-gradient(90deg, #241A16 0%, #6E3E1E 35%, #D4A853 72%, #C1673C 100%)',
+        'brand-gradient-soft':    'linear-gradient(90deg, #33231D 0%, #6E3E1E 40%, #D8B16A 75%, #E2BD74 100%)',
+        'brand-cta':              'linear-gradient(90deg, #33231D 0%, #8C5230 35%, #D4A853 72%, #C1673C 100%)',
+        'sunshine-shine':         'linear-gradient(135deg, #D4A853 0%, #E2BD74 50%, #C1673C 100%)',
+        'forest-depth':           'linear-gradient(180deg, #17110F 0%, #241A16 50%, #33231D 100%)',
       },
     },
   },

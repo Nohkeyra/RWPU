@@ -6,59 +6,60 @@
   :root {
     /* ============================================================
        Brand palette — Restoran Wawasan Pak Usop
-       Inspired by warm spice, fresh produce, and forest greens.
+       Inspired by teh tarik warmth, dark kopi counters, Putrajaya
+       sunset views, and brass-gold heritage signage.
        ============================================================ */
 
-    /* shadcn HSL tokens (kept in sync with colors above) */
-    --background:           150 45% 6%;        /* deep-forest */
-    --foreground:           42  45% 90%;       /* cream */
-    --card:                 150 40% 10%;       /* forest-green tinted */
-    --card-foreground:      42  45% 90%;
-    --popover:              150 40% 10%;
-    --popover-foreground:   42  45% 90%;
-    --primary:              135 55% 25%;       /* forest-green */
-    --primary-foreground:   42  45% 90%;
-    --secondary:            150 30% 14%;       /* light-forest */
-    --secondary-foreground: 42  45% 90%;
-    --muted:                150 20% 16%;
-    --muted-foreground:     35  20% 60%;       /* stone */
-    --accent:               45  100% 58%;      /* sunshine */
-    --accent-foreground:    150 45% 6%;
-    --destructive:          16  88% 48%;       /* carrot-burst */
-    --destructive-foreground: 42 45% 90%;
-    --border:               150 20% 18%;
-    --input:                150 20% 18%;
-    --ring:                 135 55% 25%;
-    --radius:               0.75rem;
+    /* shadcn HSL tokens (kept in sync with colors below) */
+    --background:           20  20% 8%;        /* deep espresso backdrop */
+    --foreground:           38  50% 93%;       /* cream */
+    --card:                 20  24% 12%;       /* dark wood surface */
+    --card-foreground:      38  50% 93%;
+    --popover:              20  24% 12%;
+    --popover-foreground:   38  50% 93%;
+    --primary:              37  59% 58%;       /* heritage gold */
+    --primary-foreground:   20  20% 8%;
+    --secondary:            22  28% 17%;       /* elevated wood */
+    --secondary-foreground: 38  50% 93%;
+    --muted:                22  16% 20%;
+    --muted-foreground:     34  24% 73%;       /* stone */
+    --accent:               20  51% 50%;       /* sambal terracotta */
+    --accent-foreground:    38  50% 93%;
+    --destructive:          14  59% 40%;       /* chili red */
+    --destructive-foreground: 38 50% 93%;
+    --border:               24  18% 22%;
+    --input:                24  18% 22%;
+    --ring:                 37  59% 58%;
+    --radius:               0.9rem;
 
     /* Raw brand hex tokens — single source of truth. */
-    --color-deep-forest:    #0A1F12;
-    --color-forest-green:   #19532B;
-    --color-light-forest:   #1E3D2F;
-    --color-moss:           #2D6A3F;
-    --color-fern:           #4A8C5A;
-    --color-sage:           #87A878;
-    --color-kiwi:           #9ABC04;
-    --color-sunshine:       #FFCA26;
-    --color-honey:          #FFB800;
-    --color-crisp-carrot:   #F86015;
-    --color-tomato-burst:   #D42518;
-    --color-cream:          #F3E8CC;
-    --color-stone:          #C4B8A8;
-    --color-walnut:         #5C4033;
-    --color-burnt-orange:   #B85C38;
+    --color-deep-forest:    #17110F;
+    --color-forest-green:   #241A16;
+    --color-light-forest:   #33231D;
+    --color-moss:           #6E3E1E;
+    --color-fern:           #8C5230;
+    --color-sage:           #D8B16A;
+    --color-kiwi:           #B85C38;
+    --color-sunshine:       #D4A853;
+    --color-honey:          #E2BD74;
+    --color-crisp-carrot:   #C1673C;
+    --color-tomato-burst:   #A84424;
+    --color-cream:          #F6EFE2;
+    --color-stone:          #CABBA7;
+    --color-walnut:         #5B4030;
+    --color-burnt-orange:   #9D4B2B;
 
     /* RGB variants — for rgba() with opacity. */
-    --rgb-sunshine:         255 202 38;
-    --rgb-honey:            255 184 0;
-    --rgb-kiwi:             154 188 4;
-    --rgb-carrot:           248 96 21;
-    --rgb-tomato:           212 37 24;
-    --rgb-moss:             45 106 63;
-    --rgb-fern:             74 140 90;
-    --rgb-sage:             135 168 120;
-    --rgb-cream:            243 232 204;
-    --rgb-stone:            196 184 168;
+    --rgb-sunshine:         212 168 83;
+    --rgb-honey:            226 189 116;
+    --rgb-kiwi:             184 92 56;
+    --rgb-carrot:           193 103 60;
+    --rgb-tomato:           168 68 36;
+    --rgb-moss:             110 62 30;
+    --rgb-fern:             140 82 48;
+    --rgb-sage:             216 177 106;
+    --rgb-cream:            246 239 226;
+    --rgb-stone:            202 187 167;
   }
 
   html {
@@ -68,7 +69,9 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: var(--color-deep-forest);
+    background:
+      radial-gradient(circle at top, rgba(var(--rgb-sunshine), 0.06), transparent 28%),
+      linear-gradient(180deg, #17110F 0%, #1D1411 46%, #241A16 100%);
     color: var(--color-cream);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -103,7 +106,7 @@
     ring: 2px;
     ring-color: rgba(var(--rgb-moss), 0.5);
     ring-offset: 2px;
-    ring-offset-color: #0A1F12;
+    ring-offset-color: #17110F;
   }
 
   /* Prevent text selection on buttons */
@@ -148,10 +151,10 @@
 
   /* ---------- Section label (decorative dots + line) ---------- */
   .section-label-line {
-    @apply h-[1px] bg-gradient-to-r from-kiwi/60 via-moss/40 to-transparent;
+    @apply h-[1px] bg-gradient-to-r from-sunshine/70 via-kiwi/45 to-transparent;
   }
   .section-label-line-right {
-    @apply h-[1px] bg-gradient-to-l from-kiwi/60 via-moss/40 to-transparent;
+    @apply h-[1px] bg-gradient-to-l from-sunshine/70 via-kiwi/45 to-transparent;
   }
 
   /* ---------- Paper texture overlay (subtle grain) ---------- */
@@ -161,7 +164,7 @@
 
   /* ---------- Button utilities ---------- */
   .shimmer-btn {
-    background: linear-gradient(90deg, var(--color-moss) 25%, var(--color-fern) 50%, var(--color-moss) 75%);
+    background: linear-gradient(90deg, var(--color-moss) 25%, var(--color-kiwi) 50%, var(--color-moss) 75%);
     background-size: 200% 100%;
     @apply animate-shimmer;
   }
@@ -179,9 +182,9 @@
   /* ---------- Brand CTA panel ---------- */
   .brand-cta-panel {
     background-image: linear-gradient(90deg,
-      var(--color-moss) 0%,
-      var(--color-fern) 35%,
-      var(--color-sunshine) 70%,
+      var(--color-forest-green) 0%,
+      var(--color-moss) 35%,
+      var(--color-sunshine) 72%,
       var(--color-crisp-carrot) 100%);
     background-size: 200% auto;
     @apply animate-gradient-shift;

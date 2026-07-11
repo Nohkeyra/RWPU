@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useLanguage } from '@/context/LanguageContext';
-import { Leaf, Menu, Languages, User as UserIcon } from 'lucide-react';
+import { Menu, Languages, User as UserIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
@@ -16,6 +16,14 @@ const NAV_LINKS = [
   { label: 'reviews', href: '#reviews' },
   { label: 'visit', href: '#visit' },
 ];
+
+function BrandMark() {
+  return (
+    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sunshine via-honey to-crisp-carrot text-deep-forest flex items-center justify-center shadow-sunshine-glow border border-white/10">
+      <span className="font-display font-bold text-lg leading-none">W</span>
+    </div>
+  );
+}
 
 export default function Header() {
   const isScrolled = useHeaderScroll();
@@ -51,55 +59,48 @@ export default function Header() {
       <header
         className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${
           isScrolled
-            ? 'bg-deep-forest/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
-            : 'bg-transparent'
+            ? 'bg-deep-forest/92 backdrop-blur-xl border-b border-sunshine/10 shadow-[0_8px_30px_rgba(0,0,0,0.35)]'
+            : 'bg-gradient-to-b from-deep-forest/60 to-transparent'
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 h-[72px] flex items-center justify-between">
-          {/* Logo */}
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 h-[76px] flex items-center justify-between">
           <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-kiwi/15 border border-kiwi/30 flex items-center justify-center group-hover:bg-kiwi/25 group-hover:border-kiwi/60 transition-all duration-300">
-              <Leaf className="w-5 h-5 text-kiwi" strokeWidth={2} />
-            </div>
+            <BrandMark />
             <div className="hidden sm:block">
               <span className="font-display font-semibold text-lg text-cream leading-none tracking-tight">
-                Restoran
+                Restoran Wawasan
               </span>
-              <span className="block font-accent text-[10px] text-kiwi/80 uppercase tracking-[0.15em] leading-tight mt-0.5">
-                Wawasan
+              <span className="block font-accent text-[10px] text-sunshine/85 uppercase tracking-[0.22em] leading-tight mt-1">
+                Pak Usop • Putrajaya
               </span>
             </div>
           </a>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1 rounded-full bg-white/[0.03] border border-white/[0.06] px-3 py-2 backdrop-blur-sm">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="relative px-4 py-2 font-body font-medium text-sm text-cream/80 hover:text-cream transition-colors duration-300 rounded-lg hover:bg-cream/5"
+                className="relative px-4 py-2 font-body font-medium text-sm text-cream/78 hover:text-cream transition-colors duration-300 rounded-full hover:bg-white/[0.05]"
               >
                 {t(link.label)}
               </a>
             ))}
           </nav>
 
-          {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Language */}
             <button
               onClick={toggleLanguage}
-              className="hidden md:flex items-center gap-2 px-3 py-2 text-cream/70 hover:text-cream hover:bg-cream/5 rounded-lg transition-all duration-300 text-sm font-medium"
+              className="hidden md:flex items-center gap-2 px-3 py-2 text-cream/70 hover:text-cream hover:bg-white/[0.05] rounded-full transition-all duration-300 text-sm font-medium border border-white/[0.06]"
             >
               <Languages className="w-4 h-4" />
               <span className="uppercase text-xs tracking-wider">{language === 'en' ? 'BM' : 'EN'}</span>
             </button>
-            
-            {/* Auth */}
+
             <button
               onClick={handleAuthClick}
-              className="p-2 text-cream/70 hover:text-kiwi hover:bg-cream/5 rounded-lg transition-all duration-300"
+              className="p-2.5 text-cream/70 hover:text-sunshine hover:bg-white/[0.05] rounded-full transition-all duration-300 border border-white/[0.04]"
               aria-label={currentUser ? 'Open profile' : 'Sign in'}
             >
               {currentUser ? (
@@ -111,18 +112,16 @@ export default function Header() {
               )}
             </button>
 
-            {/* CTA Button — sunshine primary */}
             <Link
               to="/order"
-              className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-sunshine text-deep-forest rounded-lg font-semibold text-sm hover:bg-honey transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
+              className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-sunshine text-deep-forest rounded-full font-semibold text-sm hover:bg-honey transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
             >
               {t('order_now')}
             </Link>
 
-            {/* Mobile Toggle */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden p-2 text-cream hover:bg-cream/5 rounded-lg transition-colors"
+              className="md:hidden p-2.5 text-cream hover:bg-white/[0.05] rounded-full transition-colors border border-white/[0.06]"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -130,21 +129,21 @@ export default function Header() {
         </div>
       </header>
 
-      <MobileMenu 
-        isOpen={mobileOpen} 
-        onClose={() => setMobileOpen(false)} 
-        links={NAV_LINKS.map(link => ({ ...link, label: t(link.label) }))}
+      <MobileMenu
+        isOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        links={NAV_LINKS.map((link) => ({ ...link, label: t(link.label) }))}
       />
 
-      <AuthModal 
-        isOpen={authModalOpen} 
-        onClose={() => setAuthModalOpen(false)} 
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
         onSuccess={() => setProfileDashboardOpen(true)}
       />
-      
-      <UserProfileDashboard 
-        isOpen={profileDashboardOpen} 
-        onClose={() => setProfileDashboardOpen(false)} 
+
+      <UserProfileDashboard
+        isOpen={profileDashboardOpen}
+        onClose={() => setProfileDashboardOpen(false)}
         onReorder={(orderData) => {
           navigate('/order', { state: { reorderData: orderData } });
         }}
