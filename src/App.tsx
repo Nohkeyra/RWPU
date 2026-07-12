@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import PushNotificationHandler from '@/components/PushNotificationHandler';
+import NativeBackButtonHandler from '@/components/NativeBackButtonHandler';
 
 import LandingPage from '@/pages/LandingPage';
 import OrderPage from '@/pages/OrderPage';
@@ -68,6 +69,7 @@ function App() {
         <ToastProvider>
           <Router>
             <PushNotificationHandler />
+            <NativeBackButtonHandler />
             <AppContent />
           </Router>
         </ToastProvider>
