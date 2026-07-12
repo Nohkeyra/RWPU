@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+
     /* Nusantara Deep Espresso - Dark Theme */
     --color-deep-forest: #F5EFE6;      /* Warm Cream Text */
     --color-forest: #1E1512;           /* Deep Espresso/Chocolate */
@@ -50,6 +52,10 @@
   body {
     @apply bg-cream text-deep-forest antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  #root {
+    padding-top: env(safe-area-inset-top, 0px);
   }
   
   h1, h2, h3, h4, h5, h6 {

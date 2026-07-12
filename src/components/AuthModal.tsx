@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -18,8 +18,11 @@ import {
   X, 
   ArrowRight, 
   Loader2,
-  ChevronDown
+  ChevronDown,
+  Fingerprint
 } from 'lucide-react';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'motion/react';
 import { SAVED_COMPANIES } from '@/constants/companies';
 
@@ -46,6 +49,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [selectedCompany, setSelectedCompany] = useState('');
   const [attn, setAttn] = useState(''); // Attn
 
+  // Translation helpers - DECLARED EARLY
+  const t = (en: string, bm: string) => (language === 'bm' ? bm : en);
+
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -60,8 +66,86 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     setMode(newMode);
   };
 
-  // Translation helpers
-  const t = (en: string, bm: string) => (language === 'bm' ? bm : en);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(
+    () => localStorage.getItem('wawasan_user_biometric_enabled') === 'true'
+  );
+
+  // Check biometric availability when open
+  useEffect(() => {
+    const checkBiometric = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      try {
+        const result = await NativeBiometric.isAvailable();
+        setBiometricAvailable(result.isAvailable);
+      } catch (err) {
+        console.error('Failed to check biometric availability', err);
+      }
+    };
+    if (isOpen) {
+      checkBiometric();
+    }
+  }, [isOpen]);
+
+  const handleBiometricAuth = async () => {
+    try {
+      setIsLoading(true);
+      await NativeBiometric.verifyIdentity({
+        reason: 'Authenticate to access your profile',
+        title: 'Restoran Wawasan',
+        subtitle: 'Use fingerprint or face ID',
+      });
+
+      // Biometric success! Retrieve saved credentials
+      const savedEmail = localStorage.getItem('wawasan_user_email');
+      const savedPassword = localStorage.getItem('wawasan_user_password');
+
+      if (savedEmail && savedPassword) {
+        await signInWithEmailAndPassword(auth, savedEmail, savedPassword);
+        toast({
+          title: t('Success', 'Berjaya'),
+          description: t('Successfully signed in via biometrics.', 'Berjaya log masuk melalui biometrik.'),
+          variant: 'success'
+        });
+        resetForm();
+        onSuccess?.();
+        onClose();
+      } else {
+        toast({
+          title: t('Setup Required', 'Penyediaan Diperlukan'),
+          description: t('Please complete password login first to register biometrics.', 'Sila lengkapkan log masuk kata laluan terlebih dahulu untuk mendaftar biometrik.'),
+          variant: 'warning'
+        });
+      }
+    } catch (err) {
+      console.error('Biometrics failed:', err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.toLowerCase().includes('cancel')) {
+        toast({
+          title: t('Cancelled', 'Dibatalkan'),
+          description: t('Biometric authentication cancelled.', 'Autentikasi biometrik dibatalkan.'),
+          variant: 'info'
+        });
+      } else {
+        toast({
+          title: t('Authentication Failed', 'Ralat Autentikasi'),
+          description: t('Biometric authentication failed. Please use password.', 'Autentikasi biometrik gagal. Sila gunakan kata laluan.'),
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Auto-trigger biometric if enabled and modal opens in signin mode
+  useEffect(() => {
+    if (isOpen && mode === 'signin' && biometricEnabled && biometricAvailable && !isLoading) {
+      const timer = setTimeout(handleBiometricAuth, 800);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mode, biometricEnabled, biometricAvailable]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +164,27 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       if (mode === 'signin') {
         if (!password) throw new Error(t('Password is required', 'Kata laluan diperlukan'));
         await signInWithEmailAndPassword(auth, email, password);
+        
+        // Handle biometric setup/updates on successful password sign in
+        if (biometricAvailable && !biometricEnabled) {
+          const enable = window.confirm(
+            t(
+              'Enable biometric authentication for faster access next time?',
+              'Aktifkan pengesahan biometrik untuk akses lebih cepat lain kali?'
+            )
+          );
+          if (enable) {
+            localStorage.setItem('wawasan_user_biometric_enabled', 'true');
+            localStorage.setItem('wawasan_user_email', email);
+            localStorage.setItem('wawasan_user_password', password);
+            setBiometricEnabled(true);
+          }
+        } else if (biometricEnabled) {
+          // Keep credentials synchronized if password/email updated
+          localStorage.setItem('wawasan_user_email', email);
+          localStorage.setItem('wawasan_user_password', password);
+        }
+
         toast({
           title: t('Success', 'Berjaya'),
           description: t('Successfully signed in.', 'Berjaya log masuk.'),
@@ -364,6 +469,18 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   </>
                 )}
               </button>
+
+              {mode === 'signin' && biometricAvailable && (
+                <button
+                  type="button"
+                  onClick={handleBiometricAuth}
+                  disabled={isLoading}
+                  className="w-full h-12 border border-[#C5A059]/30 text-[#C5A059] font-semibold rounded-lg hover:bg-[#C5A059]/10 active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-3"
+                >
+                  <Fingerprint className="w-5 h-5" />
+                  {t('Use Fingerprint / Face ID', 'Guna Cap Jari / Face ID')}
+                </button>
+              )}
 
               {/* Toggle modes */}
               <div className="text-center mt-6 pt-4 border-t border-[#222226] text-xs">

@@ -25,27 +25,29 @@ export default function OrderPage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-cream pattern-dots">
-        <header className="fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center justify-between px-6 md:px-12 bg-cream/80 backdrop-blur-xl border-b border-white/5 shadow-sm">
-          <Link to="/" className="flex items-center gap-3 group">
-            <BrandMark />
-            <div>
-              <span className="font-display font-semibold text-xl text-deep-forest leading-none tracking-tight">
-                Restoran Wawasan
-              </span>
-              <span className="block font-accent text-[10px] text-crisp-carrot uppercase tracking-[0.18em] leading-tight mt-0.5 font-bold">
-                Pak Usop
-              </span>
-            </div>
-          </Link>
-          <Link to="/">
-            <Button variant="ghost" className="text-stone hover:text-crisp-carrot hover:bg-white/10 rounded-full">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('back')}
-            </Button>
-          </Link>
+        <header className="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-xl border-b border-white/5 shadow-sm pt-[var(--sat)]">
+          <div className="flex items-center justify-between px-6 md:px-12 h-[76px]">
+            <Link to="/" className="flex items-center gap-3 group">
+              <BrandMark />
+              <div>
+                <span className="font-display font-semibold text-xl text-deep-forest leading-none tracking-tight">
+                  Restoran Wawasan
+                </span>
+                <span className="block font-accent text-[10px] text-crisp-carrot uppercase tracking-[0.18em] leading-tight mt-0.5 font-bold">
+                  Pak Usop
+                </span>
+              </div>
+            </Link>
+            <Link to="/">
+              <Button variant="ghost" className="text-stone hover:text-crisp-carrot hover:bg-white/10 rounded-full">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t('back')}
+              </Button>
+            </Link>
+          </div>
         </header>
 
-        <main className="pt-24 pb-16">
+        <main className="pt-[calc(76px+var(--sat)+2rem)] pb-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14 pt-10">
               <span className="inline-flex items-center gap-3 mb-5 px-4 py-2 rounded-full bg-sunshine/10 text-sunshine text-sm font-bold border border-sunshine/20">

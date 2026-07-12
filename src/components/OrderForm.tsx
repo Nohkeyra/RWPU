@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -101,13 +102,13 @@ const A4InvoiceSheet = ({
         {/* Cream Grid Boxes */}
         <div className="grid grid-cols-2 gap-3">
           {/* Invoice No */}
-          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('invoice_no_label')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">RW — PENDING</span>
           </div>
 
           {/* Event Date */}
-          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('tarikh_acara')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">
               <ShimmerText isTyping={isTyping.date} text={data.date && !isNaN(data.date.getTime()) ? format(data.date, 'dd/MM/yyyy') : '—'} />
@@ -116,7 +117,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Recipient Full Width Box */}
-        <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
+        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
           <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('kepada')}</span>
           <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
             <ShimmerText 
@@ -128,7 +129,7 @@ const A4InvoiceSheet = ({
 
         <div className="grid grid-cols-2 gap-3">
           {/* Event Location */}
-          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('lokasi_acara')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
               <ShimmerText isTyping={isTyping.location} text={data.location || '—'} />
@@ -136,7 +137,7 @@ const A4InvoiceSheet = ({
           </div>
 
           {/* Meal For */}
-          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('jenis_hidangan')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">
               <ShimmerText 
@@ -148,7 +149,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Quantity Full Width */}
-        <div className="bg-cream border border-deep-forest/10 p-2 rounded shadow-sm">
+        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2 rounded shadow-sm">
           <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('bilangan_pax')}</span>
           <span className="text-[10.5px] font-bold text-[#1A1816]">
             <ShimmerText isTyping={isTyping.quantity} text={data.quantity ? `${data.quantity} PAX` : '—'} />
@@ -160,7 +161,7 @@ const A4InvoiceSheet = ({
           <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
             MENU
           </div>
-          <div className="bg-cream border border-deep-forest/10 p-3 rounded-b shadow-sm">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-3 rounded-b shadow-sm">
             <span className="text-[10px] font-bold text-[#1A1816]">
               <ShimmerText isTyping={isTyping.menu} text={data.menu || 'Set box Makanan & Minuman'} />
             </span>
@@ -171,7 +172,7 @@ const A4InvoiceSheet = ({
         <div className="space-y-0.5">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-deep-forest text-white">
+              <tr className="bg-[#604008] text-white">
                 <th className="p-2 text-left text-[8px] font-black uppercase tracking-wider">{t('meals')}</th>
                 <th className="p-2 text-center text-[8px] font-black uppercase tracking-wider w-28">{t('price_pax')}</th>
                 <th className="p-2 text-right text-[8px] font-black uppercase tracking-wider w-28">{t('amount_rm')}</th>
@@ -179,7 +180,7 @@ const A4InvoiceSheet = ({
             </thead>
             <tbody>
               {data.meals.length === 0 ? (
-                <tr className="bg-cream border border-deep-forest/10">
+                <tr className="bg-[#FAF7F0] border border-[#C2932D]/20">
                   <td colSpan={3} className="p-4 text-center text-slate-400 italic text-xs">
                     {t('no_meals')}
                   </td>
@@ -187,11 +188,11 @@ const A4InvoiceSheet = ({
               ) : (
                 data.meals.map((mealVal: string) => {
                   return (
-                    <tr key={mealVal} className="bg-cream border border-deep-forest/10">
-                      <td className="p-2 border-r border-deep-forest/10 font-bold text-[10px] text-[#1A1816] uppercase">
+                    <tr key={mealVal} className="bg-[#FAF7F0] border-b border-l border-r border-[#C2932D]/20">
+                      <td className="p-2 border-r border-[#C2932D]/20 font-bold text-[10px] text-[#1A1816] uppercase">
                         {t(mealVal)}
                       </td>
-                      <td className="p-2 border-r border-deep-forest/10 text-center text-[10px] text-[#1A1816] font-medium italic">
+                      <td className="p-2 border-r border-[#C2932D]/20 text-center text-[10px] text-[#1A1816] font-medium italic">
                         {t('quote_pending')}
                       </td>
                       <td className="p-2 text-right text-[10px] font-bold text-[#1A1816] italic">
@@ -202,7 +203,7 @@ const A4InvoiceSheet = ({
                 })
               )}
               {/* Grand Total Bar */}
-              <tr className="bg-deep-forest text-white">
+              <tr className="bg-[#604008] text-white">
                 <td colSpan={2} className="p-2 font-black text-[8px] uppercase tracking-wider">
                   {t('grand_total_preview')}
                 </td>
@@ -229,7 +230,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Bank Account Details */}
-        <div className="bg-cream border border-deep-forest/10 p-3 rounded shadow-sm">
+        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-3 rounded shadow-sm">
           <div className="text-[8.5px] font-black text-[#A67C1E] uppercase tracking-wider mb-2">
             MAKLUMAT AKAUN BANK / BANK ACCOUNT DETAILS
           </div>
@@ -282,8 +283,8 @@ const A4InvoiceSheet = ({
           <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
             PERSON IN CHARGE DETAILS
           </div>
-          <div className="bg-cream border border-deep-forest/10 rounded-b shadow-sm overflow-hidden divide-y divide-deep-forest/10">
-            <div className="grid grid-cols-2 divide-x divide-deep-forest/10">
+          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 rounded-b shadow-sm overflow-hidden divide-y divide-[#C2932D]/20">
+            <div className="grid grid-cols-2 divide-x divide-[#C2932D]/20">
               <div className="p-2.5">
                 <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">NAMA / NAME</span>
                 <span className="text-[9.5px] font-bold text-[#1A1816]">
@@ -297,7 +298,7 @@ const A4InvoiceSheet = ({
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-deep-forest/10">
+            <div className="grid grid-cols-2 divide-x divide-[#C2932D]/20">
               <div className="p-2.5">
                 <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">E-MEL / EMAIL</span>
                 <span className="text-[9.5px] font-bold text-[#1A1816] break-all">
@@ -440,8 +441,10 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   const [showMobileDraft, setShowMobileDraft] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   useEffect(() => {
+    setIsProfileLoading(true);
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user && !initialData) {
@@ -473,7 +476,11 @@ export default function OrderForm({ initialData }: OrderFormProps) {
           }
         } catch(err) {
           console.error("Error fetching user profile for order form:", err);
+        } finally {
+          setIsProfileLoading(false);
         }
+      } else {
+        setIsProfileLoading(false);
       }
     });
     return () => unsubscribe();
@@ -994,42 +1001,48 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Label htmlFor="company-select" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('to')} <span className="text-crisp-carrot">*</span>
                   </Label>
-                  <Select
-                    value={selectedCompany}
-                    onValueChange={(val) => {
-                      setSelectedCompany(val);
-                      if (val === 'other') {
-                        handleInputChange('to', '');
-                      } else {
-                        handleInputChange('to', val);
-                      }
-                    }}
-                    required
-                  >
-                    <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-base text-deep-forest focus:border-sunshine/50 focus:outline-none focus:ring-2 focus:ring-sunshine/20 shadow-sm font-sans transition-all duration-300">
-                      <SelectValue placeholder={`-- ${t('select_company')} --`} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-charcoal border-white/10 text-deep-forest">
-                      {SAVED_COMPANIES.map((company, idx) => (
-                        <SelectItem key={idx} value={company} className="text-deep-forest focus:bg-white/10 focus:text-deep-forest">
-                          {company}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="other" className="text-crisp-carrot font-semibold focus:bg-white/10 focus:text-crisp-carrot">
-                        {t('other_company')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <>
+                      <Select
+                        value={selectedCompany}
+                        onValueChange={(val) => {
+                          setSelectedCompany(val);
+                          if (val === 'other') {
+                            handleInputChange('to', '');
+                          } else {
+                            handleInputChange('to', val);
+                          }
+                        }}
+                        required
+                      >
+                        <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-base text-deep-forest focus:border-sunshine/50 focus:outline-none focus:ring-2 focus:ring-sunshine/20 shadow-sm font-sans transition-all duration-300">
+                          <SelectValue placeholder={`-- ${t('select_company')} --`} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-charcoal border-white/10 text-deep-forest">
+                          {SAVED_COMPANIES.map((company, idx) => (
+                            <SelectItem key={idx} value={company} className="text-deep-forest focus:bg-white/10 focus:text-deep-forest">
+                              {company}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="other" className="text-crisp-carrot font-semibold focus:bg-white/10 focus:text-crisp-carrot">
+                            {t('other_company')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                  {selectedCompany === 'other' && (
-                    <Input
-                      id="to"
-                      value={formData.to}
-                      onChange={(e) => handleInputChange('to', e.target.value)}
-                      placeholder={t('specify_company')}
-                      required
-                      className="mt-2 animate-fade-in font-sans"
-                    />
+                      {selectedCompany === 'other' && (
+                        <Input
+                          id="to"
+                          value={formData.to}
+                          onChange={(e) => handleInputChange('to', e.target.value)}
+                          placeholder={t('specify_company')}
+                          required
+                          className="mt-2 animate-fade-in font-sans"
+                        />
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -1037,13 +1050,17 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Label htmlFor="attn" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('attn')} <span className="text-stone/40">({t('optional')})</span>
                   </Label>
-                  <Input
-                    id="attn"
-                    value={formData.attn}
-                    onChange={(e) => handleInputChange('attn', e.target.value)}
-                    placeholder={t('dept_attn')}
-                    className="font-sans"
-                  />
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <Input
+                      id="attn"
+                      value={formData.attn}
+                      onChange={(e) => handleInputChange('attn', e.target.value)}
+                      placeholder={t('dept_attn')}
+                      className="font-sans"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -1224,29 +1241,37 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Label htmlFor="name" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('name')} <span className="text-crisp-carrot">*</span>
                   </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g. Ahmad bin Ali"
-                    required
-                    className="font-sans"
-                  />
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder="e.g. Ahmad bin Ali"
+                      required
+                      className="font-sans"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="contact" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('contact')} <span className="text-crisp-carrot">*</span>
                   </Label>
-                  <Input
-                    id="contact"
-                    type="tel"
-                    value={formData.contact}
-                    onChange={(e) => handleInputChange('contact', e.target.value)}
-                    placeholder="+60 XX-XXXX XXXX"
-                    required
-                    className="font-sans"
-                  />
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <Input
+                      id="contact"
+                      type="tel"
+                      value={formData.contact}
+                      onChange={(e) => handleInputChange('contact', e.target.value)}
+                      placeholder="+60 XX-XXXX XXXX"
+                      required
+                      className="font-sans"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1255,30 +1280,38 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Label htmlFor="email" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('email')} <span className="text-crisp-carrot">*</span>
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="email@example.com"
-                    required
-                    className="font-sans"
-                  />
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="email@example.com"
+                      required
+                      className="font-sans"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmEmail" className="text-stone text-xs font-semibold uppercase tracking-wider">
                     {t('confirm_email')} <span className="text-crisp-carrot">*</span>
                   </Label>
-                  <Input
-                    id="confirmEmail"
-                    type="email"
-                    value={confirmEmail}
-                    onChange={(e) => setConfirmEmail(e.target.value)}
-                    placeholder="email@example.com"
-                    required
-                    className="font-sans"
-                  />
+                  {isProfileLoading ? (
+                    <Skeleton className="h-11 w-full rounded-md" />
+                  ) : (
+                    <Input
+                      id="confirmEmail"
+                      type="email"
+                      value={confirmEmail}
+                      onChange={(e) => setConfirmEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      required
+                      className="font-sans"
+                    />
+                  )}
                 </div>
               </div>
             </div>

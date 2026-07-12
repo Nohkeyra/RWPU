@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 const MENU_ITEMS = [
   {
@@ -70,6 +72,15 @@ const MENU_ITEMS = [
 export default function MenuSection() {
   const { t, language } = useLanguage();
   const isBm = language === 'bm';
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading menu items from a network request
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 850);
+    return () => clearTimeout(timer);
+  }, []);
 
   const headerRef = useScrollTrigger<HTMLDivElement>({
     animation: 'fade-up',
@@ -107,33 +118,55 @@ export default function MenuSection() {
         </div>
 
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {MENU_ITEMS.map((item) => (
-            <div key={item.nameEn} className="menu-card group relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.1)] hover:-translate-y-1 transition-all duration-500">
-              <div className="aspect-[4/3] overflow-hidden relative">
-                <img
-                  src={item.image}
-                  alt={isBm ? item.nameBm : item.nameEn}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0807]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-              <div className="p-6 md:p-8 relative bg-transparent">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-display font-bold text-2xl text-deep-forest">
-                    {isBm ? item.nameBm : item.nameEn}
-                  </h3>
+          {isLoading ? (
+            // Render beautiful skeleton cards during loading
+            Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="menu-card relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] p-0 flex flex-col h-full">
+                <div className="aspect-[4/3] w-full relative overflow-hidden">
+                  <Skeleton className="w-full h-full rounded-t-[2.5rem]" />
                 </div>
-                <p className="font-body text-deep-forest/70 leading-relaxed mb-6 font-light text-sm h-[60px] overflow-hidden line-clamp-3">
-                  {isBm ? item.descBm : item.descEn}
-                </p>
-                <div className="flex items-center gap-4 border-t border-white/10 pt-4">
-                  <span className="font-sans font-bold text-sunshine">
-                    {isBm ? item.priceBm : item.priceEn}
-                  </span>
+                <div className="p-6 md:p-8 flex flex-col flex-1 bg-transparent">
+                  <Skeleton className="h-7 w-1/2 rounded-md mb-4" />
+                  <div className="space-y-2 mb-6">
+                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-4 w-11/12 rounded" />
+                    <Skeleton className="h-4 w-4/5 rounded" />
+                  </div>
+                  <div className="border-t border-white/10 pt-4 mt-auto">
+                    <Skeleton className="h-5 w-1/4 rounded" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            MENU_ITEMS.map((item) => (
+              <div key={item.nameEn} className="menu-card group relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.1)] hover:-translate-y-1 transition-all duration-500">
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img
+                    src={item.image}
+                    alt={isBm ? item.nameBm : item.nameEn}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0807]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+                <div className="p-6 md:p-8 relative bg-transparent">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="font-display font-bold text-2xl text-deep-forest">
+                      {isBm ? item.nameBm : item.nameEn}
+                    </h3>
+                  </div>
+                  <p className="font-body text-deep-forest/70 leading-relaxed mb-6 font-light text-sm h-[60px] overflow-hidden line-clamp-3">
+                    {isBm ? item.descBm : item.descEn}
+                  </p>
+                  <div className="flex items-center gap-4 border-t border-white/10 pt-4">
+                    <span className="font-sans font-bold text-sunshine">
+                      {isBm ? item.priceBm : item.priceEn}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </section>

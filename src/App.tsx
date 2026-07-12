@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { SafeArea } from 'capacitor-plugin-safe-area';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -63,6 +65,42 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    const hideSplash = async () => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      await SplashScreen.hide();
+    };
+
+    hideSplash();
+
+    // Setup Safe Area CSS variables (especially for Android edge-to-edge)
+    const setupSafeArea = async () => {
+      try {
+        const { insets } = await SafeArea.getSafeAreaInsets();
+        for (const [key, value] of Object.entries(insets)) {
+          document.documentElement.style.setProperty(
+            `--safe-area-inset-${key}`,
+            `${value}px`
+          );
+        }
+
+        SafeArea.addListener('safeAreaChanged', data => {
+          const { insets } = data;
+          for (const [key, value] of Object.entries(insets)) {
+            document.documentElement.style.setProperty(
+              `--safe-area-inset-${key}`,
+              `${value}px`
+            );
+          }
+        });
+      } catch {
+        // Plugin not available (e.g. running in web browser)
+      }
+    };
+    
+    setupSafeArea();
+  }, []);
+
   return (
     <SettingsProvider>
       <LanguageProvider>

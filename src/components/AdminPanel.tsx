@@ -742,50 +742,52 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
   return (
     <div className="min-h-screen bg-charcoal">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-6 md:px-12 bg-charcoal/95 backdrop-blur-xl border-b border-warm-gold/10">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img
-              src={getAssetUrl("/assets/wawasan_logo.jpg")}
-              alt="Restoran Wawasan Logo"
-              className="w-9 h-9 rounded-lg border border-white/10 shadow-md object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div>
-              <span className="font-display font-semibold text-xl text-deep-forest leading-none">
-                Wawasan
-              </span>
-              <span className="block font-body text-xs text-deep-forest/60 leading-tight mt-0.5">
-                Admin
-              </span>
-            </div>
-          </Link>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <Link to="/">
-            <Button variant="ghost" className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('back')}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-charcoal/95 backdrop-blur-xl border-b border-warm-gold/10 pt-[var(--sat)]">
+        <div className="flex items-center justify-between px-6 md:px-12 h-[72px]">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src={getAssetUrl("/assets/wawasan_logo.jpg")}
+                alt="Restoran Wawasan Logo"
+                className="w-9 h-9 rounded-lg border border-white/10 shadow-md object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div>
+                <span className="font-display font-semibold text-xl text-deep-forest leading-none">
+                  Wawasan
+                </span>
+                <span className="block font-body text-xs text-deep-forest/60 leading-tight mt-0.5">
+                  Admin
+                </span>
+              </div>
+            </Link>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button variant="ghost" className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t('back')}
+              </Button>
+            </Link>
+            <Button 
+              variant="ghost" 
+              className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
+              onClick={() => {
+                localStorage.removeItem('wawasan_admin_authenticated');
+                localStorage.removeItem('wawasan_admin_password');
+                window.location.reload();
+              }}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('logout')}
             </Button>
-          </Link>
-          <Button 
-            variant="ghost" 
-            className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
-            onClick={() => {
-              localStorage.removeItem('wawasan_admin_authenticated');
-              localStorage.removeItem('wawasan_admin_password');
-              window.location.reload();
-            }}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            {t('logout')}
-          </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-[72px]">
+      <main className="pt-[calc(72px+var(--sat)+2rem)]">
         <div className="p-6 md:p-8">
           {/* Page Header */}
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">

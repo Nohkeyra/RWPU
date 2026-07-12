@@ -12,6 +12,7 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, db } from '@/firebaseConfig';
 import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/components/ui/Toast';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { 
   User as UserIcon, 
   Phone, 
@@ -407,8 +408,16 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
               </h3>
 
               {isLoadingProfile ? (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#C5A059]" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx} className="flex gap-2.5 items-start">
+                      <Skeleton className="w-4 h-4 shrink-0 mt-0.5 rounded-full" />
+                      <div className="flex-1 space-y-1">
+                        <Skeleton className="h-2.5 w-1/3 rounded bg-white/[0.04]" />
+                        <Skeleton className="h-4 w-2/3 rounded bg-white/[0.06]" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : isEditing ? (
                 <form onSubmit={handleSaveProfile} className="space-y-4 text-sm text-[#F4F4F6]">
@@ -530,8 +539,32 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
               </h3>
 
               {isLoadingOrders ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#C5A059]" />
+                <div className="space-y-4">
+                  {Array.from({ length: 2 }).map((_, idx) => (
+                    <div key={idx} className="bg-[#0B0B0C] border border-[#222226] rounded-xl p-4 space-y-4">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="space-y-1.5 flex-1">
+                          <Skeleton className="h-3 w-1/4 rounded bg-white/[0.04]" />
+                          <Skeleton className="h-4 w-3/4 rounded bg-white/[0.06]" />
+                        </div>
+                        <Skeleton className="h-5 w-16 rounded-full bg-white/[0.04]" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-t border-[#222226] pt-3">
+                        <div className="space-y-1">
+                          <Skeleton className="h-2.5 w-1/3 rounded bg-white/[0.04]" />
+                          <Skeleton className="h-3.5 w-1/2 rounded bg-white/[0.06]" />
+                        </div>
+                        <div className="space-y-1">
+                          <Skeleton className="h-2.5 w-1/3 rounded bg-white/[0.04]" />
+                          <Skeleton className="h-3.5 w-1/2 rounded bg-white/[0.06]" />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 border-t border-[#222226] pt-3">
+                        <Skeleton className="h-9 flex-1 rounded-lg bg-white/[0.04]" />
+                        <Skeleton className="h-9 flex-1 rounded-lg bg-white/[0.06]" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : orders.length === 0 ? (
                 <div className="bg-[#0B0B0C] border border-[#222226] rounded-xl p-8 text-center">
