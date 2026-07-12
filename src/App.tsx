@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { SafeArea } from 'capacitor-plugin-safe-area';
+import { Capacitor } from '@capacitor/core';
 import { syncPreferencesToLocalStorage } from '@/lib/preferences';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SettingsProvider } from '@/context/SettingsContext';
@@ -79,26 +80,55 @@ function App() {
 
     // Setup Safe Area CSS variables (especially for Android edge-to-edge)
     const setupSafeArea = async () => {
+      // Set initial defaults for native platforms to prevent immediate overlap before plugin resolves
+      if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        const defaultTopInset = platform === 'ios' ? '44px' : '28px';
+        document.documentElement.style.setProperty('--safe-area-inset-top', defaultTopInset);
+        document.documentElement.style.setProperty('--safe-area-inset-bottom', '20px');
+      }
+
       try {
         const { insets } = await SafeArea.getSafeAreaInsets();
-        for (const [key, value] of Object.entries(insets)) {
-          document.documentElement.style.setProperty(
-            `--safe-area-inset-${key}`,
-            `${value}px`
-          );
-        }
+        const platform = Capacitor.getPlatform();
+        
+        // If the plugin returns 0 but we are on native platform, use fallback defaults so they don't overlay
+        const topInset = (insets.top === 0 && Capacitor.isNativePlatform()) 
+          ? (platform === 'ios' ? 44 : 28) 
+          : insets.top;
+          
+        const bottomInset = (insets.bottom === 0 && Capacitor.isNativePlatform())
+          ? 20
+          : insets.bottom;
+
+        document.documentElement.style.setProperty('--safe-area-inset-top', `${topInset}px`);
+        document.documentElement.style.setProperty('--safe-area-inset-bottom', `${bottomInset}px`);
+        document.documentElement.style.setProperty('--safe-area-inset-left', `${insets.left}px`);
+        document.documentElement.style.setProperty('--safe-area-inset-right', `${insets.right}px`);
 
         SafeArea.addListener('safeAreaChanged', data => {
-          const { insets } = data;
-          for (const [key, value] of Object.entries(insets)) {
-            document.documentElement.style.setProperty(
-              `--safe-area-inset-${key}`,
-              `${value}px`
-            );
-          }
+          const { insets: newInsets } = data;
+          const currentPlatform = Capacitor.getPlatform();
+          const newTopInset = (newInsets.top === 0 && Capacitor.isNativePlatform())
+            ? (currentPlatform === 'ios' ? 44 : 28)
+            : newInsets.top;
+            
+          const newBottomInset = (newInsets.bottom === 0 && Capacitor.isNativePlatform())
+            ? 20
+            : newInsets.bottom;
+
+          document.documentElement.style.setProperty('--safe-area-inset-top', `${newTopInset}px`);
+          document.documentElement.style.setProperty('--safe-area-inset-bottom', `${newBottomInset}px`);
+          document.documentElement.style.setProperty('--safe-area-inset-left', `${newInsets.left}px`);
+          document.documentElement.style.setProperty('--safe-area-inset-right', `${newInsets.right}px`);
         });
-      } catch {
-        // Plugin not available (e.g. running in web browser)
+      } catch (err) {
+        console.warn('SafeArea plugin error, using fallbacks:', err);
+        if (Capacitor.isNativePlatform()) {
+          const platform = Capacitor.getPlatform();
+          document.documentElement.style.setProperty('--safe-area-inset-top', platform === 'ios' ? '44px' : '28px');
+          document.documentElement.style.setProperty('--safe-area-inset-bottom', '20px');
+        }
       }
     };
     

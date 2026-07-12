@@ -355,8 +355,8 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="relative w-full max-w-xl h-full bg-[#141417] border-l border-[#222226] shadow-2xl flex flex-col z-10"
         >
-          {/* Header */}
-          <div className="h-[76px] px-6 border-b border-[#222226] flex items-center justify-between">
+          {/* Header with Top Safe Area Padding */}
+          <div className="px-6 border-b border-[#222226] flex items-center justify-between pt-[var(--sat)] h-[calc(76px+var(--sat))]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center text-[#C5A059]">
                 <UserIcon className="w-5 h-5" />
