@@ -9,7 +9,6 @@ import ReviewsSection from '@/sections/ReviewsSection';
 import VisitSection from '@/sections/VisitSection';
 
 export default function LandingPage() {
-  // Ensure smooth scroll behavior for anchor links
   useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
     return () => {
@@ -18,9 +17,9 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-deep-forest">
+    <div className="min-h-screen bg-cream pattern-dots">
       <Header />
-      <main>
+      <main className="pt-20">
         <HeroSection />
         <StorySection />
         <MenuSection />

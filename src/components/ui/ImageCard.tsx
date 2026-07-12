@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, getAssetUrl } from "@/lib/utils";
 
 interface ImageCardProps {
   src: string;
@@ -24,7 +24,7 @@ export function ImageCard({
   return (
     <div className={cn("relative overflow-hidden rounded-xl group", className)}>
       <img 
-        src={src} 
+        src={getAssetUrl(src)} 
         alt={alt} 
         className={cn("w-full h-full object-cover transition-transform duration-500 group-hover:scale-105", aspectClasses[aspectRatio])}
         loading="lazy"

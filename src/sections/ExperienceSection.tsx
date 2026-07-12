@@ -1,6 +1,4 @@
 import { Sparkles, Heart, Flame, HandHeart } from 'lucide-react';
-import SectionLabel from '@/components/SectionLabel';
-import PrincipleCard from '@/components/PrincipleCard';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -37,11 +35,6 @@ const PRINCIPLES = [
 
 export default function ExperienceSection() {
   const { language, t } = useLanguage();
-  
-  const imageRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'scale-up',
-    duration: 1.2,
-  });
 
   const contentRef = useScrollTrigger<HTMLDivElement>({
     animation: 'fade-up',
@@ -54,62 +47,46 @@ export default function ExperienceSection() {
     y: 40,
     childSelector: '.principle-card',
     stagger: 0.15,
-    delay: 0.5,
   });
 
   return (
-    <section id="experience" className="relative">
-      {/* Full-Width Image Band */}
-      <div ref={imageRef} className="relative w-full h-[300px] md:h-[500px] overflow-hidden">
-        <img
-          src={`/assets/putrajaya-lake-view.jpg`}
-          alt="Putrajaya view"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-deep-forest via-deep-forest/50 to-forest-green" />
+    <section id="experience" className="section-padding bg-cream relative">
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="content-container">
         
-        {/* Overlay Content */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-6">
-            <span className="font-accent text-kiwi text-sm uppercase tracking-[0.2em] font-medium">Our Promise</span>
-            <h2 className="font-display font-bold text-cream text-4xl md:text-6xl mt-4">
-              <span className="bg-gradient-to-r from-sunshine via-crisp-carrot to-tomato-burst bg-clip-text text-transparent">Four</span>{' '}
-              Principles
-            </h2>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="bg-forest-green section-padding">
-        <div className="content-container">
-          <div ref={contentRef} className="text-center mb-16">
-            <div className="exp-animate flex justify-center">
-              <SectionLabel text={t('experience_title')} light />
+        <div ref={contentRef} className="text-center mb-20">
+          <div className="exp-animate flex justify-center mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
+                {t('experience_title')}
+              </span>
             </div>
-            <h2 className="exp-animate font-display font-semibold text-[32px] md:text-[48px] text-cream leading-[1.1] mb-6">
-              {t('more_than_meal')}
-            </h2>
-            <p className="exp-animate font-body font-light text-lg text-cream/60 leading-relaxed max-w-[560px] mx-auto">
-              {t('experience_p1')}
-            </p>
           </div>
+          <h2 className="exp-animate font-display font-bold text-[36px] md:text-[56px] text-deep-forest leading-[1.05] mb-6">
+            {t('more_than_meal')}
+          </h2>
+          <p className="exp-animate font-body text-lg text-deep-forest/70 leading-relaxed max-w-[600px] mx-auto font-light">
+            {t('experience_p1')}
+          </p>
+        </div>
 
-          {/* Principles Grid - Large Cards */}
-          <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {PRINCIPLES.map((p) => (
-              <div key={p.name} className="principle-card">
-                <PrincipleCard
-                  icon={p.icon}
-                  name={p.name}
-                  malayName={p.malayName}
-                  description={language === 'bm' ? p.descriptionBm : p.descriptionEn}
-                />
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {PRINCIPLES.map((p) => {
+            const Icon = p.icon;
+            return (
+              <div key={p.name} className="principle-card group bg-cream-dark/60 backdrop-blur-md rounded-3xl p-8 border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.08)] hover:-translate-y-1 transition-all duration-500">
+                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-sunshine group-hover:border-sunshine transition-all duration-500">
+                  <Icon className="w-6 h-6 text-sunshine group-hover:text-cream transition-colors" />
+                </div>
+                <h3 className="font-display font-bold text-xl text-deep-forest mb-1">
+                  {language === 'bm' ? p.malayName : p.name}
+                </h3>
+                <p className="text-sm font-body font-light text-deep-forest/70 leading-relaxed mt-4">
+                  {language === 'bm' ? p.descriptionBm : p.descriptionEn}
+                </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -8,43 +8,41 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ text, name, rating }: ReviewCardProps) {
   return (
-    <div className="group relative bg-forest-green rounded-2xl p-8 min-h-[320px] flex flex-col transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.4)] border border-cream/5 hover:border-sunshine/30">
-      {/* Top accent with animation — sunshine gradient */}
-      <div className="absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-sunshine/40 to-transparent group-hover:via-sunshine/80 transition-all duration-500" />
-
-      {/* Quote icon with float animation */}
-      <div className="mb-5 group-hover:animate-float">
-        <Quote className="w-8 h-8 text-sunshine/30 group-hover:text-sunshine/60 transition-colors" strokeWidth={1.5} />
+    <div className="group relative bg-cream-dark/60 backdrop-blur-md rounded-3xl p-8 min-h-[320px] flex flex-col transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(232,144,37,0.08)] border border-white/[0.06] hover:border-sunshine/30 hover:bg-cream-dark/90">
+      <div className="mb-6 opacity-30 group-hover:opacity-100 transition-opacity">
+        <Quote className="w-10 h-10 text-sunshine" strokeWidth={1.5} />
       </div>
-
-      {/* Stars with staggered hover — sunshine fill */}
-      <div className="flex gap-1 mb-4">
+      
+      <div className="flex gap-1 mb-6">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            className={`w-3.5 h-3.5 transition-all duration-300 ${
-              i < rating ? 'text-sunshine fill-sunshine drop-shadow-[0_0_4px_rgba(255,202,38,0.5)]' : 'text-cream/10'
-            } group-hover:scale-110`}
-            style={{ transitionDelay: `${i * 50}ms` }}
+            className={`w-5 h-5 transition-all duration-300 ${
+              i < rating 
+                ? 'text-sunshine fill-sunshine' 
+                : 'text-white/10'
+            }`}
           />
         ))}
       </div>
-
-      {/* Review Text */}
-      <p className="font-body font-light text-[15px] text-cream/70 leading-[1.7] italic flex-1 group-hover:text-cream/90 transition-colors">
+      
+      <p className="font-body text-[16px] text-deep-forest/80 leading-relaxed flex-1 font-light italic">
         "{text}"
       </p>
-
-      {/* Author with hover reveal */}
-      <div className="mt-6 pt-5 border-t border-cream/5 flex items-center justify-between">
-        <div>
-          <p className="font-display font-medium text-[15px] text-cream group-hover:text-kiwi transition-colors">{name}</p>
-          <span className="font-accent text-[10px] text-stone uppercase tracking-wider">
-            Verified Guest
+      
+      <div className="mt-8 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+          <span className="font-display font-semibold text-lg text-sunshine">
+            {name.charAt(0)}
           </span>
         </div>
-        <div className="w-10 h-10 rounded-full bg-sunshine/15 border border-sunshine/30 flex items-center justify-center group-hover:bg-sunshine group-hover:border-sunshine group-hover:shadow-sunshine-glow group-hover:scale-110 transition-all">
-          <span className="font-display text-sm text-sunshine group-hover:text-deep-forest transition-colors">{name.charAt(0)}</span>
+        <div>
+          <p className="font-display font-semibold text-[16px] text-deep-forest">
+            {name}
+          </p>
+          <span className="font-sans font-medium text-[12px] text-deep-forest/50 uppercase tracking-widest">
+            Verified Guest
+          </span>
         </div>
       </div>
     </div>

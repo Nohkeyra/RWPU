@@ -15,20 +15,23 @@ interface Particle {
   maxLife: number;
 }
 
+// Updated for bright tropical palette
 const PARTICLE_COLORS = [
-  'rgba(212, 168, 83, ',   // warm gold
-  'rgba(184, 147, 74, ',   // muted gold
-  'rgba(193, 122, 95, ',   // terracotta
-  'rgba(245, 240, 232, ',  // cream
+  'rgba(255, 202, 38, ',    // sunshine yellow
+  'rgba(248, 96, 21, ',     // crisp carrot orange
+  'rgba(154, 188, 4, ',     // kiwi green
+  'rgba(212, 37, 24, ',     // tomato burst red
+  'rgba(243, 232, 204, ',   // cream (subtle)
 ];
 
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
+
   useEffect(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const maxParticles = isMobile ? 60 : 120;
+    const maxParticles = isMobile ? 30 : 50; // Reduced for light theme subtlety
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -54,62 +57,42 @@ export default function ParticleCanvas() {
       return {
         x: Math.random() * window.innerWidth,
         y: window.innerHeight + Math.random() * 50,
-        radius: Math.random() * 2.5 + 1.5,
+        radius: Math.random() * 2 + 1,
         color: PARTICLE_COLORS[colorIdx],
-        speedY: -(Math.random() * 0.9 + 0.3),
-        speedX: (Math.random() - 0.5) * 0.2,
-        amplitude: Math.random() * 60 + 20,
+        speedY: -(Math.random() * 0.5 + 0.2),
+        speedX: (Math.random() - 0.5) * 0.3,
+        amplitude: Math.random() * 40 + 20,
         frequency: Math.random() * 0.002 + 0.001,
         phase: Math.random() * Math.PI * 2,
-        opacity: Math.random() * 0.4 + 0.2,
+        opacity: Math.random() * 0.3 + 0.2,
         life: 0,
         maxLife: life,
       };
     };
 
-    // Initialize particles
     for (let i = 0; i < maxParticles; i++) {
       const p = createParticle();
       p.y = Math.random() * window.innerHeight;
-      p.life = Math.random() * p.maxLife;
       particlesRef.current.push(p);
     }
 
     const animate = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      particlesRef.current.forEach((p, i) => {
+      particlesRef.current.forEach((p) => {
         p.life++;
-        p.y += p.speedY;
         p.x += p.speedX + Math.sin(p.life * p.frequency + p.phase) * 0.3;
+        p.y += p.speedY;
 
-        // Fade out near top
-        const topFadeZone = h * 0.2;
-        let alpha = p.opacity;
-        if (p.y < topFadeZone) {
-          alpha = p.opacity * (p.y / topFadeZone);
+        if (p.life > p.maxLife || p.y < -50) {
+          Object.assign(p, createParticle());
         }
-        // Fade in/out based on life
-        const lifeRatio = p.life / p.maxLife;
-        if (lifeRatio < 0.1) alpha *= lifeRatio / 0.1;
-        if (lifeRatio > 0.8) alpha *= (1 - lifeRatio) / 0.2;
 
-        if (p.life >= p.maxLife || p.y < -10) {
-          particlesRef.current[i] = createParticle();
-          return;
-        }
+        const alpha = Math.sin((p.life / p.maxLife) * Math.PI) * p.opacity;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color + alpha + ')';
-        ctx.fill();
-
-        // Glow effect
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = p.color + (alpha * 0.15) + ')';
         ctx.fill();
       });
 
@@ -128,8 +111,8 @@ export default function ParticleCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ zIndex: 0 }}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 0, opacity: 0.6 }}
     />
   );
 }

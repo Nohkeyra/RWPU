@@ -51,7 +51,7 @@ const ShimmerText = ({ isTyping, text }: { isTyping: boolean; text: string | num
   return (
     <span className={cn(
       "transition-all duration-300",
-      isTyping ? "text-[#C5A059] animate-pulse bg-[#C5A059]/10 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(197,160,89,0.25)] font-bold animate-shimmer" : ""
+      isTyping ? "text-crisp-carrot animate-pulse bg-crisp-carrot/10 px-1.5 py-0.5 rounded shadow-sunshine-glow font-bold animate-shimmer" : ""
     )}>
       {text}
     </span>
@@ -101,13 +101,13 @@ const A4InvoiceSheet = ({
         {/* Cream Grid Boxes */}
         <div className="grid grid-cols-2 gap-3">
           {/* Invoice No */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
+          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('invoice_no_label')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">RW — PENDING</span>
           </div>
 
           {/* Event Date */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
+          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('tarikh_acara')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">
               <ShimmerText isTyping={isTyping.date} text={data.date && !isNaN(data.date.getTime()) ? format(data.date, 'dd/MM/yyyy') : '—'} />
@@ -116,7 +116,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Recipient Full Width Box */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
+        <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
           <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('kepada')}</span>
           <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
             <ShimmerText 
@@ -128,7 +128,7 @@ const A4InvoiceSheet = ({
 
         <div className="grid grid-cols-2 gap-3">
           {/* Event Location */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
+          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('lokasi_acara')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
               <ShimmerText isTyping={isTyping.location} text={data.location || '—'} />
@@ -136,7 +136,7 @@ const A4InvoiceSheet = ({
           </div>
 
           {/* Meal For */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D] p-2.5 rounded shadow-sm">
+          <div className="bg-cream border border-deep-forest/10 p-2.5 rounded shadow-sm">
             <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('jenis_hidangan')}</span>
             <span className="text-[10.5px] font-bold text-[#1A1816]">
               <ShimmerText 
@@ -148,7 +148,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Quantity Full Width */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D] p-2 rounded shadow-sm">
+        <div className="bg-cream border border-deep-forest/10 p-2 rounded shadow-sm">
           <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('bilangan_pax')}</span>
           <span className="text-[10.5px] font-bold text-[#1A1816]">
             <ShimmerText isTyping={isTyping.quantity} text={data.quantity ? `${data.quantity} PAX` : '—'} />
@@ -157,10 +157,10 @@ const A4InvoiceSheet = ({
 
         {/* Menu Section */}
         <div className="space-y-0.5">
-          <div className="bg-[#A67C1E] text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
+          <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
             MENU
           </div>
-          <div className="bg-[#FAF7F0] border border-[#C2932D] p-3 rounded-b shadow-sm">
+          <div className="bg-cream border border-deep-forest/10 p-3 rounded-b shadow-sm">
             <span className="text-[10px] font-bold text-[#1A1816]">
               <ShimmerText isTyping={isTyping.menu} text={data.menu || 'Set box Makanan & Minuman'} />
             </span>
@@ -171,7 +171,7 @@ const A4InvoiceSheet = ({
         <div className="space-y-0.5">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-[#604008] text-white">
+              <tr className="bg-deep-forest text-white">
                 <th className="p-2 text-left text-[8px] font-black uppercase tracking-wider">{t('meals')}</th>
                 <th className="p-2 text-center text-[8px] font-black uppercase tracking-wider w-28">{t('price_pax')}</th>
                 <th className="p-2 text-right text-[8px] font-black uppercase tracking-wider w-28">{t('amount_rm')}</th>
@@ -179,7 +179,7 @@ const A4InvoiceSheet = ({
             </thead>
             <tbody>
               {data.meals.length === 0 ? (
-                <tr className="bg-[#FAF7F0] border border-[#C2932D]">
+                <tr className="bg-cream border border-deep-forest/10">
                   <td colSpan={3} className="p-4 text-center text-slate-400 italic text-xs">
                     {t('no_meals')}
                   </td>
@@ -187,11 +187,11 @@ const A4InvoiceSheet = ({
               ) : (
                 data.meals.map((mealVal: string) => {
                   return (
-                    <tr key={mealVal} className="bg-[#FAF7F0] border border-[#C2932D]">
-                      <td className="p-2 border-r border-[#C2932D] font-bold text-[10px] text-[#1A1816] uppercase">
+                    <tr key={mealVal} className="bg-cream border border-deep-forest/10">
+                      <td className="p-2 border-r border-deep-forest/10 font-bold text-[10px] text-[#1A1816] uppercase">
                         {t(mealVal)}
                       </td>
-                      <td className="p-2 border-r border-[#C2932D] text-center text-[10px] text-[#1A1816] font-medium italic">
+                      <td className="p-2 border-r border-deep-forest/10 text-center text-[10px] text-[#1A1816] font-medium italic">
                         {t('quote_pending')}
                       </td>
                       <td className="p-2 text-right text-[10px] font-bold text-[#1A1816] italic">
@@ -202,7 +202,7 @@ const A4InvoiceSheet = ({
                 })
               )}
               {/* Grand Total Bar */}
-              <tr className="bg-[#604008] text-white">
+              <tr className="bg-deep-forest text-white">
                 <td colSpan={2} className="p-2 font-black text-[8px] uppercase tracking-wider">
                   {t('grand_total_preview')}
                 </td>
@@ -220,7 +220,7 @@ const A4InvoiceSheet = ({
             RINGGIT MALAYSIA <span className="underline">____________________________________________________________________</span> SAHAJA
           </div>
           <div className="flex gap-2.5 items-start">
-            <div className="w-1 bg-[#A67C1E] h-8 shrink-0"></div>
+            <div className="w-1 bg-sunshine h-8 shrink-0"></div>
             <div className="text-[8.5px] text-[#1A1816] italic space-y-0.5 leading-snug">
               <p>* Harga yang diberikan termasuk caj perkhidmatan & set pembungkusan biodegradable.</p>
               <p>* The price given includes service charge & biodegradable packaging sets.</p>
@@ -229,7 +229,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Bank Account Details */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D] p-3 rounded shadow-sm">
+        <div className="bg-cream border border-deep-forest/10 p-3 rounded shadow-sm">
           <div className="text-[8.5px] font-black text-[#A67C1E] uppercase tracking-wider mb-2">
             MAKLUMAT AKAUN BANK / BANK ACCOUNT DETAILS
           </div>
@@ -252,7 +252,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Page 1 Bottom Footer Line */}
-        <div className="border-t border-[#C2932D] pt-2 text-center text-[8px] text-slate-500 font-medium">
+        <div className="border-t border-deep-forest/10 pt-2 text-center text-[8px] text-slate-500 font-medium">
           Restoran Wawasan | Unit 3, Level B3, Menara PjH, Putrajaya | Est. 1986
         </div>
       </div>
@@ -279,11 +279,11 @@ const A4InvoiceSheet = ({
 
         {/* Person in Charge Box */}
         <div className="space-y-0.5">
-          <div className="bg-[#A67C1E] text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
+          <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
             PERSON IN CHARGE DETAILS
           </div>
-          <div className="bg-[#FAF7F0] border border-[#C2932D] rounded-b shadow-sm overflow-hidden divide-y divide-[#C2932D]">
-            <div className="grid grid-cols-2 divide-x divide-[#C2932D]">
+          <div className="bg-cream border border-deep-forest/10 rounded-b shadow-sm overflow-hidden divide-y divide-deep-forest/10">
+            <div className="grid grid-cols-2 divide-x divide-deep-forest/10">
               <div className="p-2.5">
                 <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">NAMA / NAME</span>
                 <span className="text-[9.5px] font-bold text-[#1A1816]">
@@ -297,7 +297,7 @@ const A4InvoiceSheet = ({
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-[#C2932D]">
+            <div className="grid grid-cols-2 divide-x divide-deep-forest/10">
               <div className="p-2.5">
                 <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">E-MEL / EMAIL</span>
                 <span className="text-[9.5px] font-bold text-[#1A1816] break-all">
@@ -334,7 +334,7 @@ const A4InvoiceSheet = ({
         </div>
 
         {/* Page 2 Bottom Footer */}
-        <div className="border-t border-[#C2932D] pt-3 text-center space-y-0.5">
+        <div className="border-t border-deep-forest/10 pt-3 text-center space-y-0.5">
           <p className="text-[8px] font-bold text-[#1A1816]">
             Terima kasih di atas kepercayaan anda | ON BEHALF OF RESTORAN WAWASAN
           </p>
@@ -953,16 +953,16 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Form Fields - Left Column */}
-          <div className="lg:col-span-7 bg-[#141417] p-6 sm:p-8 rounded-2xl border border-[#222226] shadow-xl space-y-6">
+          <div className="lg:col-span-7 bg-cream-dark/60 backdrop-blur-md p-6 sm:p-8 rounded-[2.5rem] border border-white/[0.06] shadow-xl space-y-6">
             {!currentUser && isBannerVisible && (
-              <div className="relative bg-[#141417] border border-[#C5A059]/30 rounded-lg p-4 flex items-start gap-3 shadow-sm mb-6 animate-fade-in">
-                <UserIcon className="w-5 h-5 text-[#C5A059] shrink-0 mt-0.5" />
-                <div className="flex-1 text-sm text-[#F4F4F6] font-sans pr-6">
+              <div className="relative bg-white/5 border border-crisp-carrot/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm mb-6 animate-fade-in">
+                <UserIcon className="w-5 h-5 text-crisp-carrot shrink-0 mt-0.5" />
+                <div className="flex-1 text-sm text-deep-forest font-sans pr-6">
                   Returning Customer?{' '}
                   <button
                     type="button"
                     onClick={() => setAuthModalOpen(true)}
-                    className="text-moss hover:text-sage hover:underline transition-colors cursor-pointer"
+                    className="text-sunshine hover:text-honey hover:underline transition-colors cursor-pointer font-semibold"
                   >
                     Click here to login
                   </button>{' '}
@@ -971,7 +971,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 <button
                   type="button"
                   onClick={() => setIsBannerVisible(false)}
-                  className="absolute top-3 right-3 text-[#8E8E93] hover:text-[#F4F4F6] transition-colors"
+                  className="absolute top-3 right-3 text-stone hover:text-deep-forest transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -982,17 +982,17 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               
               {/* Customer Information Section */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#222226] pb-2">
-                <Building2 className="w-5 h-5 text-[#C5A059]" />
-                <h3 className="text-lg font-semibold text-[#F4F4F6] font-display">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <Building2 className="w-5 h-5 text-crisp-carrot" />
+                <h3 className="text-lg font-semibold text-deep-forest font-display">
                   {t('billing_info')}
                 </h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="company-select" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('to')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="company-select" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('to')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Select
                     value={selectedCompany}
@@ -1006,16 +1006,16 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     }}
                     required
                   >
-                    <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-[#222226] bg-[#0B0B0C] px-3 py-2 text-base text-[#F4F4F6] focus:border-[#C5A059]/50 focus:outline-none focus:ring-2 focus:ring-[#C5A059]/20 shadow-sm font-sans transition-all duration-300">
+                    <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-base text-deep-forest focus:border-sunshine/50 focus:outline-none focus:ring-2 focus:ring-sunshine/20 shadow-sm font-sans transition-all duration-300">
                       <SelectValue placeholder={`-- ${t('select_company')} --`} />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0B0B0C] border-[#222226]">
+                    <SelectContent className="bg-charcoal border-white/10 text-deep-forest">
                       {SAVED_COMPANIES.map((company, idx) => (
-                        <SelectItem key={idx} value={company} className="text-[#F4F4F6] focus:bg-[#222226] focus:text-[#F4F4F6]">
+                        <SelectItem key={idx} value={company} className="text-deep-forest focus:bg-white/10 focus:text-deep-forest">
                           {company}
                         </SelectItem>
                       ))}
-                      <SelectItem value="other" className="text-[#C5A059] font-semibold focus:bg-[#222226] focus:text-[#C5A059]">
+                      <SelectItem value="other" className="text-crisp-carrot font-semibold focus:bg-white/10 focus:text-crisp-carrot">
                         {t('other_company')}
                       </SelectItem>
                     </SelectContent>
@@ -1028,56 +1028,56 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       onChange={(e) => handleInputChange('to', e.target.value)}
                       placeholder={t('specify_company')}
                       required
-                      className="mt-2 border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 animate-fade-in font-sans"
+                      className="mt-2 animate-fade-in font-sans"
                     />
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="attn" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('attn')} <span className="text-[#8E8E93]/40">({t('optional')})</span>
+                  <Label htmlFor="attn" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('attn')} <span className="text-stone/40">({t('optional')})</span>
                   </Label>
                   <Input
                     id="attn"
                     value={formData.attn}
                     onChange={(e) => handleInputChange('attn', e.target.value)}
                     placeholder={t('dept_attn')}
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
               </div>
             </div>
 
             {/* Event Details Section */}
-            <div className="space-y-4 pt-4 border-t border-[#222226]">
-              <div className="flex items-center gap-2 border-b border-[#222226] pb-2">
-                <Utensils className="w-5 h-5 text-[#C5A059]" />
-                <h3 className="text-lg font-semibold text-[#F4F4F6] font-display">
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <Utensils className="w-5 h-5 text-crisp-carrot" />
+                <h3 className="text-lg font-semibold text-deep-forest font-display">
                   {t('event_details')}
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="menu-custom-input" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('preferred_menu')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="menu-custom-input" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('preferred_menu')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="menu-custom-input"
                     value={formData.menu}
                     onChange={(e) => handleInputChange('menu', e.target.value)}
                     required
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                     placeholder={t('enter_preferred_menu')}
                   />
-                  <p className="text-[11px] text-[#8E8E93]/60 leading-relaxed italic">
+                  <p className="text-[11px] text-stone/60 leading-relaxed italic">
                     {t('menu_hint')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('quantity')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="quantity" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('quantity')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="quantity"
@@ -1089,15 +1089,15 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     }}
                     required
                     placeholder={t('quantity_placeholder')}
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('datetime')} <span className="text-[#C5A059]">*</span>
+                  <Label className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('datetime')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <div className="flex gap-2">
                     <Popover>
@@ -1106,21 +1106,21 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           variant="outline"
                           type="button"
                           className={cn(
-                            "flex-1 h-11 justify-start text-left font-normal border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] hover:bg-[#141417] hover:text-[#C5A059] focus:border-[#C5A059]/50",
-                            !formData.date && "text-[#8E8E93]/40"
+                            "flex-1 h-11 justify-start text-left font-normal border-white/10 bg-white/5 text-deep-forest hover:bg-white/10 hover:text-sunshine focus:border-sunshine/50",
+                            !formData.date && "text-stone/40"
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-[#C5A059]" />
+                          <CalendarIcon className="mr-2 h-4 w-4 text-crisp-carrot" />
                           {formData.date && !isNaN(formData.date.getTime()) ? format(formData.date, 'PPP') : t('pick_a_date')}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#141417] border border-[#222226]" align="start">
+                      <PopoverContent className="w-auto p-0 bg-charcoal border border-white/10" align="start">
                         <Calendar
                           mode="single"
                           selected={formData.date}
                           onSelect={(date) => handleInputChange('date', date)}
                           initialFocus
-                          className="bg-[#141417] text-[#F4F4F6]"
+                          className="bg-charcoal text-deep-forest"
                         />
                       </PopoverContent>
                     </Popover>
@@ -1128,15 +1128,15 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       type="time"
                       value={formData.time}
                       onChange={(e) => handleInputChange('time', e.target.value)}
-                      className="w-32 h-11 border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                      className="w-32 h-11 font-sans"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('meal_for')} <span className="text-[#C5A059]">*</span>
+                  <Label className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('meal_for')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <div className="grid grid-cols-2 gap-3 mt-1">
                     {MEAL_DROPDOWN_OPTIONS.map((mealOpt) => {
@@ -1156,18 +1156,18 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           className={cn(
                             "flex items-center gap-2 p-2 rounded-xl border text-left transition-all duration-200 cursor-pointer h-11",
                             isSelected 
-                              ? "border-[#C5A059] bg-[#C5A059]/10 text-[#C5A059] font-medium ring-1 ring-[#C5A059]/30" 
-                              : "border-[#222226] bg-[#0B0B0C] text-[#8E8E93] hover:bg-[#141417] hover:text-[#F4F4F6]"
+                              ? "border-crisp-carrot bg-crisp-carrot/10 text-crisp-carrot font-medium ring-1 ring-crisp-carrot/30" 
+                              : "border-white/10 bg-white/5 text-stone hover:bg-white/10 hover:text-deep-forest"
                           )}
                         >
                           <div className={cn(
                             "w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0",
                             isSelected 
-                              ? "border-[#C5A059] bg-[#C5A059] text-[#0B0B0C]" 
-                              : "border-[#222226] bg-[#0B0B0C]"
+                              ? "border-crisp-carrot bg-crisp-carrot text-white" 
+                              : "border-white/10 bg-white/5"
                           )}>
                             {isSelected && (
-                              <svg className="w-2.5 h-2.5 text-[#0B0B0C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -1183,8 +1183,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                  {t('location')} <span className="text-[#C5A059]">*</span>
+                <Label htmlFor="location" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                  {t('location')} <span className="text-crisp-carrot">*</span>
                 </Label>
                 <Input
                   id="location"
@@ -1192,37 +1192,37 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   onChange={(e) => handleInputChange('location', e.target.value)}
                   placeholder={t('venue_address')}
                   required
-                  className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                  className="font-sans"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                  {t('notes')} <span className="text-[#8E8E93]/40">({t('optional')})</span>
+                <Label htmlFor="notes" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                  {t('notes')} <span className="text-stone/40">({t('optional')})</span>
                 </Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder={t('additional_notes')}
-                  className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans h-24"
+                  className="font-sans h-24"
                 />
               </div>
             </div>
 
             {/* Officer Information Section */}
-            <div className="space-y-4 pt-4 border-t border-[#222226]">
-              <div className="flex items-center gap-2 border-b border-[#222226] pb-2">
-                <UserIcon className="w-5 h-5 text-[#C5A059]" />
-                <h3 className="text-lg font-semibold text-[#F4F4F6] font-display">
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <UserIcon className="w-5 h-5 text-crisp-carrot" />
+                <h3 className="text-lg font-semibold text-deep-forest font-display">
                   {t('officer_info')}
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('name')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="name" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('name')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="name"
@@ -1230,13 +1230,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="e.g. Ahmad bin Ali"
                     required
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contact" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('contact')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="contact" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('contact')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="contact"
@@ -1245,15 +1245,15 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     onChange={(e) => handleInputChange('contact', e.target.value)}
                     placeholder="+60 XX-XXXX XXXX"
                     required
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('email')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="email" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('email')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="email"
@@ -1262,13 +1262,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="email@example.com"
                     required
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmEmail" className="text-[#8E8E93] text-xs font-semibold uppercase tracking-wider">
-                    {t('confirm_email')} <span className="text-[#C5A059]">*</span>
+                  <Label htmlFor="confirmEmail" className="text-stone text-xs font-semibold uppercase tracking-wider">
+                    {t('confirm_email')} <span className="text-crisp-carrot">*</span>
                   </Label>
                   <Input
                     id="confirmEmail"
@@ -1277,14 +1277,14 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     onChange={(e) => setConfirmEmail(e.target.value)}
                     placeholder="email@example.com"
                     required
-                    className="border-[#222226] bg-[#0B0B0C] text-[#F4F4F6] placeholder-[#8E8E93]/30 focus:border-[#C5A059]/50 focus:ring-2 focus:ring-[#C5A059]/20 font-sans"
+                    className="font-sans"
                   />
                 </div>
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="pt-6 border-t border-[#222226] space-y-4">
+            <div className="pt-6 border-t border-white/5 space-y-4">
               {submitError && (
                 <div className="p-3 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-400 text-sm text-center font-medium animate-fade-in font-sans">
                   {submitError}
@@ -1295,7 +1295,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 h-14 min-h-[56px] bg-[#C5A059] text-[#0B0B0C] font-semibold text-base sm:text-lg hover:bg-[#E2C792] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 font-display rounded-lg shadow-lg shadow-[#C5A059]/10"
+                  className="flex-1 h-14 min-h-[56px] bg-crisp-carrot text-white font-semibold text-base sm:text-lg hover:bg-sunshine active:scale-[0.98] transition-all duration-300 disabled:opacity-50 font-display rounded-lg shadow-lg shadow-crisp-carrot/10"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2 justify-center">
@@ -1311,22 +1311,22 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   type="button"
                   onClick={handleShare}
                   variant="outline"
-                  className="h-14 min-h-[56px] px-5 border-2 border-[#C5A059]/30 hover:border-[#C5A059] hover:bg-[#C5A059]/5 text-[#C5A059] font-semibold flex items-center justify-center gap-2 transition-all duration-300 rounded-lg"
+                  className="h-14 min-h-[56px] px-5 border-2 border-crisp-carrot/30 hover:border-crisp-carrot hover:bg-crisp-carrot/5 text-crisp-carrot font-semibold flex items-center justify-center gap-2 transition-all duration-300 rounded-lg"
                 >
                   {copied ? (
                     <>
-                      <Check className="w-5 h-5 text-[#C5A059] animate-bounce" />
+                      <Check className="w-5 h-5 text-crisp-carrot animate-bounce" />
                       <span className="text-sm">{t('link_copied')}</span>
                     </>
                   ) : (
                     <>
-                      <Share2 className="w-5 h-5 text-[#C5A059]" />
+                      <Share2 className="w-5 h-5 text-crisp-carrot" />
                       <span className="text-sm">{t('share_form')}</span>
                     </>
                   )}
                 </Button>
               </div>
-              <p className="text-center text-xs text-[#8E8E93]/60 mt-4 leading-relaxed">
+              <p className="text-center text-xs text-stone/60 mt-4 leading-relaxed">
                 {t('terms_agree')}
               </p>
             </div>
@@ -1335,7 +1335,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
         {/* Live-Updating Invoice Preview - Right Column */}
         <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-6 space-y-4">
-          <div className="bg-[#141417] border border-[#222226] p-2.5 rounded-lg text-center text-xs text-[#C5A059] font-sans font-medium uppercase tracking-wider">
+          <div className="bg-white/5 border border-white/10 p-2.5 rounded-lg text-center text-xs text-sunshine font-sans font-semibold uppercase tracking-wider">
             {t('live_preview')} / Draf Invois Semasa
           </div>
           
@@ -1350,20 +1350,20 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       </div>
 
       {/* Mobile Bottom Float Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#141417]/95 backdrop-blur-md border-t border-[#222226] p-4 flex items-center justify-between shadow-2xl pb-safe">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-charcoal/90 backdrop-blur-md border-t border-white/5 p-4 flex items-center justify-between shadow-2xl pb-safe">
         <div>
-          <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider">Estimated Draft / Anggaran</p>
-          <p className="text-[#C5A059] font-bold text-sm font-sans">
+          <p className="text-[10px] text-stone uppercase font-bold tracking-wider">Estimated Draft / Anggaran</p>
+          <p className="text-crisp-carrot font-bold text-sm font-sans">
             {debouncedFormData.quantity ? `${debouncedFormData.quantity} Pax / ` : ''}{debouncedFormData.meals.length} Meal(s)
           </p>
         </div>
-        <Button
+        <button
           type="button"
           onClick={() => setShowMobileDraft(true)}
-          variant="moss"
+          className="px-5 py-2.5 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold text-xs rounded-full hover:scale-105 active:scale-95 transition-all shadow-md shadow-crisp-carrot/10 cursor-pointer"
         >
-          {t('lihat_draf', 'Lihat Draf')}
-        </Button>
+          {language === 'bm' ? 'Lihat Draf' : 'View Draft'}
+        </button>
       </div>
 
       {/* Mobile Bottom Slide-up Sheet Modal */}
@@ -1376,7 +1376,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowMobileDraft(false)}
-              className="absolute inset-0 bg-[#0B0B0C]/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
             {/* Animated Sheet */}
             <motion.div
@@ -1384,18 +1384,18 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative bg-[#0B0B0C] w-full max-h-[90vh] rounded-t-2xl shadow-2xl overflow-hidden z-10 flex flex-col border-t border-[#222226]"
+              className="relative bg-white w-full max-h-[90vh] rounded-t-2xl shadow-2xl overflow-hidden z-10 flex flex-col border-t border-white/5"
             >
               {/* Header bar of mobile draft */}
-              <div className="sticky top-0 bg-[#141417] border-b border-[#222226] p-4 flex items-center justify-between text-[#F4F4F6] z-10">
+              <div className="sticky top-0 bg-white border-b border-deep-forest/10 p-4 flex items-center justify-between text-deep-forest z-10">
                 <div>
-                  <h3 className="font-display font-bold text-sm text-[#C5A059]">{t('live_preview', 'Live Preview')}</h3>
-                  <p className="text-[10px] text-[#8E8E93]">{t('preview_desc', 'Draf Invois Semasa / Current Invoice Draft')}</p>
+                  <h3 className="font-display font-bold text-sm text-crisp-carrot">{t('live_preview', 'Live Preview')}</h3>
+                  <p className="text-[10px] text-stone">{t('preview_desc', 'Draf Invois Semasa / Current Invoice Draft')}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowMobileDraft(false)}
-                  className="p-2 text-[#8E8E93] hover:text-[#F4F4F6] hover:bg-[#222226] rounded-lg transition-colors"
+                  className="p-2 text-stone hover:text-deep-forest hover:bg-deep-forest/10 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

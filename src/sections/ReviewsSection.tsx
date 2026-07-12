@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
-import SectionLabel from '@/components/SectionLabel';
 import ReviewCard from '@/components/ReviewCard';
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useCarousel } from '@/hooks/useCarousel';
@@ -40,71 +39,82 @@ export default function ReviewsSection() {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) setSlidesToShow(1);
-      else if (window.innerWidth < 1024) setSlidesToShow(2);
-      else setSlidesToShow(3);
+      if (window.innerWidth < 768) {
+        setSlidesToShow(1);
+      } else if (window.innerWidth < 1024) {
+        setSlidesToShow(2);
+      } else {
+        setSlidesToShow(3);
+      }
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const headerRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    childSelector: '.review-header',
-    stagger: 0.1,
-  });
-
   const {
     currentIndex,
-    goTo,
+    setIsHovered,
     goNext,
     goPrev,
-    setIsHovered,
-    containerRef,
     onTouchStart,
     onTouchMove,
     onTouchEnd,
+    containerRef,
   } = useCarousel({
-    totalSlides: REVIEWS.length,
+    totalItems: REVIEWS.length,
     slidesToShow,
-    autoPlayInterval: 6000,
+    autoPlayInterval: 5000,
+  });
+
+  const headerRef = useScrollTrigger<HTMLDivElement>({
+    animation: 'fade-up',
+    childSelector: '.review-header',
+    stagger: 0.15,
   });
 
   return (
-    <section id="reviews" className="section-padding bg-deep-forest">
+    <section id="reviews" className="section-padding bg-cream relative">
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <div className="content-container">
-        {/* Header */}
-        <div ref={headerRef} className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+        
+        <div ref={headerRef} className="flex flex-col md:flex-row md:items-end md:justify-between mb-16">
           <div className="text-center md:text-left">
-            <div className="review-header flex justify-center md:justify-start">
-              <SectionLabel text={t('testimonials')} light />
+            <div className="review-header flex justify-center md:justify-start mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
+                  {t('reviews')}
+                </span>
+              </div>
             </div>
-            <h2 className="review-header font-display font-semibold text-[36px] md:text-[48px] text-cream leading-[1.1]">
-              {t('guest_reviews')}
+            <h2 className="review-header font-display font-bold text-[40px] md:text-[56px] text-deep-forest leading-[1.05]">
+              {t('what_they_say')}
             </h2>
           </div>
           
-          <div className="review-header flex items-center justify-center gap-4 mt-6 md:mt-0">
-            <div className="flex items-center gap-2 bg-forest-green border border-sunshine/30 rounded-full px-4 py-2 shadow-sunshine-glow">
-              <Star className="w-4 h-4 text-sunshine fill-sunshine" />
-              <span className="font-semibold text-cream text-sm">4.9</span>
-              <span className="text-cream/40 text-xs">/ 5</span>
+          <div className="review-header flex items-center justify-center gap-6 mt-8 md:mt-0">
+            <div className="flex items-center gap-3 bg-cream-dark/60 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3 shadow-lg">
+              <Star className="w-5 h-5 text-sunshine fill-sunshine animate-pulse" />
+              <div className="flex flex-col">
+                <span className="font-bold text-deep-forest leading-none">4.9</span>
+                <span className="text-deep-forest/50 text-[10px] uppercase font-bold tracking-widest mt-1">Rating</span>
+              </div>
             </div>
+            
             <div className="flex gap-2">
               <button
                 onClick={goPrev}
-                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-kiwi hover:border-kiwi hover:text-deep-forest text-cream transition-all duration-300"
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-cream text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
                 aria-label="Previous slide"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={goNext}
-                className="w-10 h-10 rounded-full bg-forest-green border border-cream/5 flex items-center justify-center hover:bg-kiwi hover:border-kiwi hover:text-deep-forest text-cream transition-all duration-300"
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-cream text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
                 aria-label="Next slide"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -120,7 +130,7 @@ export default function ReviewsSection() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="overflow-hidden">
+          <div className="overflow-hidden pb-8 pt-4 -mx-3 px-3">
             <div
               className="flex transition-transform duration-700 ease-out"
               style={{
@@ -136,22 +146,6 @@ export default function ReviewsSection() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Progress Dots */}
-          <div className="flex justify-center gap-2 mt-10">
-            {Array.from({ length: Math.max(1, REVIEWS.length - slidesToShow + 1) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  i === currentIndex
-                    ? 'w-8 bg-kiwi shadow-kiwi-glow'
-                    : 'w-1.5 bg-cream/20 hover:bg-cream/40'
-                }`}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            ))}
           </div>
         </div>
       </div>

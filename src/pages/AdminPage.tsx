@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Lock, Utensils, ArrowLeft } from 'lucide-react';
+import { Lock, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdminPanel from '@/components/AdminPanel';
 import { getApiUrl } from '@/lib/api';
+import { getAssetUrl } from '@/lib/utils';
 
 const ADMIN_AUTH_STORAGE_KEY = 'wawasan_admin_authenticated';
 const ADMIN_PASSWORD_STORAGE_KEY = 'wawasan_admin_password';
@@ -60,13 +61,18 @@ export default function AdminPage() {
       <div className="min-h-screen bg-charcoal flex flex-col">
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-6 md:px-12 bg-charcoal/95 backdrop-blur-xl">
-          <Link to="/" className="flex items-center gap-2 group">
-            <Utensils className="w-4 h-4 text-warm-gold" strokeWidth={2} />
+          <Link to="/" className="flex items-center gap-3 group">
+            <img
+              src={getAssetUrl("/assets/wawasan_logo.jpg")}
+              alt="Restoran Wawasan Logo"
+              className="w-9 h-9 rounded-lg border border-white/10 shadow-md object-cover"
+              referrerPolicy="no-referrer"
+            />
             <div>
               <span className="font-display font-semibold text-xl text-cream leading-none">
                 Wawasan
               </span>
-              <span className="block font-body text-xs text-cream/60 leading-tight">
+              <span className="block font-body text-xs text-cream/60 leading-tight mt-0.5">
                 Pak Usop
               </span>
             </div>

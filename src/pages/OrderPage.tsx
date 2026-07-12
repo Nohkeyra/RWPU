@@ -4,111 +4,94 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import OrderForm from '@/components/OrderForm';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { getAssetUrl } from '@/lib/utils';
 
 function BrandMark() {
   return (
-    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-sunshine via-honey to-crisp-carrot text-deep-forest flex items-center justify-center shadow-sunshine-glow border border-white/10">
-      <span className="font-display font-bold text-base leading-none">W</span>
-    </div>
+    <img
+      src={getAssetUrl("/assets/wawasan_logo.jpg")}
+      alt="Restoran Wawasan Logo"
+      className="w-9 h-9 rounded-xl border border-white/20 shadow-lg object-cover"
+      referrerPolicy="no-referrer"
+    />
   );
 }
 
 export default function OrderPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const location = useLocation();
   const initialData = location.state?.reorderData;
 
   return (
-    <div className="min-h-screen bg-deep-forest">
-      <header className="fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center justify-between px-6 md:px-12 bg-deep-forest/86 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
-        <Link to="/" className="flex items-center gap-3 group">
-          <BrandMark />
-          <div>
-            <span className="font-display font-semibold text-xl text-cream leading-none tracking-tight">
-              Restoran Wawasan
-            </span>
-            <span className="block font-accent text-[10px] text-sunshine/80 uppercase tracking-[0.18em] leading-tight mt-0.5">
-              Pak Usop
-            </span>
-          </div>
-        </Link>
-        <Link to="/">
-          <Button variant="ghost" className="text-stone hover:text-sunshine hover:bg-white/[0.05] rounded-full">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('back')}
-          </Button>
-        </Link>
-      </header>
-
-      <main className="pt-24 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 pt-10">
-            <div className="inline-flex items-center gap-3 mb-5">
-              <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-sunshine/60" />
-              <span className="text-sunshine text-xs font-accent font-semibold tracking-[0.2em] uppercase">
-                {language === 'bm' ? 'Katering & tempahan pejabat' : 'Catering & office orders'}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-cream pattern-dots">
+        <header className="fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center justify-between px-6 md:px-12 bg-cream/80 backdrop-blur-xl border-b border-white/5 shadow-sm">
+          <Link to="/" className="flex items-center gap-3 group">
+            <BrandMark />
+            <div>
+              <span className="font-display font-semibold text-xl text-deep-forest leading-none tracking-tight">
+                Restoran Wawasan
               </span>
-              <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-sunshine/60" />
+              <span className="block font-accent text-[10px] text-crisp-carrot uppercase tracking-[0.18em] leading-tight mt-0.5 font-bold">
+                Pak Usop
+              </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-cream mb-4 tracking-tight">
-              <span className="bg-gradient-to-r from-sunshine via-honey to-crisp-carrot bg-clip-text text-transparent">
-                {t('catering_order')}
+          </Link>
+          <Link to="/">
+            <Button variant="ghost" className="text-stone hover:text-crisp-carrot hover:bg-white/10 rounded-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('back')}
+            </Button>
+          </Link>
+        </header>
+
+        <main className="pt-24 pb-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-14 pt-10">
+              <span className="inline-flex items-center gap-3 mb-5 px-4 py-2 rounded-full bg-sunshine/10 text-sunshine text-sm font-bold border border-sunshine/20">
+                <span className="w-2 h-2 rounded-full bg-crisp-carrot animate-pulse" />
+                Online Ordering Available
               </span>
-            </h1>
-            <p className="text-cream/70 text-lg max-w-2xl mx-auto leading-relaxed">
-              {t('order_subtitle')}
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-deep-forest mb-4">
+                Place Your Order
+              </h1>
+              <p className="text-stone max-w-2xl mx-auto font-light">
+                Enjoy authentic Malay cuisine from the comfort of your home. Delivery available within Putrajaya area.
+              </p>
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-12">
+              {[
+                { label: 'Prep Time', value: '15-20 min' },
+                { label: 'Delivery', value: '30-45 min' },
+                { label: 'Min Order', value: 'RM 25' }
+              ].map((stat, idx) => (
+                <div key={idx} className="text-center p-4 rounded-2xl bg-cream-dark/60 backdrop-blur-md border border-white/[0.06] shadow-xl">
+                  <div className="text-lg font-bold text-sunshine">{stat.value}</div>
+                  <div className="text-xs text-stone uppercase tracking-wider">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <OrderForm initialData={initialData} />
+          </div>
+        </main>
+
+        <footer className="bg-charcoal border-t border-white/5 py-8 mt-14">
+          <div className="max-w-3xl mx-auto px-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-sunshine" />
+              <span className="text-cream/60 text-xs tracking-[0.18em] uppercase font-semibold">
+                Restoran Wawasan Pak Usop
+              </span>
+            </div>
+            <p className="text-cream/40 text-sm">
+              © 2026 All rights reserved
             </p>
           </div>
-
-          <div className="nature-card shadow-[inset_0_2px_20px_rgba(0,0,0,0.25)] rounded-[28px] overflow-hidden border border-white/[0.06]">
-            <div className="h-1.5 bg-brand-cta" />
-            <div className="p-6 md:p-10 bg-gradient-to-b from-white/[0.02] to-transparent">
-              <ErrorBoundary fallbackTitle="Catering Form Error">
-                <OrderForm initialData={initialData} />
-              </ErrorBoundary>
-            </div>
-          </div>
-
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              {
-                icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                label: language === 'bm' ? 'Tempahan teratur' : 'Structured booking',
-              },
-              {
-                icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-                label: language === 'bm' ? 'Maklum balas pantas' : 'Fast response',
-              },
-              {
-                icon: 'M5 13l4 4L19 7',
-                label: language === 'bm' ? 'Hidangan konsisten' : 'Consistent quality',
-              },
-            ].map((item, i) => (
-              <div key={i} className="nature-card p-5 text-center group hover:border-sunshine/25 transition-all duration-500 rounded-[24px] border border-white/[0.06]">
-                <div className="w-11 h-11 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-sunshine/16 to-crisp-carrot/10 border border-sunshine/25 flex items-center justify-center group-hover:bg-sunshine/22 group-hover:border-sunshine/45 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-5 h-5 text-sunshine group-hover:text-honey transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
-                  </svg>
-                </div>
-                <p className="text-sm text-stone group-hover:text-cream transition-colors font-medium">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      <footer className="bg-forest-green border-t border-white/[0.06] py-8 mt-14">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-sunshine" />
-            <span className="text-stone/70 text-xs tracking-[0.18em] uppercase">Restoran Wawasan Pak Usop</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-sunshine" />
-          </div>
-          <p className="text-stone/45 text-sm">
-            &copy; {new Date().getFullYear()} Restoran Wawasan. {t('all_rights_reserved')}.
-          </p>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </ErrorBoundary>
   );
 }

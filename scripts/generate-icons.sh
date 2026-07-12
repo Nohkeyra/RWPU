@@ -4,7 +4,7 @@
 
 set -e
 
-SRC_ICON="./to_be_deleted/src/assets/images/app_icon_1783189212065.jpg"
+SRC_ICON="./public/assets/wawasan_logo.jpg"
 
 if [ ! -f "$SRC_ICON" ]; then
     echo "❌ Source icon not found at $SRC_ICON"

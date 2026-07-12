@@ -28,9 +28,10 @@ var import_path = __toESM(require("path"), 1);
 var import_fs = __toESM(require("fs"), 1);
 var import_nodemailer = __toESM(require("nodemailer"), 1);
 var import_cors = __toESM(require("cors"), 1);
-var import_app = require("firebase/app");
-var import_auth = require("firebase/auth");
-var import_firestore = require("firebase/firestore");
+var admin = __toESM(require("firebase-admin"), 1);
+var import_app = require("firebase-admin/app");
+var import_firestore = require("firebase-admin/firestore");
+var import_messaging = require("firebase-admin/messaging");
 var import_googleapis = require("googleapis");
 var firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCaCFMk6K8go9Wgt-jdNd6QTvD8JbsTkY4",
@@ -42,53 +43,274 @@ var firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-ZWC8H62RZN",
   firestoreDatabaseId: void 0
 };
-try {
-  const configPath = import_path.default.join(process.cwd(), "firebase-applet-config.json");
-  if (import_fs.default.existsSync(configPath)) {
-    const appletConfig = JSON.parse(import_fs.default.readFileSync(configPath, "utf-8"));
-    firebaseConfig = {
-      ...firebaseConfig,
-      ...appletConfig,
-      firestoreDatabaseId: appletConfig.firestoreDatabaseId || void 0
-    };
-  }
-} catch (err) {
-  console.warn("Failed to load local firebase-applet-config.json, using default credentials:", err);
-}
-var clientApps = (0, import_app.getApps)();
-var clientApp = clientApps.length === 0 ? (0, import_app.initializeApp)(firebaseConfig) : clientApps[0];
-var db = (0, import_firestore.getFirestore)(clientApp, firebaseConfig.firestoreDatabaseId);
-var auth = (0, import_auth.getAuth)(clientApp);
-var adminEmail = process.env.ADMIN_EMAIL;
-var adminPassword = process.env.ADMIN_PASSWORD;
-if (adminEmail && adminPassword) {
-  (0, import_auth.signInWithEmailAndPassword)(auth, adminEmail, adminPassword).then((userCredential) => {
-    console.log(`[Firebase] Server successfully authenticated as admin user: ${userCredential.user.email}`);
-  }).catch((err) => {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const errorCode = err.code || "";
-    if (errorCode === "auth/operation-not-allowed" || errorMessage.includes("auth/operation-not-allowed") || errorMessage.includes("operation-not-allowed")) {
-      console.error(
-        `
-======================================================================
-[Firebase ERROR] Server failed to authenticate: auth/operation-not-allowed
-
-REASON: The "Email/Password" sign-in provider is disabled in your Firebase Console.
-
-TO FIX THIS:
-1. Go to your Firebase Console: https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/providers
-2. Under the "Sign-in method" tab, click "Add new provider" (or choose "Email/Password").
-3. Toggle "Enable" under the Email/Password setting and click "Save".
-4. Re-run or redeploy your app on Render.
-======================================================================
-`
-      );
-    } else {
-      console.error("[Firebase] Server failed to authenticate as admin user:", errorMessage);
-    }
-  });
-}
 var LOCAL_DB_PATH = import_path.default.join(process.cwd(), "orders.json");
+var ENABLE_LOCAL_FALLBACK = process.env.ENABLE_LOCAL_FALLBACK === "true";
+var STRICT_FIREBASE_ADMIN = process.env.STRICT_FIREBASE_ADMIN !== "false";
+var adminApp = null;
+function getAdminApp() {
+  if (!adminApp) {
+    const apps2 = admin.apps || [];
+    if (apps2.length === 0) {
+      const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+      const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ? process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n") : void 0;
+      if (email && privateKey) {
+        adminApp = admin.initializeApp({
+          credential: (0, import_app.cert)({
+            projectId: firebaseConfig.projectId,
+            clientEmail: email,
+            privateKey
+          }),
+          projectId: firebaseConfig.projectId
+        });
+      } else {
+        const msg = "Missing GOOGLE_SERVICE_ACCOUNT_EMAIL or GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY. On Render this usually means Firebase Admin cannot authenticate to Firestore, so orders/invoice counters/widgets will fail.";
+        if (STRICT_FIREBASE_ADMIN) {
+          throw new Error(msg);
+        }
+        console.warn(msg + " Continuing with Application Default Credentials (not recommended on Render).");
+        adminApp = admin.initializeApp({ projectId: firebaseConfig.projectId });
+      }
+    } else {
+      adminApp = apps2[0];
+    }
+  }
+  return adminApp;
+}
+function getFirestore() {
+  const app = getAdminApp();
+  const dbId = firebaseConfig.firestoreDatabaseId;
+  if (dbId && dbId !== "(default)") {
+    try {
+      return (0, import_firestore.getFirestore)(app, dbId);
+    } catch (err) {
+      console.warn(`Failed to initialize Firestore with database ID ${dbId}, falling back to default:`, err);
+      return (0, import_firestore.getFirestore)(app);
+    }
+  }
+  return (0, import_firestore.getFirestore)(app);
+}
+async function sendNotificationToTopic(topic, title, body) {
+  try {
+    const app = getAdminApp();
+    const message = {
+      notification: {
+        title,
+        body
+      },
+      topic
+    };
+    const response = await (0, import_messaging.getMessaging)(app).send(message);
+    console.log(`Successfully sent message to topic ${topic}:`, response);
+  } catch (error) {
+    console.error(`Error sending message to topic ${topic}:`, error);
+  }
+}
+var ENABLE_ORDER_STATUS_NOTIFICATIONS = (process.env.ENABLE_ORDER_STATUS_NOTIFICATIONS || "true") !== "false";
+function getStatusCopy(status, name, invoiceNo, lang) {
+  const s = (status || "").toLowerCase();
+  const who = name || (lang === "bm" ? "Pelanggan" : "Customer");
+  const invoiceSuffix = invoiceNo ? lang === "bm" ? ` (No. Invois: ${invoiceNo})` : ` (Invoice No: ${invoiceNo})` : "";
+  const en = {
+    pending: {
+      subject: `Your order is being reviewed${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Order Received \u2014 Pending Review",
+      message: `Hi ${who}, we've received your catering order${invoiceSuffix} and it is currently pending review. We'll update you as soon as it's confirmed.`,
+      pushTitle: "Order pending review",
+      pushBody: `Your order${invoiceSuffix} is pending review.`
+    },
+    approved: {
+      subject: `Your order is approved${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Order Approved \u{1F389}",
+      message: `Great news ${who}! Your catering order${invoiceSuffix} has been approved. We look forward to serving you.`,
+      pushTitle: "Order approved \u{1F389}",
+      pushBody: `Your order${invoiceSuffix} has been approved.`
+    },
+    billed: {
+      subject: `Your invoice is ready${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Invoice Issued",
+      message: `Hi ${who}, an invoice${invoiceSuffix} has been issued for your catering order. Please check your email for the invoice details.`,
+      pushTitle: "Invoice ready",
+      pushBody: `Your invoice${invoiceSuffix} is ready.`
+    },
+    rejected: {
+      subject: `Update on your order${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Order Could Not Be Confirmed",
+      message: `Hi ${who}, unfortunately we were unable to confirm your catering order${invoiceSuffix} at this time. Please contact us if you'd like to discuss alternatives.`,
+      pushTitle: "Order update",
+      pushBody: `There's an update on your order${invoiceSuffix}.`
+    },
+    completed: {
+      subject: `Thank you from Restoran Wawasan${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Order Completed \u2014 Thank You!",
+      message: `Hi ${who}, your catering order${invoiceSuffix} is now marked as completed. Thank you for choosing Restoran Wawasan \u2014 we hope to serve you again!`,
+      pushTitle: "Order completed",
+      pushBody: `Your order${invoiceSuffix} is completed. Thank you!`
+    }
+  };
+  const bm = {
+    pending: {
+      subject: `Pesanan anda sedang disemak${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Pesanan Diterima \u2014 Menunggu Semakan",
+      message: `Salam ${who}, kami telah menerima tempahan katering anda${invoiceSuffix} dan ia sedang menunggu semakan. Kami akan maklumkan sebaik sahaja ia disahkan.`,
+      pushTitle: "Pesanan menunggu semakan",
+      pushBody: `Pesanan anda${invoiceSuffix} sedang disemak.`
+    },
+    approved: {
+      subject: `Pesanan anda telah diluluskan${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Pesanan Diluluskan \u{1F389}",
+      message: `Berita baik ${who}! Tempahan katering anda${invoiceSuffix} telah diluluskan. Kami menantikan peluang untuk berkhidmat kepada anda.`,
+      pushTitle: "Pesanan diluluskan \u{1F389}",
+      pushBody: `Pesanan anda${invoiceSuffix} telah diluluskan.`
+    },
+    billed: {
+      subject: `Invois anda telah sedia${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Invois Dikeluarkan",
+      message: `Salam ${who}, satu invois${invoiceSuffix} telah dikeluarkan untuk tempahan katering anda. Sila semak e-mel anda untuk butiran invois.`,
+      pushTitle: "Invois sedia",
+      pushBody: `Invois anda${invoiceSuffix} telah sedia.`
+    },
+    rejected: {
+      subject: `Kemas kini tempahan anda${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Tempahan Tidak Dapat Disahkan",
+      message: `Salam ${who}, malangnya kami tidak dapat mengesahkan tempahan katering anda${invoiceSuffix} pada masa ini. Sila hubungi kami jika anda ingin membincangkan pilihan lain.`,
+      pushTitle: "Kemas kini tempahan",
+      pushBody: `Terdapat kemas kini pada tempahan anda${invoiceSuffix}.`
+    },
+    completed: {
+      subject: `Terima kasih daripada Restoran Wawasan${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+      heading: "Tempahan Selesai \u2014 Terima Kasih!",
+      message: `Salam ${who}, tempahan katering anda${invoiceSuffix} kini ditanda sebagai selesai. Terima kasih kerana memilih Restoran Wawasan \u2014 kami harap dapat berkhidmat lagi!`,
+      pushTitle: "Tempahan selesai",
+      pushBody: `Tempahan anda${invoiceSuffix} telah selesai. Terima kasih!`
+    }
+  };
+  const table = lang === "bm" ? bm : en;
+  if (table[s]) return table[s];
+  const prettyStatus = status || (lang === "bm" ? "dikemas kini" : "updated");
+  return lang === "bm" ? {
+    subject: `Status tempahan anda telah dikemas kini${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+    heading: "Kemas Kini Status Tempahan",
+    message: `Salam ${who}, status tempahan katering anda${invoiceSuffix} kini ialah: ${prettyStatus}.`,
+    pushTitle: "Kemas kini status tempahan",
+    pushBody: `Status pesanan anda${invoiceSuffix}: ${prettyStatus}.`
+  } : {
+    subject: `Your order status was updated${invoiceNo ? ` \u2014 ${invoiceNo}` : ""}`,
+    heading: "Order Status Update",
+    message: `Hi ${who}, the status of your catering order${invoiceSuffix} is now: ${prettyStatus}.`,
+    pushTitle: "Order status update",
+    pushBody: `Your order status${invoiceSuffix}: ${prettyStatus}.`
+  };
+}
+function buildStatusEmailHtml(copy, lang) {
+  const footerText = lang === "bm" ? "E-mel ini dijanakan secara automatik apabila status tempahan anda berubah. Sila hubungi kami jika terdapat sebarang pertanyaan." : "This email is generated automatically when your order status changes. Please contact us if you have any questions.";
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f7fafc;margin:0;padding:20px;color:#2d3748;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;">
+    <div style="background-color:#1a202c;padding:30px;text-align:center;color:#ffffff;border-bottom:3px solid #D4AF37;">
+      <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:0.05em;color:#D4AF37;">RESTORAN WAWASAN</h1>
+      <p style="margin:5px 0 0 0;color:#a0aec0;font-size:14px;text-transform:uppercase;letter-spacing:0.1em;">${copy.heading}</p>
+    </div>
+    <div style="padding:30px;">
+      <p style="font-size:16px;line-height:1.6;margin:0 0 25px 0;">${copy.message}</p>
+    </div>
+    <div style="background-color:#f7fafc;padding:20px 30px;text-align:center;color:#718096;font-size:12px;border-top:1px solid #e2e8f0;">
+      ${footerText}
+    </div>
+  </div>
+</body>
+</html>`;
+}
+async function sendOrderStatusEmail(transporter, order, newStatus) {
+  const to = order.email;
+  if (!to) {
+    console.warn("[StatusNotify] No customer email on order; skipping status email.");
+    return false;
+  }
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("[StatusNotify] SMTP not configured (SMTP_USER/SMTP_PASS); skipping status email.");
+    return false;
+  }
+  const lang = order.lang === "bm" ? "bm" : "en";
+  const copy = getStatusCopy(newStatus, order.name || "", order.invoiceNo || "", lang);
+  await transporter.sendMail({
+    from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || process.env.SMTP_USER || "madnor.noisy@gmail.com"}>`,
+    to,
+    subject: copy.subject,
+    text: `${copy.heading}
+
+${copy.message}`,
+    html: buildStatusEmailHtml(copy, lang)
+  });
+  console.log(`[StatusNotify] Status email (${newStatus}) sent to ${to}.`);
+  return true;
+}
+async function resolveCustomerFcmToken(order) {
+  try {
+    const db = getFirestore();
+    const customerUid = order.userId || order.uid;
+    if (customerUid) {
+      const snap = await db.collection("users").doc(customerUid).get();
+      const token = snap.exists ? snap.data()?.fcmToken : void 0;
+      if (token) return token;
+    }
+    if (order.email) {
+      const q = await db.collection("users").where("email", "==", order.email).limit(1).get();
+      if (!q.empty) {
+        const token = q.docs[0].data()?.fcmToken;
+        if (token) return token;
+      }
+    }
+  } catch (err) {
+    console.warn("[StatusNotify] Could not resolve customer FCM token:", err);
+  }
+  return null;
+}
+async function sendOrderStatusPush(order, newStatus) {
+  const token = await resolveCustomerFcmToken(order);
+  if (!token) {
+    console.log("[StatusNotify] No FCM token for customer; skipping push (email still sent).");
+    return false;
+  }
+  const lang = order.lang === "bm" ? "bm" : "en";
+  const copy = getStatusCopy(newStatus, order.name || "", order.invoiceNo || "", lang);
+  try {
+    const app = getAdminApp();
+    const response = await (0, import_messaging.getMessaging)(app).send({
+      token,
+      notification: { title: copy.pushTitle, body: copy.pushBody },
+      data: {
+        type: "order_status",
+        status: String(newStatus || ""),
+        orderId: String(order.id || ""),
+        invoiceNo: String(order.invoiceNo || "")
+      }
+    });
+    console.log(`[StatusNotify] Status push (${newStatus}) sent to customer:`, response);
+    return true;
+  } catch (error) {
+    console.error("[StatusNotify] Error sending status push to customer:", error);
+    return false;
+  }
+}
+async function notifyCustomerOfStatusChange(transporter, order, newStatus) {
+  if (!ENABLE_ORDER_STATUS_NOTIFICATIONS) {
+    console.log("[StatusNotify] Disabled via ENABLE_ORDER_STATUS_NOTIFICATIONS=false; skipping.");
+    return;
+  }
+  await Promise.allSettled([
+    sendOrderStatusEmail(transporter, order, newStatus).catch(
+      (err) => console.error("[StatusNotify] Email send failed:", err)
+    ),
+    sendOrderStatusPush(order, newStatus).catch(
+      (err) => console.error("[StatusNotify] Push send failed:", err)
+    )
+  ]);
+}
 async function runWithRetry(fn, retries = 3, delayMs = 1e3) {
   let lastError;
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -106,10 +328,12 @@ async function runWithRetry(fn, retries = 3, delayMs = 1e3) {
   throw lastError;
 }
 function getLocalOrders() {
+  if (!ENABLE_LOCAL_FALLBACK) return [];
   try {
     if (import_fs.default.existsSync(LOCAL_DB_PATH)) {
       console.warn("[WARNING] Reading from local fallback file 'orders.json'. Note: This local file system is ephemeral and transient. All local changes will be lost upon container restart or redeployment.");
-      return JSON.parse(import_fs.default.readFileSync(LOCAL_DB_PATH, "utf-8"));
+      const data = JSON.parse(import_fs.default.readFileSync(LOCAL_DB_PATH, "utf-8"));
+      return Array.isArray(data) ? data : [];
     }
   } catch (err) {
     console.error("Error reading local orders database:", err);
@@ -117,12 +341,56 @@ function getLocalOrders() {
   return [];
 }
 function saveLocalOrders(orders) {
+  if (!ENABLE_LOCAL_FALLBACK) return;
   try {
     console.warn("[WARNING] Writing to local fallback file 'orders.json'. Note: This local file system is ephemeral and transient. All local changes will be lost upon container restart or redeployment.");
     import_fs.default.writeFileSync(LOCAL_DB_PATH, JSON.stringify(orders, null, 2), "utf-8");
   } catch (err) {
     console.error("Error writing to local orders database:", err);
   }
+}
+function toEventTimestamp(orderData) {
+  try {
+    const raw = orderData.dateTime ? new Date(orderData.dateTime) : orderData.date ? /* @__PURE__ */ new Date(`${orderData.date}T${orderData.time || "12:00"}:00+08:00`) : null;
+    if (!raw || isNaN(raw.getTime())) return null;
+    return import_firestore.Timestamp.fromDate(raw);
+  } catch {
+    return null;
+  }
+}
+async function createOrderWithSequentialInvoice(orderData) {
+  const db = getFirestore();
+  const counterRef = db.collection("meta").doc("invoiceCounter");
+  const orderRef = db.collection("orders").doc();
+  return await db.runTransaction(async (tx) => {
+    const counterSnap = await tx.get(counterRef);
+    let next = 1;
+    if (counterSnap.exists) {
+      const data = counterSnap.data();
+      if (data && typeof data.count === "number") {
+        next = data.count + 1;
+      }
+    }
+    const invoiceNo = `RW${String(next).padStart(4, "0")}`;
+    const eventTimestamp = toEventTimestamp(orderData);
+    tx.set(
+      counterRef,
+      { count: next, updatedAt: import_firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+    tx.set(orderRef, {
+      ...orderData,
+      status: "approved",
+      approvedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      invoiceNo,
+      eventTimestamp,
+      // Always set by server (client may send a Firestore sentinel that isn't valid server-side)
+      createdAt: import_firestore.FieldValue.serverTimestamp(),
+      // Used by the admin endpoints; never trust client
+      adminPasscode: process.env.ADMIN_PASSWORD || "wawasan123"
+    });
+    return { orderId: orderRef.id, invoiceNo };
+  });
 }
 function getGoogleCalendarClient() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -132,12 +400,12 @@ function getGoogleCalendarClient() {
     return null;
   }
   try {
-    const auth2 = new import_googleapis.google.auth.JWT({
+    const auth = new import_googleapis.google.auth.JWT({
       email,
       key: privateKey,
       scopes: ["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/calendar.events"]
     });
-    return import_googleapis.google.calendar({ version: "v3", auth: auth2 });
+    return import_googleapis.google.calendar({ version: "v3", auth });
   } catch (err) {
     console.error("Failed to initialize Google Calendar client:", err);
     return null;
@@ -152,8 +420,9 @@ async function syncGoogleCalendarEvent(orderId, passedOrderData) {
     let orderData = passedOrderData;
     if (!orderData) {
       try {
-        const docSnap = await (0, import_firestore.getDoc)((0, import_firestore.doc)(db, "orders", orderId));
-        if (docSnap.exists()) {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection("orders").doc(orderId).get();
+        if (docSnap.exists) {
           orderData = docSnap.data();
         }
       } catch (dbErr) {
@@ -181,17 +450,8 @@ async function syncGoogleCalendarEvent(orderId, passedOrderData) {
     }
     const endDateTime = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1e3);
     const mealList = Array.isArray(orderData.meals) ? orderData.meals.join(", ") : orderData.meals || "";
-    const summary = `[${(orderData.status || "pending").toUpperCase()}] Wawasan Order - ${orderData.name || "Customer"} (${orderData.quantity || ""} Pax)`;
-    const description = `Customer: ${orderData.name || "N/A"}
-Contact: ${orderData.contact || "N/A"}
-Email: ${orderData.email || "N/A"}
-Pax (Quantity): ${orderData.quantity || "N/A"}
-Meals: ${mealList || "N/A"}
-Menu: ${orderData.menu || "N/A"}
-Location: ${orderData.location || "N/A"}
-Notes: ${orderData.notes || "N/A"}
-Status: ${orderData.status || "N/A"}
-Total Amount: ${orderData.totalAmount !== void 0 ? `RM ${Number(orderData.totalAmount).toFixed(2)}` : "N/A"}`;
+    const summary = `${orderData.quantity || ""} Pax | ${mealList || "N/A"} | ${orderData.location || "N/A"}`;
+    const description = `Menu: ${orderData.menu || "N/A"}`;
     const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
     const existingEventId = orderData.calendarEventIds?.[calendarId];
     if (existingEventId) {
@@ -250,7 +510,8 @@ Total Amount: ${orderData.totalAmount !== void 0 ? `RM ${Number(orderData.totalA
         [calendarId]: eventId
       };
       try {
-        await (0, import_firestore.updateDoc)((0, import_firestore.doc)(db, "orders", orderId), {
+        const adminDb = getFirestore();
+        await adminDb.collection("orders").doc(orderId).update({
           calendarEventIds: updatedCalendarEventIds
         });
         console.log(`Firestore updated with calendarEventIds for order ${orderId}`);
@@ -288,7 +549,9 @@ async function startServer() {
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
-    }
+    },
+    family: 4
+    // Force IPv4 — Render's network doesn't reliably route outbound IPv6 to Gmail SMTP
   });
   transporter.verify((error) => {
     if (error) {
@@ -300,38 +563,320 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
+  app.get("/api/diagnostics/firebase", async (req, res) => {
+    try {
+      const db = getFirestore();
+      const ref = db.collection("meta").doc("diagnostics");
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const prev = snap.data()?.count || 0;
+        tx.set(
+          ref,
+          {
+            count: prev + 1,
+            lastRunAt: import_firestore.FieldValue.serverTimestamp()
+          },
+          { merge: true }
+        );
+      });
+      res.json({ ok: true, projectId: firebaseConfig.projectId });
+    } catch (err) {
+      console.error("Firebase diagnostics failed:", err);
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+  app.get("/api/diagnostics/calendar", async (req, res) => {
+    try {
+      const calendar = getGoogleCalendarClient();
+      if (!calendar) {
+        return res.status(500).json({
+          ok: false,
+          error: "Google Calendar client not configured (missing GOOGLE_SERVICE_ACCOUNT_EMAIL/PRIVATE_KEY)."
+        });
+      }
+      const r = await calendar.calendarList.list({ maxResults: 1 });
+      res.json({ ok: true, calendarsReturned: (r.data.items || []).length });
+    } catch (err) {
+      const e = err;
+      console.error("Calendar diagnostics failed:", err);
+      res.status(500).json({
+        ok: false,
+        status: e?.status ?? e?.code,
+        message: e?.message || "Calendar diagnostics failed"
+      });
+    }
+  });
+  app.post("/api/diagnostics/email", async (req, res) => {
+    try {
+      const { password, testEmail } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!password || password !== adminPassword) {
+        return res.status(401).json({ error: "Unauthorized: Invalid password" });
+      }
+      if (!testEmail) {
+        return res.status(400).json({ error: "Missing testEmail" });
+      }
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        return res.status(500).json({
+          ok: false,
+          error: "SMTP is not fully configured (missing SMTP_USER or SMTP_PASS environment variables)."
+        });
+      }
+      const info = await transporter.sendMail({
+        from: `"Restoran Wawasan (Test)" <${process.env.SMTP_USER}>`,
+        to: testEmail,
+        subject: "Wawasan Pak Usop Catering App - SMTP Test Email",
+        text: `Hello,
+
+This is a diagnostics test email sent from the Restoran Wawasan Pak Usop Admin Panel.
+If you received this, your SMTP configuration is 100% WORKING!
+
+Sent at: ${(/* @__PURE__ */ new Date()).toLocaleString()}
+
+Best regards,
+Restoran Wawasan Pak Usop Server`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: 0 auto; background-color: #f9f9f9;">
+            <h2 style="color: #0f3d2a; margin-top: 0;">Restoran Wawasan Putrajaya</h2>
+            <p style="font-size: 16px; color: #333;">Hello,</p>
+            <p style="font-size: 14px; line-height: 1.5; color: #555;">
+              This is a diagnostics test email sent from the <strong>Restoran Wawasan Pak Usop Catering App</strong> Admin Panel.
+            </p>
+            <div style="background-color: #d1e7dd; color: #0f5132; padding: 12px; border-radius: 4px; font-weight: bold; margin: 15px 0;">
+              \u2713 SMTP Configuration is 100% OPERATIONAL!
+            </div>
+            <p style="font-size: 12px; color: #888; margin-top: 25px; border-top: 1px solid #eee; padding-top: 10px;">
+              Sent at: ${(/* @__PURE__ */ new Date()).toLocaleString()}<br>
+              Server Time: ${(/* @__PURE__ */ new Date()).toISOString()}
+            </p>
+          </div>
+        `
+      });
+      res.json({ ok: true, messageId: info.messageId });
+    } catch (err) {
+      console.error("Email diagnostics failed:", err);
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+  app.get("/api/widget/upcoming-orders", async (req, res) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit || "5", 10), 20);
+      const now = /* @__PURE__ */ new Date();
+      const results = [];
+      try {
+        const adminDb = getFirestore();
+        const nowTs = import_firestore.Timestamp.fromDate(now);
+        const snapshot = await adminDb.collection("orders").where("eventTimestamp", ">=", nowTs).orderBy("eventTimestamp", "asc").limit(limit).get();
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          const eventDate = d.eventTimestamp?.toDate?.() || (d.dateTime ? new Date(d.dateTime) : d.date ? /* @__PURE__ */ new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null);
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+            results.push({
+              id: docSnap.id,
+              date: eventDate.toISOString(),
+              quantity: d.quantity,
+              meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+              location: d.location,
+              menu: d.menu
+            });
+          }
+        });
+        if (results.length === 0) {
+          const legacySnap = await adminDb.collection("orders").get();
+          legacySnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            const eventDate = d.dateTime ? new Date(d.dateTime) : d.date ? /* @__PURE__ */ new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null;
+            if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+              results.push({
+                id: docSnap.id,
+                date: eventDate.toISOString(),
+                quantity: d.quantity,
+                meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+                location: d.location,
+                menu: d.menu
+              });
+            }
+          });
+        }
+      } catch (dbErr) {
+        console.warn("Widget endpoint: Firestore fetch failed, falling back to local orders:", dbErr);
+        const localOrders = getLocalOrders();
+        localOrders.forEach((d) => {
+          const eventDate = d.dateTime ? new Date(d.dateTime) : d.date ? /* @__PURE__ */ new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null;
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate.getTime() >= now.getTime()) {
+            results.push({
+              id: d.id,
+              date: eventDate.toISOString(),
+              quantity: d.quantity,
+              meals: Array.isArray(d.meals) ? d.meals.join(", ") : d.meals,
+              location: d.location,
+              menu: d.menu
+            });
+          }
+        });
+      }
+      results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      res.json({ success: true, orders: results.slice(0, limit) });
+    } catch (err) {
+      console.error("Widget endpoint error:", err);
+      res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+  app.get("/api/widget/kwgt", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    try {
+      const now = /* @__PURE__ */ new Date();
+      let nextOrder = null;
+      try {
+        const adminDb = getFirestore();
+        const nowTs = import_firestore.Timestamp.fromDate(now);
+        const snapshot = await adminDb.collection("orders").where("eventTimestamp", ">=", nowTs).orderBy("eventTimestamp", "asc").limit(1).get();
+        if (!snapshot.empty) {
+          const docSnap = snapshot.docs[0];
+          nextOrder = { id: docSnap.id, ...docSnap.data() };
+        } else {
+          const legacySnap = await adminDb.collection("orders").get();
+          const legacyOrders = [];
+          legacySnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            const eventDate2 = d.dateTime ? new Date(d.dateTime) : d.date ? /* @__PURE__ */ new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null;
+            if (eventDate2 && !isNaN(eventDate2.getTime()) && eventDate2.getTime() >= now.getTime()) {
+              legacyOrders.push({
+                id: docSnap.id,
+                ...d,
+                computedDate: eventDate2
+              });
+            }
+          });
+          if (legacyOrders.length > 0) {
+            legacyOrders.sort((a, b) => {
+              const aTime = a.computedDate?.getTime() || 0;
+              const bTime = b.computedDate?.getTime() || 0;
+              return aTime - bTime;
+            });
+            nextOrder = legacyOrders[0];
+          }
+        }
+      } catch (dbErr) {
+        console.warn("KWGT endpoint: Firestore fetch failed, falling back to local orders:", dbErr);
+        const localOrders = getLocalOrders();
+        const upcomingLocal = [];
+        localOrders.forEach((d) => {
+          const eventDate2 = d.dateTime ? new Date(d.dateTime) : d.date ? /* @__PURE__ */ new Date(`${d.date}T${d.time || "12:00"}:00+08:00`) : null;
+          if (eventDate2 && !isNaN(eventDate2.getTime()) && eventDate2.getTime() >= now.getTime()) {
+            upcomingLocal.push({
+              ...d,
+              id: d.id,
+              computedDate: eventDate2
+            });
+          }
+        });
+        if (upcomingLocal.length > 0) {
+          upcomingLocal.sort((a, b) => {
+            const aTime = a.computedDate?.getTime() || 0;
+            const bTime = b.computedDate?.getTime() || 0;
+            return aTime - bTime;
+          });
+          nextOrder = upcomingLocal[0];
+        }
+      }
+      if (!nextOrder) {
+        return res.json({
+          status: "success",
+          title: "No Upcoming Events",
+          time: "--:--"
+        });
+      }
+      const eventDate = nextOrder.eventTimestamp?.toDate?.() || (nextOrder.dateTime ? new Date(nextOrder.dateTime) : nextOrder.date ? /* @__PURE__ */ new Date(`${nextOrder.date}T${nextOrder.time || "12:00"}:00+08:00`) : null);
+      let timeStr = "--:--";
+      if (eventDate && !isNaN(eventDate.getTime())) {
+        const utc = eventDate.getTime() + eventDate.getTimezoneOffset() * 6e4;
+        const myTime = new Date(utc + 36e5 * 8);
+        let hours = myTime.getHours();
+        const minutes = myTime.getMinutes();
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const minutesStr = String(minutes).padStart(2, "0");
+        const hoursStr = String(hours).padStart(2, "0");
+        timeStr = `${hoursStr}:${minutesStr} ${ampm}`;
+      }
+      const orderName = nextOrder.name || "Customer";
+      const orderMenu = nextOrder.menu || "Catering";
+      const orderQty = nextOrder.quantity || 0;
+      const titleStr = `${orderName} - ${orderMenu} (${orderQty} Pax)`;
+      res.json({
+        status: "success",
+        title: titleStr,
+        time: timeStr
+      });
+    } catch (err) {
+      console.error("KWGT endpoint error:", err);
+      res.status(500).json({
+        status: "error",
+        message: err instanceof Error ? err.message : "Internal server error"
+      });
+    }
+  });
+  if (process.env.ENABLE_DEBUG_ENDPOINTS === "true") {
+    app.get("/api/widget/debug-all-orders", async (req, res) => {
+      try {
+        const results = [];
+        try {
+          const adminDb = getFirestore();
+          const snapshot = await adminDb.collection("orders").get();
+          snapshot.forEach((docSnap) => {
+            results.push({ id: docSnap.id, ...docSnap.data() });
+          });
+        } catch (dbErr) {
+          console.warn("Debug endpoint: Firestore fetch failed:", dbErr);
+        }
+        const localOrders = getLocalOrders();
+        res.json({ success: true, firestoreCount: results.length, localCount: localOrders.length, firestoreOrders: results, localOrders });
+      } catch (err) {
+        console.error("Debug endpoint error:", err);
+        res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+      }
+    });
+  }
   app.post("/api/orders", async (req, res) => {
     try {
       const orderData = req.body;
       let orderId = "";
-      let savedInFirestore = false;
+      let invoiceNo = "";
       try {
-        const docRef = await runWithRetry(() => (0, import_firestore.addDoc)((0, import_firestore.collection)(db, "orders"), {
-          ...orderData,
-          adminPasscode: process.env.ADMIN_PASSWORD || "wawasan123"
-        }));
-        orderId = docRef.id;
-        savedInFirestore = true;
-      } catch (dbErr) {
-        console.warn("Firestore order submission failed after retries, saving locally:", dbErr);
+        const created = await runWithRetry(() => createOrderWithSequentialInvoice(orderData));
+        orderId = created.orderId;
+        invoiceNo = created.invoiceNo;
+      } catch (firestoreErr) {
+        if (ENABLE_LOCAL_FALLBACK) {
+          console.warn("Firestore order submission failed; ENABLE_LOCAL_FALLBACK=true so saving locally:", firestoreErr);
+          orderId = "order_" + Math.random().toString(36).substring(2, 10);
+          invoiceNo = `RW-FALLBACK-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          const localOrders = getLocalOrders();
+          localOrders.push({
+            id: orderId,
+            ...orderData,
+            status: "approved",
+            approvedAt: (/* @__PURE__ */ new Date()).toISOString(),
+            invoiceNo,
+            createdAt: { seconds: Math.floor(Date.now() / 1e3), nanoseconds: 0 }
+          });
+          saveLocalOrders(localOrders);
+        } else {
+          throw firestoreErr;
+        }
       }
-      if (!savedInFirestore) {
-        orderId = "order_" + Math.random().toString(36).substring(2, 10);
-        const localOrders = getLocalOrders();
-        localOrders.push({
-          id: orderId,
-          ...orderData,
-          createdAt: { seconds: Math.floor(Date.now() / 1e3), nanoseconds: 0 }
-        });
-        saveLocalOrders(localOrders);
-      }
-      syncGoogleCalendarEvent(orderId, orderData).catch((err) => {
+      syncGoogleCalendarEvent(orderId, { ...orderData, invoiceNo }).catch((err) => {
         console.error("Background Google Calendar event creation error:", err);
       });
-      res.json({ success: true, id: orderId });
+      sendNotificationToTopic("new_orders", "New Order Received!", `New order from ${orderData.name || "Customer"} - ${orderData.quantity || "0"} pax.`).catch((err) => {
+        console.error("Background push notification error:", err);
+      });
+      res.json({ success: true, id: orderId, invoiceNo });
     } catch (err) {
       console.error("Order submission endpoint error:", err);
-      res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : "Internal server error" });
     }
   });
   app.post("/api/submissions/bill", async (req, res) => {
@@ -347,9 +892,9 @@ async function startServer() {
       let data = null;
       let isLocal = false;
       try {
-        const docRef = (0, import_firestore.doc)(db, collectionName, submissionId);
-        const docSnap = await (0, import_firestore.getDoc)(docRef);
-        if (docSnap.exists()) {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection(collectionName).doc(submissionId).get();
+        if (docSnap.exists) {
           data = docSnap.data();
         }
       } catch (dbErr) {
@@ -373,8 +918,8 @@ async function startServer() {
       };
       if (!isLocal) {
         try {
-          const docRef = (0, import_firestore.doc)(db, collectionName, submissionId);
-          await runWithRetry(() => (0, import_firestore.updateDoc)(docRef, updatedFields));
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection(collectionName).doc(submissionId).update(updatedFields));
         } catch (dbErr) {
           console.warn("Firestore update in bill failed after retries, syncing locally:", dbErr);
           isLocal = true;
@@ -614,7 +1159,7 @@ async function startServer() {
         });
       }
       await transporter.sendMail({
-        from: `"Restoran Wawasan" <${smtpUser}>`,
+        from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || "madnor.noisy@gmail.com"}>`,
         to: customerEmail,
         subject: emailSubject,
         html: htmlBody,
@@ -879,7 +1424,7 @@ Restoran Wawasan`;
       }
       const pdfBuffer = Buffer.from(pdfBase64.split(",")[1] || pdfBase64, "base64");
       await transporter.sendMail({
-        from: `"Restoran Wawasan" <${process.env.SMTP_USER}>`,
+        from: `"Restoran Wawasan" <${process.env.SENDER_EMAIL || "madnor.noisy@gmail.com"}>`,
         to: email,
         subject: emailSubject,
         text: htmlBody ? void 0 : emailBody,
@@ -902,8 +1447,8 @@ Restoran Wawasan`;
   app.post("/api/admin/login", (req, res) => {
     try {
       const { password } = req.body;
-      const adminPassword2 = process.env.ADMIN_PASSWORD;
-      if (!password || password !== adminPassword2) {
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!password || password !== adminPassword) {
         return res.status(401).json({ success: false, error: "Unauthorized: Invalid password" });
       }
       return res.json({ success: true });
@@ -912,18 +1457,33 @@ Restoran Wawasan`;
       res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
     }
   });
+  app.post("/api/admin/subscribe-to-topic", async (req, res) => {
+    try {
+      const { token, topic } = req.body;
+      if (!token || !topic) {
+        return res.status(400).json({ error: "Missing token or topic" });
+      }
+      const app2 = getAdminApp();
+      await (0, import_messaging.getMessaging)(app2).subscribeToTopic(token, topic);
+      console.log(`Successfully subscribed token to topic ${topic}`);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error subscribing to topic:", err);
+      res.status(500).json({ error: "Failed to subscribe" });
+    }
+  });
   app.post("/api/admin/orders", async (req, res) => {
     try {
       const { password, action, orderId, data } = req.body;
-      const adminPassword2 = process.env.ADMIN_PASSWORD;
-      if (!password || password !== adminPassword2) {
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!password || password !== adminPassword) {
         return res.status(401).json({ error: "Unauthorized: Invalid password" });
       }
       if (action === "fetch") {
         const orders = [];
         try {
-          const q = (0, import_firestore.query)((0, import_firestore.collection)(db, "orders"), (0, import_firestore.orderBy)("createdAt", "desc"));
-          const snapshot = await (0, import_firestore.getDocs)(q);
+          const adminDb = getFirestore();
+          const snapshot = await adminDb.collection("orders").orderBy("createdAt", "desc").get();
           snapshot.forEach((docSnap) => {
             const docData = docSnap.data();
             const createdAt = docData.createdAt;
@@ -956,9 +1516,25 @@ Restoran Wawasan`;
         if (!orderId || !data) {
           return res.status(400).json({ error: "Missing orderId or data for update" });
         }
+        let previousOrder;
+        try {
+          const adminDb = getFirestore();
+          const beforeSnap = await adminDb.collection("orders").doc(orderId).get();
+          if (beforeSnap.exists) {
+            previousOrder = beforeSnap.data();
+          }
+        } catch (readErr) {
+          console.warn("[StatusNotify] Could not read order before update (Firestore):", readErr);
+        }
+        if (!previousOrder) {
+          const localOrdersBefore = getLocalOrders();
+          previousOrder = localOrdersBefore.find((o) => o.id === orderId);
+        }
+        const previousStatus = previousOrder?.status || "";
         let updatedInFirestore = false;
         try {
-          await runWithRetry(() => (0, import_firestore.updateDoc)((0, import_firestore.doc)(db, "orders", orderId), data));
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).update(data));
           updatedInFirestore = true;
         } catch (dbErr) {
           console.warn("Firestore update failed after retries, relying on local backup:", dbErr);
@@ -983,6 +1559,18 @@ Restoran Wawasan`;
         syncGoogleCalendarEvent(orderId).catch((err) => {
           console.error("Background Google Calendar event sync error during admin update:", err);
         });
+        const newStatus = data?.status;
+        if (newStatus && newStatus !== previousStatus) {
+          const mergedOrder = {
+            ...previousOrder || {},
+            ...data,
+            id: orderId
+          };
+          console.log(`[StatusNotify] Order ${orderId} status changed: "${previousStatus}" -> "${newStatus}". Notifying customer.`);
+          notifyCustomerOfStatusChange(transporter, mergedOrder, newStatus).catch((err) => {
+            console.error("[StatusNotify] Background status notification error:", err);
+          });
+        }
         return res.json({ success: true });
       }
       if (action === "delete") {
@@ -990,7 +1578,8 @@ Restoran Wawasan`;
           return res.status(400).json({ error: "Missing orderId for delete" });
         }
         try {
-          await runWithRetry(() => (0, import_firestore.deleteDoc)((0, import_firestore.doc)(db, "orders", orderId)));
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).delete());
         } catch (dbErr) {
           console.warn("Firestore delete failed after retries, relying on local backup:", dbErr);
         }

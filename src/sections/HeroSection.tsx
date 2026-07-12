@@ -1,20 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import gsap from 'gsap';
-import { ChevronDown, ArrowRight, Coffee, MapPin, UtensilsCrossed } from 'lucide-react';
+
+import { motion } from 'motion/react';
+import { ArrowRight, Coffee, MapPin, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import ParticleCanvas from '@/components/ParticleCanvas';
+import { getAssetUrl } from '@/lib/utils';
 
 export default function HeroSection() {
   const { t, language } = useLanguage();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [scrollStarted, setScrollStarted] = useState(false);
-
   const isBm = language === 'bm';
-  const chips = [
-    isBm ? 'Sejak 1986' : 'Since 1986',
-    isBm ? 'Pemandangan tasik Putrajaya' : 'Putrajaya lake view',
-    isBm ? 'Sarapan, makan tengah hari & katering' : 'Breakfast, lunch & catering',
-  ];
 
   const highlights = [
     {
@@ -34,114 +28,100 @@ export default function HeroSection() {
     },
   ];
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.2 });
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+    }
+  };
 
-      tl.fromTo('.hero-chip', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, stagger: 0.08, ease: 'power3.out' })
-        .fromTo('.hero-title', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.2')
-        .fromTo('.hero-tagline', { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.65, ease: 'power3.out' }, '-=0.45')
-        .fromTo('.hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: 'power3.out' }, '-=0.35')
-        .fromTo('.hero-panel', { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.1, ease: 'power3.out' }, '-=0.15');
-    }, contentRef);
-
-    const onScroll = () => setScrollStarted(window.scrollY > 50);
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    return () => {
-      ctx.revert();
-      window.removeEventListener('scroll', onScroll);
-    };
-  }, []);
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+  };
 
   return (
-    <section className="relative w-full min-h-[100dvh] overflow-hidden bg-deep-forest kp-songkok">
-      <img
-        src="/assets/putrajaya-lake-view.jpg"
-        alt="Putrajaya lake view"
-        className="absolute inset-0 w-full h-full object-cover scale-[1.03]"
-      />
+    <section className="relative w-full overflow-hidden bg-cream pt-32 pb-16 lg:pt-40 lg:pb-24">
+      {/* Interactive floating elements in the dark atmosphere */}
+      <ParticleCanvas />
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,168,83,0.22),transparent_28%)]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-deep-forest via-deep-forest/70 to-deep-forest/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-deep-forest via-deep-forest/40 to-deep-forest/35" />
-      <div className="absolute inset-0 kp-batik opacity-50 mix-blend-overlay" />
+      {/* Decorative ambient radial glows for dark theme richness */}
+      <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-sunshine/10 blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[5%] w-[35vw] h-[35vw] rounded-full bg-kiwi/5 blur-[130px] pointer-events-none" />
 
-      <div ref={contentRef} className="relative content-container flex flex-col justify-center min-h-[100dvh] pt-28 pb-10 lg:pb-14">
-        <div className="max-w-3xl">
-          <div className="flex flex-wrap gap-3 mb-7">
-            {chips.map((chip) => (
-              <span
-                key={chip}
-                className="hero-chip inline-flex items-center gap-2 rounded-full border border-sunshine/20 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-sunshine backdrop-blur-sm"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-sunshine" />
-                {chip}
-              </span>
-            ))}
-          </div>
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="content-container flex flex-col items-center text-center relative z-10"
+      >
+        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-crisp-carrot animate-pulse shadow-carrot-glow" />
+          <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
+            {isBm ? 'Sejak 1986' : 'Since 1986'}
+          </span>
+        </motion.div>
 
-          <h1 className="hero-title font-display font-bold text-cream leading-[0.92] tracking-[-0.03em] text-[48px] md:text-[86px] lg:text-[104px]">
-            Restoran Wawasan
-            <br />
-            <span className="bg-gradient-to-r from-sunshine via-honey to-crisp-carrot bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift">
-              Pak Usop
-            </span>
-          </h1>
+        <motion.h1 
+          variants={itemVariants} 
+          className="font-display font-bold text-deep-forest leading-[1.05] tracking-tight text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] max-w-5xl"
+        >
+          Restoran Wawasan <br />
+          <span className="bg-gradient-to-r from-sunshine via-honey to-crisp-carrot bg-clip-text text-transparent italic pr-2">Pak Usop</span>
+        </motion.h1>
 
-          <p className="hero-tagline font-body font-light text-cream/78 text-lg md:text-[22px] leading-relaxed max-w-[760px] mt-7">
-            {t('hero_tagline')}
-          </p>
+        <motion.p variants={itemVariants} className="font-body text-deep-forest/70 text-lg md:text-xl leading-relaxed max-w-2xl mt-8 font-light">
+          {isBm 
+            ? 'Warisan rasa sejak Singapura 1986, kini di Putrajaya dengan hidangan sarapan klasik Nusantara, pakej mesyuarat dan katering yang mesra pejabat.'
+            : 'A culinary legacy from Singapore since 1986, now in Putrajaya with beloved breakfast classics, Nusantara comfort dishes, and catering.'}
+        </motion.p>
 
-          <p className="hero-tagline font-body text-cream/58 text-sm md:text-base leading-relaxed max-w-[680px] mt-4">
-            {isBm
-              ? 'Warisan rasa sejak Singapura 1986, kini di Putrajaya dengan hidangan sarapan, menu klasik Nusantara, pakej mesyuarat dan katering yang mesra pejabat.'
-              : 'A long-standing culinary legacy from Singapore since 1986, now rooted in Putrajaya with beloved breakfast classics, Nusantara comfort dishes, meeting packs, and catering.'}
-          </p>
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 mt-10 w-full sm:w-auto">
+          <Link
+            to="/order"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-semibold shadow-sunshine-glow hover:shadow-xl hover:scale-105 transition-all duration-300"
+          >
+            <span>{t('order_now')}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <a
+            href="#menu"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 text-deep-forest border border-white/10 rounded-full font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+          >
+            {t('view_our_menu')}
+          </a>
+        </motion.div>
 
-          <div className="hero-cta flex flex-col sm:flex-row items-center gap-4 mt-10">
-            <Link
-              to="/order"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-sunshine text-deep-forest rounded-full font-semibold text-sm transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5 relative overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-              <span className="relative z-10">{t('order_now')}</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform relative z-10" />
-            </Link>
-            <a
-              href="#menu"
-              className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 border border-white/15 text-cream rounded-full font-medium text-sm hover:bg-white/[0.06] hover:border-sunshine/35 hover:text-sunshine transition-all duration-300 hover:-translate-y-0.5"
-            >
-              {t('view_our_menu')}
-            </a>
-          </div>
-        </div>
+        {/* Stunning Feature Image */}
+        <motion.div variants={itemVariants} className="w-full mt-20 relative rounded-[2.5rem] overflow-hidden aspect-[16/9] md:aspect-[21/9] border border-white/[0.08] shadow-2xl">
+          <img
+            src={getAssetUrl("/assets/putrajaya-lake-view.jpg")}
+            alt="Putrajaya lake view"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-cream via-transparent to-transparent opacity-80" />
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 max-w-5xl">
+        {/* Highlights */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full text-left">
           {highlights.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
-                className="hero-panel rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-md p-5 md:p-6 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.45)]"
+                className="bg-cream-dark/60 backdrop-blur-md rounded-3xl p-8 border border-white/[0.06] shadow-xl hover:border-sunshine/30 hover:shadow-[0_15px_35px_rgba(232,144,37,0.08)] hover:-translate-y-1 transition-all duration-500"
               >
-                <div className="w-11 h-11 rounded-2xl bg-sunshine/12 border border-sunshine/20 flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5 text-sunshine" />
+                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-5 border border-white/10">
+                  <Icon className="w-6 h-6 text-sunshine" />
                 </div>
-                <h3 className="font-display text-xl text-cream">{item.title}</h3>
-                <p className="text-sm text-cream/58 mt-2 leading-relaxed">{item.subtitle}</p>
+                <h3 className="font-display font-semibold text-xl text-deep-forest">{item.title}</h3>
+                <p className="text-sm text-deep-forest/60 mt-3 leading-relaxed font-light">{item.subtitle}</p>
               </div>
             );
           })}
-        </div>
-
-        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 transition-all duration-500 ${scrollStarted ? 'opacity-0 translate-y-4' : 'opacity-100'}`}>
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-cream/40 font-accent">Scroll</span>
-            <ChevronDown className="w-5 h-5 text-sunshine animate-bounce-down" />
-          </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

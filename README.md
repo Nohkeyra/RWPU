@@ -1,19 +1,48 @@
-# Wawasan Pak Usop 📱🍔
+# Restoran Wawasan Pak Usop — Landing Page
 
-A highly interactive and professional web and mobile application designed for **Restoran Wawasan Pak Usop**. It is built using **React, TypeScript, Vite, Tailwind CSS, and Capacitor** to deliver a premium responsive experience that can be built directly into an Android APK, backed by a robust and resilient Express backend.
+Reorganized from a chat transcript containing multiple design iterations for the
+Restoran Wawasan Pak Usop (Putrajaya) website rebuild.
 
----
+## How this was organized
 
-## 🌟 Key Features
+The original transcript contained several rounds of edits to the same files
+(color palette migrations, section rewrites, etc.). Each named file below
+reflects the **most recent version** referenced in the conversation.
 
-*   **Premium Interactive Landing Page**: Modern visual design featuring elegant typography, fluid transitions, and a local Malay-inspired aesthetic.
-*   **Dynamic Order System**: Customers can customize orders, calculate totals dynamically, and select preferred delivery or pickup modes.
-*   **Automated PDF Invoicing**: Uses client-side PDF generation (`jspdf` & `jspdf-autotable`) to create beautiful, printable receipts instantly in both English and Bahasa Melayu.
-*   **Interactive Admin Dashboard**: Admin view to manage active orders, review restaurant analytics, and inspect customer inquiries.
-*   **Fully Wrapped Mobile Shell**: Fully integrated with `@capacitor/core` and `@capacitor/android` to enable packaging as a native Android App (APK).
-*   **Resilient Hybrid Database**: Automated self-healing dual-layer database that synchronizes Firestore records with a local `orders.json` backup on the server, ensuring zero data loss during network disruptions.
-*   **Google Calendar Syncing**: Automatically creates and updates catering events on Google Calendar for seamless tracking of event dates and times.
-*   **Professional Email Receipts**: Generates and mails beautiful HTML-designed receipts to customers using SMTP and Nodemailer.
+```
+project/
+├── tailwind.config.js       # Final brand palette (light-theme migration)
+├── index.css                 # Final global styles / CSS variables
+├── src/
+│   ├── pages/
+│   │   ├── LandingPage.tsx   # Main landing page assembly
+│   │   └── OrderPage.tsx     # Order flow page
+│   └── components/
+│       ├── Header.tsx
+│       ├── Footer.tsx
+│       ├── MobileMenu.tsx
+│       ├── HeroSection.tsx
+│       ├── StorySection.tsx
+│       ├── MenuSection.tsx
+│       ├── ExperienceSection.tsx
+│       ├── FoodCard.tsx
+│       ├── ReviewCard.tsx
+│       └── PrincipleCard.tsx
+└── history/
+    └── draft_XX_lineNNN.*     # Earlier full-page drafts, kept for reference
+                                 (superseded by the files above)
+```
 
----
+## Notes
 
+- `history/` holds earlier, unnamed full-`LandingPage` drafts (dark "kopi"
+  theme, before the light-theme migration) plus one earlier snippet — kept
+  in case you want to compare or recover something from an earlier direction.
+- Some components reference files not present in the transcript
+  (`@/components/ui/button`, `@/components/SectionLabel`,
+  `@/context/LanguageContext`) — these were pre-existing project files not
+  pasted into the chat, so you'll need to reconnect this to your actual
+  codebase for it to build.
+- Image assets referenced (e.g. `/assets/putrajaya-lake-view.jpg`) are not
+  included — see the image mapping table that was in the original chat if
+  you still have it.

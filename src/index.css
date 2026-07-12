@@ -4,253 +4,151 @@
 
 @layer base {
   :root {
-    /* ============================================================
-       Brand palette — Restoran Wawasan Pak Usop
-       Inspired by teh tarik warmth, dark kopi counters, Putrajaya
-       sunset views, and brass-gold heritage signage.
-       ============================================================ */
-
-    /* shadcn HSL tokens (kept in sync with colors below) */
-    --background:           20  20% 8%;        /* deep espresso backdrop */
-    --foreground:           38  50% 93%;       /* cream */
-    --card:                 20  24% 12%;       /* dark wood surface */
-    --card-foreground:      38  50% 93%;
-    --popover:              20  24% 12%;
-    --popover-foreground:   38  50% 93%;
-    --primary:              37  59% 58%;       /* heritage gold */
-    --primary-foreground:   20  20% 8%;
-    --secondary:            22  28% 17%;       /* elevated wood */
-    --secondary-foreground: 38  50% 93%;
-    --muted:                22  16% 20%;
-    --muted-foreground:     34  24% 73%;       /* stone */
-    --accent:               20  51% 50%;       /* sambal terracotta */
-    --accent-foreground:    38  50% 93%;
-    --destructive:          14  59% 40%;       /* chili red */
-    --destructive-foreground: 38 50% 93%;
-    --border:               24  18% 22%;
-    --input:                24  18% 22%;
-    --ring:                 37  59% 58%;
-    --radius:               0.9rem;
-
-    /* Raw brand hex tokens — single source of truth. */
-    --color-deep-forest:    #17110F;
-    --color-forest-green:   #241A16;
-    --color-light-forest:   #33231D;
-    --color-moss:           #6E3E1E;
-    --color-fern:           #8C5230;
-    --color-sage:           #D8B16A;
-    --color-kiwi:           #B85C38;
-    --color-sunshine:       #D4A853;
-    --color-honey:          #E2BD74;
-    --color-crisp-carrot:   #C1673C;
-    --color-tomato-burst:   #A84424;
-    --color-cream:          #F6EFE2;
-    --color-stone:          #CABBA7;
-    --color-walnut:         #5B4030;
-    --color-burnt-orange:   #9D4B2B;
-
-    /* RGB variants — for rgba() with opacity. */
-    --rgb-sunshine:         212 168 83;
-    --rgb-honey:            226 189 116;
-    --rgb-kiwi:             184 92 56;
-    --rgb-carrot:           193 103 60;
-    --rgb-tomato:           168 68 36;
-    --rgb-moss:             110 62 30;
-    --rgb-fern:             140 82 48;
-    --rgb-sage:             216 177 106;
-    --rgb-cream:            246 239 226;
-    --rgb-stone:            202 187 167;
+    /* Nusantara Deep Espresso - Dark Theme */
+    --color-deep-forest: #F5EFE6;      /* Warm Cream Text */
+    --color-forest: #1E1512;           /* Deep Espresso/Chocolate */
+    --color-light-forest: #2D211C;     /* Lighter Chocolate for Hover */
+    
+    --color-sunshine: #E89025;         /* Radiant Golden Orange */
+    --color-honey: #F2A43F;            /* Soft Orange-Gold */
+    --color-crisp-carrot: #E55928;     /* Sambal Orange-Red */
+    --color-tomato-burst: #BA3C1E;     /* Rich Tomato Red */
+    --color-kiwi: #729B48;             /* Fresh Leaf Green */
+    
+    --color-cream: #0B0807;            /* Premium Espresso Black Primary Background */
+    --color-cream-dark: #15100E;       /* Deep Warm Chocolate Secondary Background */
+    --color-charcoal: #120E0C;         /* Secondary dark surface */
+    --color-stone: #A69D95;            /* Muted Taupe/Sand Text */
+    
+    /* Updated shadcn tokens for beautiful dark mode */
+    --background: 15 13% 4%;           /* Matches #0B0807 */
+    --foreground: 36 33% 93%;          /* Matches #F5EFE6 */
+    --card: 15 20% 8%;                 /* Matches #15100E */
+    --card-foreground: 36 33% 93%;
+    --popover: 15 20% 8%;
+    --popover-foreground: 36 33% 93%;
+    --primary: 36 80% 53%;             /* Sunshine Golden Orange */
+    --primary-foreground: 15 13% 4%;
+    --secondary: 15 20% 8%;
+    --secondary-foreground: 36 33% 93%;
+    --muted: 15 15% 15%;
+    --muted-foreground: 36 10% 65%;
+    --accent: 14 78% 53%;              /* Crisp Carrot */
+    --accent-foreground: 36 33% 93%;
+    --destructive: 11 72% 42%;         /* Tomato Burst */
+    --destructive-foreground: 36 33% 93%;
+    --border: 15 20% 15%;
+    --input: 15 20% 15%;
+    --ring: 36 80% 53%;
+    --radius: 1.25rem;
   }
 
-  html {
-    scroll-behavior: auto;
-    -webkit-tap-highlight-color: transparent;
+  * {
+    @apply border-border;
   }
-
+  
   body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background:
-      radial-gradient(circle at top, rgba(var(--rgb-sunshine), 0.06), transparent 28%),
-      linear-gradient(180deg, #17110F 0%, #1D1411 46%, #241A16 100%);
-    color: var(--color-cream);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    @apply bg-cream text-deep-forest antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
-
+  
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 600;
     letter-spacing: -0.02em;
   }
-
-  ::selection {
-    background-color: rgba(var(--rgb-kiwi), 0.35);
-    color: #F3E8CC;
+  
+  html {
+    scroll-behavior: smooth;
   }
-
-  ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-track { background: var(--color-deep-forest); }
+  
+  ::selection {
+    background-color: rgba(232, 144, 37, 0.3);
+    color: #F5EFE6;
+  }
+  
+  /* Dark mode scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0807;
+  }
   ::-webkit-scrollbar-thumb {
-    background: var(--color-moss);
+    background: #2D211C;
     border-radius: 4px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-fern); }
-
-  /* Touch targets for mobile (accessibility) */
-  .touch-target { min-height: 44px; min-width: 44px; }
-
-  /* Better focus visible (accessibility) */
-  *:focus-visible {
-    outline: none;
-    ring: 2px;
-    ring-color: rgba(var(--rgb-moss), 0.5);
-    ring-offset: 2px;
-    ring-offset-color: #17110F;
+  ::-webkit-scrollbar-thumb:hover {
+    background: #E89025;
   }
 
-  /* Prevent text selection on buttons */
-  button, [role="button"] {
-    user-select: none;
-    -webkit-user-select: none;
+  /* Global input overlays to ensure beautiful dark-inputs throughout order sheets, etc. */
+  input, textarea, select, [role="combobox"] {
+    background-color: rgba(21, 16, 14, 0.6) !important;
+    color: #F5EFE6 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  input:focus, textarea:focus {
+    border-color: var(--color-sunshine) !important;
+    box-shadow: 0 0 10px rgba(232, 144, 37, 0.15) !important;
   }
 }
 
 @layer components {
-  /* ---------- Layout helpers ---------- */
+  /* Layout helpers - Updated for premium dark theme */
   .section-padding    { @apply py-20 md:py-[120px]; }
   .content-container  { @apply max-w-[1200px] mx-auto px-6 md:px-12; }
-
-  /* ---------- Brand surfaces ---------- */
+  
+  /* Brand surfaces - Now dark with glassmorphic accents */
   .nature-card {
-    @apply bg-forest-green rounded-2xl border border-cream/10 shadow-[0_4px_40px_rgba(0,0,0,0.25)] overflow-hidden;
+    background-color: rgba(21, 16, 14, 0.85);
+    @apply backdrop-blur-md rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden;
   }
-  .moss-glow     { @apply animate-glow-pulse; }
-  .kiwi-pulse    { @apply animate-kiwi-pulse; }
-  .sunshine-pulse{ @apply animate-sunshine-pulse; }
-
-  /* ---------- Brand gradient text + glows ---------- */
+  
+  /* Brand gradient text - Updated with new hot sunset glows */
   .gradient-text {
-    @apply bg-gradient-to-r from-moss via-sunshine to-crisp-carrot bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-deep-forest via-crisp-carrot to-sunshine bg-clip-text text-transparent;
   }
   .gradient-text-warm {
-    @apply bg-gradient-to-r from-sunshine via-crisp-carrot to-tomato-burst bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-crisp-carrot via-sunshine to-tomato-burst bg-clip-text text-transparent;
   }
-  .gradient-text-cool {
-    @apply bg-gradient-to-r from-fern via-sage to-kiwi bg-clip-text text-transparent;
-  }
+  
+  /* Accents */
   .kiwi-accent {
-    @apply text-kiwi drop-shadow-[0_0_8px_rgba(154,188,4,0.3)];
+    @apply text-kiwi drop-shadow-[0_0_8px_rgba(114,155,72,0.3)];
   }
   .carrot-accent {
-    @apply text-crisp-carrot drop-shadow-[0_0_8px_rgba(248,96,21,0.3)];
+    @apply text-crisp-carrot font-bold;
   }
   .sunshine-accent {
-    @apply text-sunshine drop-shadow-[0_0_8px_rgba(255,202,38,0.3)];
+    @apply text-sunshine drop-shadow-[0_0_8px_rgba(232,144,37,0.4)];
   }
-
-  /* ---------- Section label (decorative dots + line) ---------- */
-  .section-label-line {
-    @apply h-[1px] bg-gradient-to-r from-sunshine/70 via-kiwi/45 to-transparent;
+  
+  /* Glassmorphism for headers - Dark version */
+  .glass-header {
+    background-color: rgba(11, 8, 7, 0.8);
+    @apply backdrop-blur-xl border-b border-white/5 shadow-lg;
   }
-  .section-label-line-right {
-    @apply h-[1px] bg-gradient-to-l from-sunshine/70 via-kiwi/45 to-transparent;
+  
+  /* Pattern overlay for sections - Dimmed for dark mode comfort */
+  .pattern-dots {
+    background-image: radial-gradient(rgba(245, 239, 230, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
-
-  /* ---------- Paper texture overlay (subtle grain) ---------- */
-  .paper-texture {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-  }
-
-  /* ---------- Button utilities ---------- */
-  .shimmer-btn {
-    background: linear-gradient(90deg, var(--color-moss) 25%, var(--color-kiwi) 50%, var(--color-moss) 75%);
-    background-size: 200% 100%;
-    @apply animate-shimmer;
-  }
-  .shimmer-sunshine {
-    background: linear-gradient(90deg, var(--color-sunshine) 25%, var(--color-honey) 50%, var(--color-sunshine) 75%);
-    background-size: 200% 100%;
-    @apply animate-shimmer;
-  }
-  .shimmer-carrot {
-    background: linear-gradient(90deg, var(--color-crisp-carrot) 25%, var(--color-tomato-burst) 50%, var(--color-crisp-carrot) 75%);
-    background-size: 200% 100%;
-    @apply animate-shimmer;
-  }
-
-  /* ---------- Brand CTA panel ---------- */
-  .brand-cta-panel {
-    background-image: linear-gradient(90deg,
-      var(--color-forest-green) 0%,
-      var(--color-moss) 35%,
-      var(--color-sunshine) 72%,
-      var(--color-crisp-carrot) 100%);
-    background-size: 200% auto;
-    @apply animate-gradient-shift;
-  }
-
-  /* ---------- Honey drip container ---------- */
-  .honey-drip-container {
-    position: relative;
-    overflow: hidden;
-  }
-  .honey-drip-container::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 50%;
-    width: 4px; height: 100%;
-    background: linear-gradient(to bottom, var(--color-honey), transparent);
-    transform: scaleY(0);
-    transform-origin: top;
-  }
-  .honey-drip-container:active::after {
-    animation: honey-drip 0.4s ease-out forwards;
-  }
-
-  /* ---------- Organic flowing shape ---------- */
-  .organic-blob {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    animation: gradient-shift 8s ease infinite;
-  }
-
-  /* ---------- Soft floating chip (used for "Halal", "Est. 1986", etc.) ---------- */
-  .brand-chip {
-    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-           bg-moss/10 border border-moss/20 backdrop-blur-sm
-           text-moss text-[10px] uppercase tracking-[0.2em] font-medium;
-  }
-  .brand-chip-kiwi {
-    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-           bg-kiwi/10 border border-kiwi/30 backdrop-blur-sm
-           text-kiwi text-[10px] uppercase tracking-[0.2em] font-medium;
-  }
-  .brand-chip-sunshine {
-    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-           bg-sunshine/10 border border-sunshine/30 backdrop-blur-sm
-           text-sunshine text-[10px] uppercase tracking-[0.2em] font-medium;
-  }
-  .brand-chip-carrot {
-    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-           bg-crisp-carrot/10 border border-crisp-carrot/30 backdrop-blur-sm
-           text-crisp-carrot text-[10px] uppercase tracking-[0.2em] font-medium;
+  
+  /* Touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
-@layer utilities {
-  .animate-success-pop { animation: success-pop 0.5s ease-out; }
-
-  /* Brand-tinted text colors with stronger visibility. */
-  .text-brand-kiwi     { color: var(--color-kiwi); }
-  .text-brand-sunshine { color: var(--color-sunshine); }
-  .text-brand-carrot   { color: var(--color-crisp-carrot); }
-  .text-brand-tomato   { color: var(--color-tomato-burst); }
-  .text-brand-sage     { color: var(--color-sage); }
-  .text-brand-cream    { color: var(--color-cream); }
-
-  @keyframes success-pop {
-    0%   { transform: scale(0.8); opacity: 0; }
-    50%  { transform: scale(1.05); }
-    100% { transform: scale(1);   opacity: 1; }
-  }
+/* Utility for hiding scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.kp-skip { position: absolute; top: -100px; left: 0; background: var(--color-sunshine); color: #fff; padding: 8px 16px; z-index: 9999; transition: top 0.2s; font-weight: bold; } .kp-skip:focus { top: 0; }

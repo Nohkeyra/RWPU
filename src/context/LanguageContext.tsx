@@ -102,6 +102,7 @@ const translations: Translation = {
   
   // Menu Section
   signature_dishes: { en: 'Signature Dishes', bm: 'Hidangan Istimewa' },
+  menu_title: { en: 'Signature Dishes', bm: 'Hidangan Istimewa' },
   menu_subtitle: {
     en: 'From our legendary Asam Pedas to our famous Friday Rojak Singapore — each dish is crafted with fresh, locally sourced ingredients and decades of culinary expertise.',
     bm: 'Daripada Asam Pedas legenda kami kepada Rojak Singapore hari Jumaat yang terkenal — setiap hidangan disediakan dengan bahan-bahan tempatan yang segar dan kepakaran kulinari berdekad-dekad lamanya.'
@@ -154,6 +155,7 @@ const translations: Translation = {
   // Testimonials
   testimonials: { en: 'Testimonials', bm: 'Testimoni' },
   guest_reviews: { en: 'What Our Guests Say', bm: 'Apa Kata Tetamu Kami' },
+  what_they_say: { en: 'What They Say', bm: 'Apa Kata Mereka' },
   based_on: { en: 'Based on 35+ reviews', bm: 'Berdasarkan 35+ ulasan' },
   out_of: { en: 'out of 5', bm: 'daripada 5' },
   
