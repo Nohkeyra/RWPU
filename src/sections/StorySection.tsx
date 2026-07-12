@@ -40,7 +40,7 @@ export default function StorySection() {
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80';
+                    target.src = getAssetUrl('/assets/wawasan_logo.jpg');
                   }}
                 />
               </div>

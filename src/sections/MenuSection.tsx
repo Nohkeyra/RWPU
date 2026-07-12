@@ -1,6 +1,5 @@
 import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
-import { getAssetUrl } from '@/lib/utils';
 
 const MENU_ITEMS = [
   {
@@ -112,13 +111,9 @@ export default function MenuSection() {
             <div key={item.nameEn} className="menu-card group relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.1)] hover:-translate-y-1 transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden relative">
                 <img
-                  src={getAssetUrl(item.image)}
+                  src={item.image}
                   alt={isBm ? item.nameBm : item.nameEn}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?auto=format&fit=crop&q=80';
-                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0807]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>

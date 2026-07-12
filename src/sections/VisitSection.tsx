@@ -66,7 +66,7 @@ export default function VisitSection() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80';
+                  target.src = getAssetUrl('/assets/wawasan_logo.jpg');
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/20 to-transparent" />
