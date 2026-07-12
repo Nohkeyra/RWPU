@@ -1,18 +1,9 @@
 {
-	"appId": "com.restoranwawasan.app",
-	"appName": "Restoran Wawasan",
+	"appId": "com.wawasanpakusop.app",
+	"appName": "Wawasan Pak Usop",
 	"webDir": "dist",
 	"exclude": [
 		"server.cjs",
 		"server.cjs.map"
-	],
-	"server": {
-		"cleartext": true,
-		"androidScheme": "https"
-	},
-	"plugins": {
-		"SplashScreen": {
-			"launchShowDuration": 0
-		}
-	}
+	]
 }
