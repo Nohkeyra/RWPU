@@ -25,7 +25,7 @@ export function SuccessState({ title, subtitle, className, showConfetti = false 
         <CheckCircle2 className="w-12 h-12 text-kiwi mx-auto mb-3" />
       </motion.div>
       
-      <h2 className="font-display text-2xl text-cream mb-2">{title}</h2>
+      <h2 className="font-display text-2xl text-deep-forest mb-2">{title}</h2>
       {subtitle && <p className="text-stone text-sm">{subtitle}</p>}
       
       {showConfetti && (

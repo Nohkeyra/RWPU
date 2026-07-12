@@ -11,13 +11,13 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-moss text-cream [a&]:hover:bg-fern",
+          "border-transparent bg-moss text-deep-forest [a&]:hover:bg-fern",
         secondary:
-          "border-transparent bg-forest-green text-cream border border-cream/10 [a&]:hover:bg-light-forest",
+          "border-transparent bg-forest-green text-deep-forest border border-deep-forest/10 [a&]:hover:bg-light-forest",
         destructive:
-          "border-transparent bg-tomato-burst text-cream [a&]:hover:bg-tomato-burst/90",
+          "border-transparent bg-tomato-burst text-deep-forest [a&]:hover:bg-tomato-burst/90",
         outline:
-          "text-cream border-cream/20 [a&]:hover:bg-cream/5 [a&]:hover:text-kiwi",
+          "text-deep-forest border-deep-forest/20 [a&]:hover:bg-deep-forest/5 [a&]:hover:text-kiwi",
         // Brand-specific variants.
         honey:
           "border-transparent bg-honey/15 text-honey border border-honey/20 [a&]:hover:bg-honey/25",

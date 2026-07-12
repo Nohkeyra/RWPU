@@ -731,7 +731,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
   if (loading) {
     return (
       <div className="min-h-screen bg-charcoal flex items-center justify-center">
-        <div className="flex items-center gap-3 text-cream/60">
+        <div className="flex items-center gap-3 text-deep-forest/60">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>{t('loading')}</span>
         </div>
@@ -752,10 +752,10 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               referrerPolicy="no-referrer"
             />
             <div>
-              <span className="font-display font-semibold text-xl text-cream leading-none">
+              <span className="font-display font-semibold text-xl text-deep-forest leading-none">
                 Wawasan
               </span>
-              <span className="block font-body text-xs text-cream/60 leading-tight mt-0.5">
+              <span className="block font-body text-xs text-deep-forest/60 leading-tight mt-0.5">
                 Admin
               </span>
             </div>
@@ -764,14 +764,14 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
         
         <div className="flex items-center gap-4">
           <Link to="/">
-            <Button variant="ghost" className="text-cream hover:text-warm-gold hover:bg-transparent">
+            <Button variant="ghost" className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('back')}
             </Button>
           </Link>
           <Button 
             variant="ghost" 
-            className="text-cream/60 hover:text-red-400 hover:bg-red-500/10"
+            className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
             onClick={() => {
               localStorage.removeItem('wawasan_admin_authenticated');
               localStorage.removeItem('wawasan_admin_password');
@@ -790,16 +790,16 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
           {/* Page Header */}
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-display font-bold text-cream mb-2">
+              <h1 className="text-3xl font-display font-bold text-deep-forest mb-2">
                 {t('orders')}
               </h1>
-              <p className="text-cream/50">
+              <p className="text-deep-forest/50">
                 {t('orders_subtitle')}
               </p>
             </div>
             
             {calendarState.loading ? (
-              <div className="flex items-center gap-2 px-4 py-2 bg-cream/5 text-cream/50 border border-cream/10 rounded-md">
+              <div className="flex items-center gap-2 px-4 py-2 bg-cream/5 text-deep-forest/50 border border-deep-forest/10 rounded-md">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm font-medium">Checking Calendar Sync...</span>
               </div>
@@ -838,7 +838,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
                 activeTab === 'orders'
                   ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
-                  : 'border-transparent text-cream/50 hover:text-cream/80 hover:bg-cream/5'
+                  : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -852,7 +852,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
                 activeTab === 'diagnostics'
                   ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
-                  : 'border-transparent text-cream/50 hover:text-cream/80 hover:bg-cream/5'
+                  : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
               }`}
             >
               <Activity className="w-4 h-4" />
@@ -864,12 +864,12 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <>
               {/* Search */}
               <div className="mb-6 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-deep-forest/40" />
                 <Input
                   placeholder={t('search_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-deep-brown border-warm-gold/20 text-cream placeholder:text-cream/30 focus:border-warm-gold/50"
+                  className="pl-10 bg-deep-brown border-warm-gold/20 text-deep-forest placeholder:text-deep-forest/30 focus:border-warm-gold/50"
                 />
               </div>
 
@@ -879,26 +879,26 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                   <Table>
                     <TableHeader>
                       <TableRow className="border-warm-gold/10 hover:bg-transparent">
-                        <TableHead className="text-cream/60">{t('date')}</TableHead>
-                        <TableHead className="text-cream/60">{t('quantity')}</TableHead>
-                        <TableHead className="text-cream/60">{t('status')}</TableHead>
-                        <TableHead className="text-cream/60 text-right">{t('actions')}</TableHead>
+                        <TableHead className="text-deep-forest/60">{t('date')}</TableHead>
+                        <TableHead className="text-deep-forest/60">{t('quantity')}</TableHead>
+                        <TableHead className="text-deep-forest/60">{t('status')}</TableHead>
+                        <TableHead className="text-deep-forest/60 text-right">{t('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredOrders.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-cream/40 py-12">
+                          <TableCell colSpan={4} className="text-center text-deep-forest/40 py-12">
                             {t('no_orders')}
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredOrders.map((order) => (
                           <TableRow key={order.id} className="border-warm-gold/10 hover:bg-warm-gold/5">
-                            <TableCell className="text-cream/70">
+                            <TableCell className="text-deep-forest/70">
                               {order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}
                             </TableCell>
-                            <TableCell className="text-cream/70">
+                            <TableCell className="text-deep-forest/70">
                               {order.quantity} pax
                             </TableCell>
                             <TableCell>
@@ -910,7 +910,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                                   variant="ghost"
                                   size="sm"
                                   title={t('view_edit_details')}
-                                  className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  className="text-deep-forest/60 hover:text-warm-gold hover:bg-warm-gold/10"
                                   onClick={() => openOrderDetail(order)}
                                 >
                                   <Eye className="w-4 h-4" />
@@ -920,7 +920,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                                   variant="ghost"
                                   size="sm"
                                   title={t('preview_pdf')}
-                                  className="text-cream/60 hover:text-blue-400 hover:bg-blue-500/10"
+                                  className="text-deep-forest/60 hover:text-blue-400 hover:bg-blue-500/10"
                                   onClick={() => handlePreviewPDF(order, order.status === 'approved')}
                                 >
                                   <FileText className="w-4 h-4" />
@@ -930,7 +930,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                                   variant="ghost"
                                   size="sm"
                                   title={t('download_pdf')}
-                                  className="text-cream/60 hover:text-green-400 hover:bg-green-500/10"
+                                  className="text-deep-forest/60 hover:text-green-400 hover:bg-green-500/10"
                                   onClick={() => handleDownloadPDF(order, order.status === 'approved')}
                                   disabled={generatingInvoice === order.id}
                                 >
@@ -945,7 +945,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                                   variant="ghost"
                                   size="sm"
                                   title={t('send_pdf')}
-                                  className="text-cream/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  className="text-deep-forest/60 hover:text-warm-gold hover:bg-warm-gold/10"
                                   onClick={() => openSendDialog(order)}
                                 >
                                   <Send className="w-4 h-4" />
@@ -955,7 +955,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                                   variant="ghost"
                                   size="sm"
                                   title={t('delete_order')}
-                                  className="text-cream/60 hover:text-red-400 hover:bg-red-500/10"
+                                  className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
                                   onClick={() => handleDelete(order.id)}
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -974,8 +974,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <div className="space-y-6 animate-fade-in">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-charcoal/50 border border-warm-gold/10 rounded-xl gap-4">
                 <div>
-                  <h3 className="font-display font-bold text-cream text-lg">System Diagnostics</h3>
-                  <p className="text-xs text-cream/50 mt-1">Verify health and credentials of automated backend services and PDF capabilities.</p>
+                  <h3 className="font-display font-bold text-deep-forest text-lg">System Diagnostics</h3>
+                  <p className="text-xs text-deep-forest/50 mt-1">Verify health and credentials of automated backend services and PDF capabilities.</p>
                 </div>
                 <Button 
                   onClick={runAllDiagnostics}
@@ -995,8 +995,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         <Database className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-cream">Firestore Database</h4>
-                        <p className="text-xs text-cream/40">Writes/reads of orders & invoice counters</p>
+                        <h4 className="font-semibold text-deep-forest">Firestore Database</h4>
+                        <p className="text-xs text-deep-forest/40">Writes/reads of orders & invoice counters</p>
                       </div>
                     </div>
                     <Button 
@@ -1004,15 +1004,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       size="sm" 
                       onClick={runFirebaseDiag}
                       disabled={diagFirebase.status === 'running'}
-                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
                     >
                       Test
                     </Button>
                   </div>
 
-                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
-                    <span className="text-cream/50">Status:</span>
-                    {diagFirebase.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                  <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
+                    <span className="text-deep-forest/50">Status:</span>
+                    {diagFirebase.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
                     {diagFirebase.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagFirebase.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Connected</span>}
                     {diagFirebase.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
@@ -1041,8 +1041,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         <Wifi className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-cream">Google Calendar API</h4>
-                        <p className="text-xs text-cream/40">Automated event publishing</p>
+                        <h4 className="font-semibold text-deep-forest">Google Calendar API</h4>
+                        <p className="text-xs text-deep-forest/40">Automated event publishing</p>
                       </div>
                     </div>
                     <Button 
@@ -1050,15 +1050,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       size="sm" 
                       onClick={runCalendarDiag}
                       disabled={diagCalendar.status === 'running'}
-                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
                     >
                       Test
                     </Button>
                   </div>
 
-                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
-                    <span className="text-cream/50">Status:</span>
-                    {diagCalendar.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                  <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
+                    <span className="text-deep-forest/50">Status:</span>
+                    {diagCalendar.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
                     {diagCalendar.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagCalendar.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Online</span>}
                     {diagCalendar.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
@@ -1087,8 +1087,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-cream">Client PDF Engine</h4>
-                        <p className="text-xs text-cream/40">In-memory jsPDF & formatting engine</p>
+                        <h4 className="font-semibold text-deep-forest">Client PDF Engine</h4>
+                        <p className="text-xs text-deep-forest/40">In-memory jsPDF & formatting engine</p>
                       </div>
                     </div>
                     <Button 
@@ -1096,15 +1096,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       size="sm" 
                       onClick={runPdfDiag}
                       disabled={diagPdf.status === 'running'}
-                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
                     >
                       Test
                     </Button>
                   </div>
 
-                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
-                    <span className="text-cream/50">Status:</span>
-                    {diagPdf.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                  <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
+                    <span className="text-deep-forest/50">Status:</span>
+                    {diagPdf.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
                     {diagPdf.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagPdf.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
                     {diagPdf.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
@@ -1133,8 +1133,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         <Cpu className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-cream">App Environment</h4>
-                        <p className="text-xs text-cream/40">WebView context & Native APIs</p>
+                        <h4 className="font-semibold text-deep-forest">App Environment</h4>
+                        <p className="text-xs text-deep-forest/40">WebView context & Native APIs</p>
                       </div>
                     </div>
                     <Button 
@@ -1142,15 +1142,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       size="sm" 
                       onClick={runNativeDiag}
                       disabled={diagNative.status === 'running'}
-                      className="border-warm-gold/20 text-cream text-xs hover:bg-warm-gold/5"
+                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
                     >
                       Test
                     </Button>
                   </div>
 
-                  <div className="pt-2 border-t border-cream/5 flex items-center justify-between text-xs">
-                    <span className="text-cream/50">Status:</span>
-                    {diagNative.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
+                  <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
+                    <span className="text-deep-forest/50">Status:</span>
+                    {diagNative.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
                     {diagNative.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagNative.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
                     {diagNative.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
@@ -1186,12 +1186,12 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-cream">SMTP Relay (Brevo SMTP via Render)</h4>
-                    <p className="text-xs text-cream/40">Sends actual HTML emails to customers on approval</p>
+                    <h4 className="font-semibold text-deep-forest">SMTP Relay (Brevo SMTP via Render)</h4>
+                    <p className="text-xs text-deep-forest/40">Sends actual HTML emails to customers on approval</p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-cream/5 space-y-4">
+                <div className="pt-2 border-t border-deep-forest/5 space-y-4">
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1">
                       <Input
@@ -1199,7 +1199,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         placeholder="Enter test recipient email address"
                         value={testEmailAddress}
                         onChange={(e) => setTestEmailAddress(e.target.value)}
-                        className="bg-charcoal/30 border-warm-gold/20 text-cream text-xs placeholder:text-cream/30 h-10"
+                        className="bg-charcoal/30 border-warm-gold/20 text-deep-forest text-xs placeholder:text-deep-forest/30 h-10"
                       />
                     </div>
                     <Button
@@ -1213,8 +1213,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-1">
-                    <span className="text-cream/50">SMTP Test Status:</span>
-                    {diagEmail.status === 'idle' && <span className="text-cream/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Not Tested</span>}
+                    <span className="text-deep-forest/50">SMTP Test Status:</span>
+                    {diagEmail.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Not Tested</span>}
                     {diagEmail.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Sending...</span>}
                     {diagEmail.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Email Dispatched Successfully</span>}
                     {diagEmail.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
@@ -1244,7 +1244,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
 
       {/* Order Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl bg-deep-brown border-warm-gold/20 text-cream max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl bg-deep-brown border-warm-gold/20 text-deep-forest max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-display">
               {t('order_details')}
@@ -1258,7 +1258,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <div className="space-y-6 py-4">
               {/* Status Banner */}
               <div className="flex items-center justify-between p-4 rounded-lg bg-charcoal/50">
-                <span className="text-cream/60">Status</span>
+                <span className="text-deep-forest/60">Status</span>
                 {getStatusBadge(selectedOrder.status)}
               </div>
 
@@ -1267,24 +1267,24 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 <h4 className="font-semibold text-warm-gold">{t('customer_info')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-cream/50">{t('to')}:</span>
-                    <p className="text-cream">{selectedOrder.to}</p>
+                    <span className="text-deep-forest/50">{t('to')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.to}</p>
                   </div>
                   <div>
-                    <span className="text-cream/50">{t('attn')}:</span>
-                    <p className="text-cream">{selectedOrder.attn || '-'}</p>
+                    <span className="text-deep-forest/50">{t('attn')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.attn || '-'}</p>
                   </div>
                   <div>
-                    <span className="text-cream/50">{t('name')}:</span>
-                    <p className="text-cream">{selectedOrder.name}</p>
+                    <span className="text-deep-forest/50">{t('name')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.name}</p>
                   </div>
                   <div>
-                    <span className="text-cream/50">{t('contact')}:</span>
-                    <p className="text-cream">{selectedOrder.contact}</p>
+                    <span className="text-deep-forest/50">{t('contact')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.contact}</p>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-cream/50">{t('email')}:</span>
-                    <p className="text-cream">{selectedOrder.email}</p>
+                    <span className="text-deep-forest/50">{t('email')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.email}</p>
                   </div>
                 </div>
               </div>
@@ -1294,29 +1294,29 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 <h4 className="font-semibold text-warm-gold">{t('event_details')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-cream/50">{t('datetime')}:</span>
-                    <p className="text-cream">
+                    <span className="text-deep-forest/50">{t('datetime')}:</span>
+                    <p className="text-deep-forest">
                       {selectedOrder.dateTime 
                         ? format(new Date(selectedOrder.dateTime), 'PPp')
                         : '-'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-cream/50">{t('quantity')}:</span>
-                    <p className="text-cream">{selectedOrder.quantity} pax</p>
+                    <span className="text-deep-forest/50">{t('quantity')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.quantity} pax</p>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-cream/50">{t('location')}:</span>
-                    <p className="text-cream">{selectedOrder.location}</p>
+                    <span className="text-deep-forest/50">{t('location')}:</span>
+                    <p className="text-deep-forest">{selectedOrder.location}</p>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-cream/50">{t('meals')}:</span>
+                    <span className="text-deep-forest/50">{t('meals')}:</span>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {selectedOrder.meals.map((meal) => (
                         <Badge 
                           key={meal} 
                           variant="outline" 
-                          className="border-warm-gold/30 text-cream"
+                          className="border-warm-gold/30 text-deep-forest"
                         >
                           {MEAL_LABELS[meal]?.[selectedOrder.lang] || meal}
                         </Badge>
@@ -1325,14 +1325,14 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                   </div>
                   {selectedOrder.menu && (
                     <div className="col-span-2">
-                      <span className="text-cream/50">{t('menu')}:</span>
-                      <p className="text-cream mt-1">{selectedOrder.menu}</p>
+                      <span className="text-deep-forest/50">{t('menu')}:</span>
+                      <p className="text-deep-forest mt-1">{selectedOrder.menu}</p>
                     </div>
                   )}
                   {selectedOrder.notes && (
                     <div className="col-span-2">
-                      <span className="text-cream/50">{t('notes')}:</span>
-                      <p className="text-cream mt-1">{selectedOrder.notes}</p>
+                      <span className="text-deep-forest/50">{t('notes')}:</span>
+                      <p className="text-deep-forest mt-1">{selectedOrder.notes}</p>
                     </div>
                   )}
                 </div>
@@ -1344,11 +1344,11 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 <div className="space-y-3">
                   {selectedOrder.meals.map((meal) => (
                     <div key={meal} className="flex items-center gap-4">
-                      <Label className="w-32 text-cream/70">
+                      <Label className="w-32 text-deep-forest/70">
                         {MEAL_LABELS[meal]?.[selectedOrder.lang] || meal}
                       </Label>
                       <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/50">RM</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-deep-forest/50">RM</span>
                         <Input
                           type="number"
                           min="0"
@@ -1358,7 +1358,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                             ...prev, 
                             [meal]: e.target.value 
                           }))}
-                          className="pl-10 bg-charcoal/50 border-warm-gold/20 text-cream"
+                          className="pl-10 bg-charcoal/50 border-warm-gold/20 text-deep-forest"
                           placeholder="0.00"
                         />
                       </div>
@@ -1369,7 +1369,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 {/* Total Preview */}
                 <div className="p-4 bg-charcoal/50 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-cream/60">{t('grand_total')}:</span>
+                    <span className="text-deep-forest/60">{t('grand_total')}:</span>
                     <span className="text-2xl font-bold text-warm-gold">
                       RM {selectedOrder.meals.reduce((total, meal) => {
                         const price = parseFloat(prices[meal] || '0');
@@ -1377,7 +1377,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       }, 0).toFixed(2)}
                     </span>
                   </div>
-                  <p className="text-sm text-cream/50 italic">
+                  <p className="text-sm text-deep-forest/50 italic">
                     {numberToWords(selectedOrder.meals.reduce((total, meal) => {
                       const price = parseFloat(prices[meal] || '0');
                       return total + (price * selectedOrder.quantity);
@@ -1401,7 +1401,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <Button
               variant="outline"
               onClick={() => setIsDetailOpen(false)}
-              className="border-warm-gold/30 text-cream hover:bg-warm-gold/10"
+              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10"
             >
               {t('close')}
             </Button>
@@ -1411,7 +1411,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
 
       {/* Send Invoice Dialog */}
       <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
-        <DialogContent className="max-w-md bg-deep-brown border-warm-gold/20 text-cream">
+        <DialogContent className="max-w-md bg-deep-brown border-warm-gold/20 text-deep-forest">
           <DialogHeader>
             <DialogTitle className="text-xl font-display font-bold text-warm-gold flex items-center gap-2">
               <Send className="w-5 h-5 text-warm-gold" />
@@ -1427,17 +1427,17 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               {/* Summary Box */}
               <div className="p-4 bg-charcoal/50 rounded-xl border border-warm-gold/10 text-sm space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-cream/50">{t('invoice_no_label')}</span>
-                  <span className="font-mono font-medium text-cream">
+                  <span className="text-deep-forest/50">{t('invoice_no_label')}</span>
+                  <span className="font-mono font-medium text-deep-forest">
                     {sendOrder.invoiceNo || `RW${sendOrder.id.substring(0, 6).toUpperCase()}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-cream/50">{t('customer_label')}</span>
-                  <span className="font-medium text-cream">{sendOrder.to}</span>
+                  <span className="text-deep-forest/50">{t('customer_label')}</span>
+                  <span className="font-medium text-deep-forest">{sendOrder.to}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-cream/50">{t('grand_total_label')}</span>
+                  <span className="text-deep-forest/50">{t('grand_total_label')}</span>
                   <span className="font-bold text-warm-gold">
                     RM {(sendOrder.totalAmount || sendOrder.meals.reduce((sum, meal) => {
                       const price = sendOrder.prices?.[meal] || 0;
@@ -1451,15 +1451,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               <div className="space-y-5">
                 {/* Email Option */}
                 <div className="p-4 rounded-xl border border-warm-gold/10 bg-charcoal/20 space-y-4">
-                  <div className="flex items-center gap-2 font-semibold text-cream">
+                  <div className="flex items-center gap-2 font-semibold text-deep-forest">
                     <Mail className="w-4 h-4 text-warm-gold" />
                     <span>{t('option_email')}</span>
                   </div>
-                  <p className="text-xs text-cream/60">
+                  <p className="text-xs text-deep-forest/60">
                     {t('email_desc')}
                   </p>
                   <div className="space-y-2">
-                    <Label htmlFor="send-email-input" className="text-xs text-cream/50">
+                    <Label htmlFor="send-email-input" className="text-xs text-deep-forest/50">
                       {t('recipient_email')}
                     </Label>
                     <Input
@@ -1467,7 +1467,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       type="email"
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
-                      className="bg-charcoal/50 border-warm-gold/20 text-cream focus:border-warm-gold/50 h-10 text-sm"
+                      className="bg-charcoal/50 border-warm-gold/20 text-deep-forest focus:border-warm-gold/50 h-10 text-sm"
                       placeholder="customer@email.com"
                     />
                   </div>
@@ -1492,15 +1492,15 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
 
                 {/* WhatsApp Option */}
                 <div className="p-4 rounded-xl border border-warm-gold/10 bg-charcoal/20 space-y-4">
-                  <div className="flex items-center gap-2 font-semibold text-cream">
+                  <div className="flex items-center gap-2 font-semibold text-deep-forest">
                     <MessageSquare className="w-4 h-4 text-emerald-500" />
                     <span>{t('option_whatsapp')}</span>
                   </div>
-                  <p className="text-xs text-cream/60">
+                  <p className="text-xs text-deep-forest/60">
                     {t('whatsapp_desc')}
                   </p>
                   <div className="space-y-2">
-                    <Label htmlFor="send-phone-input" className="text-xs text-cream/50">
+                    <Label htmlFor="send-phone-input" className="text-xs text-deep-forest/50">
                       {t('recipient_phone')}
                     </Label>
                     <Input
@@ -1508,7 +1508,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       type="text"
                       value={recipientPhone}
                       onChange={(e) => setRecipientPhone(e.target.value)}
-                      className="bg-charcoal/50 border-warm-gold/20 text-cream focus:border-warm-gold/50 h-10 text-sm"
+                      className="bg-charcoal/50 border-warm-gold/20 text-deep-forest focus:border-warm-gold/50 h-10 text-sm"
                       placeholder="e.g. 0123456789"
                     />
                   </div>
@@ -1531,7 +1531,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <Button
               variant="outline"
               onClick={() => setIsSendDialogOpen(false)}
-              className="border-warm-gold/30 text-cream hover:bg-warm-gold/10 w-full md:w-auto text-sm"
+              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10 w-full md:w-auto text-sm"
             >
               {t('cancel')}
             </Button>
@@ -1541,7 +1541,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
 
       {/* PDF Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-deep-brown border-warm-gold/20 text-cream flex flex-col p-6">
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-deep-brown border-warm-gold/20 text-deep-forest flex flex-col p-6">
           <DialogHeader className="pb-2 border-b border-warm-gold/10 flex-shrink-0">
             <DialogTitle className="text-xl font-display font-bold text-warm-gold">
               {previewFileName || 'PDF Preview'}
@@ -1559,7 +1559,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 className="w-full h-full border-0"
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-cream/40">
+              <div className="absolute inset-0 flex items-center justify-center text-deep-forest/40">
                 {t('loading') || 'Loading preview...'}
               </div>
             )}
@@ -1586,7 +1586,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 setIsPreviewOpen(false);
                 setPreviewPdfUrl('');
               }}
-              className="border-warm-gold/30 text-cream hover:bg-warm-gold/10"
+              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10"
             >
               {t('close')}
             </Button>

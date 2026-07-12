@@ -22,7 +22,7 @@ export default function FoodCard({ name, description, price, image, isBestseller
         {/* Badges */}
         <div className="absolute top-4 left-4 flex gap-2">
           {isBestseller && (
-            <span className="bg-tomato-burst text-cream px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            <span className="bg-tomato-burst text-deep-forest px-3 py-1 rounded-full text-xs font-bold shadow-lg">
               BESTSELLER
             </span>
           )}

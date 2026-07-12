@@ -119,7 +119,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
 
       <div className="flex-1 flex flex-col justify-center min-w-0 pr-4">
         {title && (
-          <h4 className="text-sm font-bold text-cream leading-tight mb-1">
+          <h4 className="text-sm font-bold text-deep-forest leading-tight mb-1">
             {title}
           </h4>
         )}
@@ -130,7 +130,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
 
       <button
         onClick={() => onDismiss(id)}
-        className="text-stone/50 hover:text-cream p-0.5 rounded-lg hover:bg-cream/5 transition-colors shrink-0"
+        className="text-stone/50 hover:text-deep-forest p-0.5 rounded-lg hover:bg-deep-forest/5 transition-colors shrink-0"
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />

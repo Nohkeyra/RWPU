@@ -82,11 +82,11 @@ export default function OrderPage() {
           <div className="max-w-3xl mx-auto px-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-sunshine" />
-              <span className="text-cream/60 text-xs tracking-[0.18em] uppercase font-semibold">
+              <span className="text-deep-forest/60 text-xs tracking-[0.18em] uppercase font-semibold">
                 Restoran Wawasan Pak Usop
               </span>
             </div>
-            <p className="text-cream/40 text-sm">
+            <p className="text-deep-forest/40 text-sm">
               © 2026 All rights reserved
             </p>
           </div>

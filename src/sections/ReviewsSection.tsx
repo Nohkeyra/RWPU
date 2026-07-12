@@ -104,14 +104,14 @@ export default function ReviewsSection() {
             <div className="flex gap-2">
               <button
                 onClick={goPrev}
-                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-cream text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-deep-forest text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={goNext}
-                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-cream text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-sunshine hover:border-sunshine hover:text-deep-forest text-deep-forest transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)]"
                 aria-label="Next slide"
               >
                 <ChevronRight className="w-6 h-6" />

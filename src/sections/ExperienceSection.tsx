@@ -76,7 +76,7 @@ export default function ExperienceSection() {
             return (
               <div key={p.name} className="principle-card group bg-cream-dark/60 backdrop-blur-md rounded-3xl p-8 border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.08)] hover:-translate-y-1 transition-all duration-500">
                 <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-sunshine group-hover:border-sunshine transition-all duration-500">
-                  <Icon className="w-6 h-6 text-sunshine group-hover:text-cream transition-colors" />
+                  <Icon className="w-6 h-6 text-sunshine group-hover:text-deep-forest transition-colors" />
                 </div>
                 <h3 className="font-display font-bold text-xl text-deep-forest mb-1">
                   {language === 'bm' ? p.malayName : p.name}

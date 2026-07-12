@@ -69,16 +69,16 @@ export default function AdminPage() {
               referrerPolicy="no-referrer"
             />
             <div>
-              <span className="font-display font-semibold text-xl text-cream leading-none">
+              <span className="font-display font-semibold text-xl text-deep-forest leading-none">
                 Wawasan
               </span>
-              <span className="block font-body text-xs text-cream/60 leading-tight mt-0.5">
+              <span className="block font-body text-xs text-deep-forest/60 leading-tight mt-0.5">
                 Pak Usop
               </span>
             </div>
           </Link>
           <Link to="/">
-            <Button variant="ghost" className="text-cream hover:text-warm-gold hover:bg-transparent">
+            <Button variant="ghost" className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('back')}
             </Button>
@@ -102,17 +102,17 @@ export default function AdminPage() {
                 </div>
 
                 {/* Title */}
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-cream text-center mb-2">
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-deep-forest text-center mb-2">
                   {t('admin_login')}
                 </h2>
-                <p className="text-cream/50 text-center text-sm mb-8">
+                <p className="text-deep-forest/50 text-center text-sm mb-8">
                   Restricted Access • Staff Only
                 </p>
 
                 {/* Form */}
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-cream/70 mb-2">
+                    <label className="block text-sm font-medium text-deep-forest/70 mb-2">
                       {t('password')}
                     </label>
                     <Input
@@ -120,7 +120,7 @@ export default function AdminPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-charcoal/50 border-warm-gold/20 text-cream placeholder:text-cream/30 focus:border-warm-gold/50 focus:ring-warm-gold/20 h-12"
+                      className="bg-charcoal/50 border-warm-gold/20 text-deep-forest placeholder:text-deep-forest/30 focus:border-warm-gold/50 focus:ring-warm-gold/20 h-12"
                     />
                   </div>
 
@@ -150,7 +150,7 @@ export default function AdminPage() {
                 </form>
 
                 {/* Security Note */}
-                <p className="mt-6 text-center text-xs text-cream/40">
+                <p className="mt-6 text-center text-xs text-deep-forest/40">
                   This area is protected. Unauthorized access is prohibited.
                 </p>
               </div>

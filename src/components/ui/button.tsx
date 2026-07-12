@@ -10,28 +10,28 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-moss text-cream hover:bg-fern hover:shadow-moss-glow",
+          "bg-moss text-deep-forest hover:bg-fern hover:shadow-moss-glow",
         destructive:
-          "bg-tomato-burst text-cream hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
+          "bg-tomato-burst text-deep-forest hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
         outline:
-          "border border-cream/15 bg-transparent text-cream hover:bg-cream/5 hover:border-kiwi/40 hover:text-kiwi",
+          "border border-deep-forest/15 bg-transparent text-deep-forest hover:bg-deep-forest/5 hover:border-kiwi/40 hover:text-kiwi",
         secondary:
-          "bg-forest-green text-cream border border-cream/10 hover:bg-light-forest hover:border-cream/15",
+          "bg-forest-green text-deep-forest border border-deep-forest/10 hover:bg-light-forest hover:border-deep-forest/15",
         ghost:
-          "text-stone hover:text-kiwi hover:bg-cream/5",
+          "text-stone hover:text-kiwi hover:bg-deep-forest/5",
         link:
           "text-kiwi underline-offset-4 hover:underline hover:text-sunshine",
         // Brand-specific variants.
         moss:
-          "bg-moss text-cream hover:bg-fern hover:shadow-moss-glow",
+          "bg-moss text-deep-forest hover:bg-fern hover:shadow-moss-glow",
         sunshine:
           "bg-sunshine text-deep-forest hover:bg-honey hover:shadow-sunshine-glow font-semibold",
         carrot:
-          "bg-crisp-carrot text-cream hover:bg-crisp-carrot/90 hover:shadow-carrot-glow font-semibold",
+          "bg-crisp-carrot text-deep-forest hover:bg-crisp-carrot/90 hover:shadow-carrot-glow font-semibold",
         kiwi:
           "bg-kiwi text-deep-forest hover:bg-[#8BA803] hover:shadow-kiwi-glow font-semibold",
         tomato:
-          "bg-tomato-burst text-cream hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
+          "bg-tomato-burst text-deep-forest hover:bg-tomato-burst/90 hover:shadow-tomato-glow",
         "sunshine-outline":
           "border border-sunshine/40 bg-sunshine/5 text-sunshine hover:bg-sunshine/15 hover:border-sunshine/70 hover:shadow-sunshine-glow font-semibold",
         "kiwi-outline":

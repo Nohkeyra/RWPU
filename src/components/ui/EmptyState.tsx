@@ -29,7 +29,7 @@ export function EmptyState({
       <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-kiwi/10 border border-kiwi/20 flex items-center justify-center">
         <Icon className="w-8 h-8 text-kiwi/70" />
       </div>
-      <h3 className="font-display text-xl text-cream mb-2">{title}</h3>
+      <h3 className="font-display text-xl text-deep-forest mb-2">{title}</h3>
       <p className="text-stone text-sm max-w-xs mx-auto leading-relaxed">{description}</p>
       {action && <div className="mt-6">{action}</div>}
     </div>
