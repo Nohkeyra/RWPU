@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { setSecureItem } from '@/lib/preferences';
 
 interface SettingsContextType {
   notificationsEnabled: boolean;
@@ -18,11 +19,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('notificationsEnabled', String(notificationsEnabled));
+    setSecureItem('notificationsEnabled', String(notificationsEnabled));
   }, [notificationsEnabled]);
 
   useEffect(() => {
-    localStorage.setItem('developerMode', String(developerMode));
+    setSecureItem('developerMode', String(developerMode));
   }, [developerMode]);
 
   return (

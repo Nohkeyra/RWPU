@@ -25,6 +25,7 @@ import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'motion/react';
 import { SAVED_COMPANIES } from '@/constants/companies';
+import { setSecureItem } from '@/lib/preferences';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -174,15 +175,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             )
           );
           if (enable) {
-            localStorage.setItem('wawasan_user_biometric_enabled', 'true');
-            localStorage.setItem('wawasan_user_email', email);
-            localStorage.setItem('wawasan_user_password', password);
+            setSecureItem('wawasan_user_biometric_enabled', 'true');
+            setSecureItem('wawasan_user_email', email);
+            setSecureItem('wawasan_user_password', password);
             setBiometricEnabled(true);
           }
         } else if (biometricEnabled) {
           // Keep credentials synchronized if password/email updated
-          localStorage.setItem('wawasan_user_email', email);
-          localStorage.setItem('wawasan_user_password', password);
+          setSecureItem('wawasan_user_email', email);
+          setSecureItem('wawasan_user_password', password);
         }
 
         toast({

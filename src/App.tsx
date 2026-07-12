@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { SafeArea } from 'capacitor-plugin-safe-area';
+import { syncPreferencesToLocalStorage } from '@/lib/preferences';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SettingsProvider } from '@/context/SettingsContext';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -66,6 +67,9 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
+    // Sync Capacitor Preferences to localStorage for synchronous access fallback
+    syncPreferencesToLocalStorage();
+
     const hideSplash = async () => {
       await new Promise(resolve => setTimeout(resolve, 800));
       await SplashScreen.hide();

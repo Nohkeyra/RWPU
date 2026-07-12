@@ -9,6 +9,7 @@ import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
+import { setSecureItem } from '@/lib/preferences';
 
 const ADMIN_AUTH_STORAGE_KEY = 'wawasan_admin_authenticated';
 const ADMIN_PASSWORD_STORAGE_KEY = 'wawasan_admin_password';
@@ -63,11 +64,11 @@ export default function AdminPage() {
       if (savedPassword) {
         setPassword(savedPassword);
         setIsAuthenticated(true);
-        localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+        setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
 
         // Automatically ensure biometric is enabled if authenticated successfully
         if (!biometricEnabled) {
-          localStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true');
+          setSecureItem(BIOMETRIC_ENABLED_KEY, 'true');
           setBiometricEnabled(true);
         }
       } else {
@@ -108,8 +109,8 @@ export default function AdminPage() {
       
       if (response.ok && data.success) {
         setIsAuthenticated(true);
-        localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
-        localStorage.setItem(ADMIN_PASSWORD_STORAGE_KEY, password);
+        setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+        setSecureItem(ADMIN_PASSWORD_STORAGE_KEY, password);
 
         // Offer to enable biometrics after first successful login
         if (biometricAvailable && !biometricEnabled) {
@@ -120,7 +121,7 @@ export default function AdminPage() {
             )
           );
           if (enable) {
-            localStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true');
+            setSecureItem(BIOMETRIC_ENABLED_KEY, 'true');
             setBiometricEnabled(true);
           }
         }

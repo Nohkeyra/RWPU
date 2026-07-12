@@ -50,6 +50,8 @@ import { numberToWords } from '@/services/numberToWordsBM';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Device } from '@capacitor/device';
+import { removeSecureItem } from '@/lib/preferences';
 import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
 
@@ -123,7 +125,20 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
   const [diagCalendar, setDiagCalendar] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string; calendarsReturned?: number }>({ status: 'idle' });
   const [diagEmail, setDiagEmail] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string }>({ status: 'idle' });
   const [diagPdf, setDiagPdf] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string }>({ status: 'idle' });
-  const [diagNative, setDiagNative] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; details?: Record<string, unknown> }>({ status: 'idle' });
+  const [diagNative, setDiagNative] = useState<{
+    status: 'idle' | 'running' | 'pass' | 'fail';
+    details?: {
+      isNative: boolean;
+      platform: string;
+      hasFilesystem: boolean;
+      hasShare: boolean;
+      userAgent?: string;
+      deviceInfo?: Record<string, unknown>;
+      deviceId?: Record<string, unknown>;
+      batteryInfo?: Record<string, unknown>;
+      error?: string;
+    };
+  }>({ status: 'idle' });
   
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
@@ -167,6 +182,23 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
       const platform = Capacitor.getPlatform();
       const hasFilesystem = typeof Filesystem !== 'undefined';
       const hasShare = typeof Share !== 'undefined';
+
+      let deviceInfo: Record<string, unknown> | undefined;
+      let deviceId: Record<string, unknown> | undefined;
+      let batteryInfo: Record<string, unknown> | undefined;
+
+      try {
+        deviceInfo = (await Device.getInfo()) as unknown as Record<string, unknown>;
+        deviceId = (await Device.getId()) as unknown as Record<string, unknown>;
+      } catch (e) {
+        console.warn('Device info or ID not available:', e);
+      }
+
+      try {
+        batteryInfo = (await Device.getBatteryInfo()) as unknown as Record<string, unknown>;
+      } catch (e) {
+        console.warn('Battery info not available:', e);
+      }
       
       setDiagNative({
         status: 'pass',
@@ -175,7 +207,10 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
           platform,
           hasFilesystem,
           hasShare,
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
+          deviceInfo,
+          deviceId,
+          batteryInfo,
         }
       });
     } catch (err: unknown) {
@@ -773,9 +808,9 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
             <Button 
               variant="ghost" 
               className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
-              onClick={() => {
-                localStorage.removeItem('wawasan_admin_authenticated');
-                localStorage.removeItem('wawasan_admin_password');
+              onClick={async () => {
+                await removeSecureItem('wawasan_admin_authenticated');
+                await removeSecureItem('wawasan_admin_password');
                 window.location.reload();
               }}
             >
@@ -1176,6 +1211,40 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                         <span className="opacity-60">Share API:</span>
                         <span>{diagNative.details.hasShare ? 'Available' : 'Unavailable'}</span>
                       </div>
+                      
+                      {diagNative.details.deviceInfo && (
+                        <>
+                          <div className="flex justify-between border-t border-green-500/10 pt-1 mt-1">
+                            <span className="opacity-60">Device Model:</span>
+                            <span>{String(diagNative.details.deviceInfo['model'] || 'Unknown')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="opacity-60">OS Version:</span>
+                            <span>{String(diagNative.details.deviceInfo['osVersion'] || 'Unknown')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="opacity-60">Manufacturer:</span>
+                            <span>{String(diagNative.details.deviceInfo['manufacturer'] || 'Unknown')}</span>
+                          </div>
+                        </>
+                      )}
+                      {diagNative.details.deviceId && (
+                        <div className="flex justify-between">
+                          <span className="opacity-60">Device UUID:</span>
+                          <span className="truncate max-w-[120px]" title={String(diagNative.details.deviceId['uuid'] || '')}>
+                            {String(diagNative.details.deviceId['uuid'] || 'Unknown')}
+                          </span>
+                        </div>
+                      )}
+                      {diagNative.details.batteryInfo && typeof diagNative.details.batteryInfo['batteryLevel'] !== 'undefined' && (
+                        <div className="flex justify-between border-t border-green-500/10 pt-1 mt-1">
+                          <span className="opacity-60">Battery Level:</span>
+                          <span>
+                            {Math.round(Number(diagNative.details.batteryInfo['batteryLevel']) * 100)}% 
+                            {diagNative.details.batteryInfo['isCharging'] ? ' ⚡ (Charging)' : ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

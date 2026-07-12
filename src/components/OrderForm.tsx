@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X } from 'lucide-react';
+import { CalendarIcon, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { generateInvoicePDF } from '@/services/pdfService';
@@ -25,6 +25,7 @@ import { SAVED_COMPANIES } from '@/constants/companies';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface FormData {
   to: string;
@@ -442,6 +443,64 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  const tText = (en: string, bm: string) => (language === 'bm' ? bm : en);
+
+  const handleDetectLocation = async () => {
+    try {
+      setIsDetectingLocation(true);
+      
+      // Request permission if on native platform
+      if (Capacitor.isNativePlatform()) {
+        const permResult = await Geolocation.checkPermissions();
+        if (permResult.location !== 'granted') {
+          const requestResult = await Geolocation.requestPermissions();
+          if (requestResult.location !== 'granted') {
+            throw new Error('Location permission denied / Kebenaran lokasi dinafikan.');
+          }
+        }
+      }
+
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+
+      const { latitude, longitude } = coordinates.coords;
+
+      // Reverse geocode via OpenStreetMap Nominatim
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Reverse geocoding failed');
+      }
+
+      const data = await response.json();
+      const displayName = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      
+      handleInputChange('location', displayName);
+      toast({
+        title: tText('Location Detected', 'Lokasi Diperoleh'),
+        description: tText('Successfully auto-filled your location.', 'Berjaya mengisi lokasi anda secara automatik.'),
+        variant: 'success',
+      });
+    } catch (err) {
+      console.error('Error detecting location:', err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      toast({
+        title: tText('Location Error', 'Ralat Lokasi'),
+        description: errMsg.includes('denied') 
+          ? tText('Please enable location permissions in your settings.', 'Sila benarkan akses lokasi dalam tetapan anda.')
+          : tText('Could not retrieve location. Please type manually.', 'Tidak dapat memperoleh lokasi. Sila taip secara manual.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
 
   useEffect(() => {
     setIsProfileLoading(true);
@@ -1203,14 +1262,29 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 <Label htmlFor="location" className="text-stone text-xs font-semibold uppercase tracking-wider">
                   {t('location')} <span className="text-crisp-carrot">*</span>
                 </Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder={t('venue_address')}
-                  required
-                  className="font-sans"
-                />
+                <div className="relative flex items-center">
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder={t('venue_address')}
+                    required
+                    className="font-sans pr-24"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isDetectingLocation}
+                    className="absolute right-2 px-2.5 py-1.5 text-xs font-bold text-warm-gold bg-stone-900 border border-warm-gold/20 hover:bg-warm-gold/10 rounded-md transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isDetectingLocation ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <MapPin className="w-3.5 h-3.5" />
+                    )}
+                    {tText('Detect', 'Kesan')}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
