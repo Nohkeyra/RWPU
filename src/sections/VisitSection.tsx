@@ -1,7 +1,7 @@
 import { MapPin, Clock, Phone, ArrowRight, Navigation } from 'lucide-react';
-import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
 import { getAssetUrl } from '@/lib/utils';
+import { motion } from 'motion/react';
 
 export default function VisitSection() {
   const { t, language } = useLanguage();
@@ -13,47 +13,78 @@ export default function VisitSection() {
     { day: t('sunday'), time: t('closed') },
   ];
 
-  const contentRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    childSelector: '.visit-animate',
-    stagger: 0.15,
-  });
+  const headerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
 
-  const cardsRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    y: 30,
-    childSelector: '.info-card',
-    stagger: 0.15,
-    delay: 0.3,
-  });
+  const headerItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
-  const ctaRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    y: 30,
-    delay: 0.6,
-  });
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+  const ctaVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
   return (
     <section id="visit" className="section-padding bg-cream relative overflow-hidden paper-texture kp-songkok">
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sunshine/10 to-transparent pointer-events-none" />
       <div className="content-container relative">
-        <div ref={contentRef} className="mb-12">
-          <div className="visit-animate mb-4">
+        <motion.div 
+          variants={headerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="mb-12"
+        >
+          <motion.div variants={headerItemVariants} className="visit-animate mb-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
               <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
                 {t('visit_us')}
               </span>
             </div>
-          </div>
-          <h2 className="visit-animate font-display font-semibold text-[36px] md:text-[52px] text-deep-forest leading-[1.05] mb-4">
+          </motion.div>
+          <motion.h2 variants={headerItemVariants} className="visit-animate font-display font-semibold text-[36px] md:text-[52px] text-deep-forest leading-[1.05] mb-4">
             {t('come_dine')}
-          </h2>
-          <p className="visit-animate font-body text-lg text-deep-forest/70 max-w-[620px] leading-relaxed font-light">
+          </motion.h2>
+          <motion.p variants={headerItemVariants} className="visit-animate font-body text-lg text-deep-forest/70 max-w-[620px] leading-relaxed font-light">
             {language === 'bm'
               ? 'Lokasi di Menara PjH menjadikan Restoran Wawasan Pak Usop pilihan mudah untuk sarapan, makan tengah hari, mesyuarat, dan singgah selepas urusan di Putrajaya.'
               : 'Located in Menara PjH, Restoran Wawasan Pak Usop is an easy stop for breakfast, lunch, meetings, and day-to-day dining in Putrajaya.'}
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           <div className="lg:col-span-5">
@@ -105,8 +136,14 @@ export default function VisitSection() {
             </div>
           </div>
 
-          <div ref={cardsRef} className="lg:col-span-7 flex flex-col gap-6">
-            <div className="info-card bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] p-6 md:p-8 border border-white/[0.06] hover:border-sunshine/20 hover:shadow-xl transition-all duration-500">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            className="lg:col-span-7 flex flex-col gap-6"
+          >
+            <motion.div variants={cardVariants} className="info-card bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] p-6 md:p-8 border border-white/[0.06] hover:border-sunshine/20 hover:shadow-xl transition-all duration-500">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
                   <Clock className="w-6 h-6 text-sunshine" />
@@ -127,9 +164,9 @@ export default function VisitSection() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="info-card bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] p-6 md:p-8 border border-white/[0.06] hover:border-sunshine/20 hover:shadow-xl transition-all duration-500">
+            <motion.div variants={cardVariants} className="info-card bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] p-6 md:p-8 border border-white/[0.06] hover:border-sunshine/20 hover:shadow-xl transition-all duration-500">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
                   <Phone className="w-6 h-6 text-sunshine" />
@@ -153,11 +190,17 @@ export default function VisitSection() {
                   <span className="font-medium text-deep-forest">wawasan.orders@gmail.com</span>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
-        <div ref={ctaRef} className="mt-16 relative rounded-[32px] p-8 md:p-12 overflow-hidden group border border-deep-forest/10 shadow-2xl bg-sunshine">
+        <motion.div 
+          variants={ctaVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="mt-16 relative rounded-[32px] p-8 md:p-12 overflow-hidden group border border-deep-forest/10 shadow-2xl bg-sunshine"
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-sunshine via-honey to-sunshine animate-gradient-shift bg-[length:200%_auto]" />
           <div
             className="absolute inset-0 opacity-10 mix-blend-overlay"
@@ -183,7 +226,7 @@ export default function VisitSection() {
               <ArrowRight className="w-4 h-4" />
             </a>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

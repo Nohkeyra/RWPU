@@ -111,8 +111,8 @@ const translations: Translation = {
   // Story Section
   story_title: { en: 'A Legacy of Flavor Since 1986', bm: 'Warisan Rasa Sejak 1986' },
   story_p1: {
-    en: 'Restoran Wawasan was first established in Singapore in 1986. For nearly four decades, we have been serving beloved dishes with diverse flavors spanning Thai, Indian, Chinese, Western, and authentic Malay cuisine.',
-    bm: 'Restoran Wawasan mula ditubuhkan di Singapura pada tahun 1986. Selama hampir empat dekad, kami telah menyajikan hidangan kegemaran ramai dengan pelbagai cita rasa merangkumi masakan Thai, India, Cina, Barat dan masakan Melayu asli.'
+    en: 'A culinary legacy from Singapore since 1986, now in Putrajaya with beloved breakfast classics, Nusantara comfort dishes, and catering. For nearly four decades, we have been serving beloved dishes with diverse flavors spanning Thai, Indian, Chinese, Western, and authentic Malay cuisine.',
+    bm: 'Satu warisan kulinari dari Singapura sejak 1986, kini di Putrajaya dengan hidangan sarapan klasik kegemaran ramai, hidangan selesa Nusantara, dan katering. Selama hampir empat dekad, kami telah menyajikan hidangan kegemaran ramai dengan pelbagai cita rasa merangkumi masakan Thai, India, Cina, Barat dan masakan Melayu asli.'
   },
   story_p2: {
     en: 'By maintaining our core principles — cleanliness, excellent service, lasting taste, and affordable pricing — Restoran Wawasan has endured through the years, becoming a beloved destination for ministers, VIPs, artists, foreign tourists, civil servants, and families alike.',

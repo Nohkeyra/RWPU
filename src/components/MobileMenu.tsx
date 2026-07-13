@@ -72,6 +72,15 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
         </button>
 
         <nav ref={itemsRef} className="flex-1 flex flex-col gap-1 overflow-y-auto pb-8">
+          <div className="flex flex-col justify-center mb-6">
+            <span className="font-urban text-2xl text-deep-forest leading-none tracking-wide">
+              Restoran Wawasan
+            </span>
+            <span className="block font-graffiti text-lg text-crisp-carrot leading-none mt-1 ml-0.5">
+              Pak Usop
+            </span>
+          </div>
+
           {links.map((link) => (
             <a
               key={link.href}

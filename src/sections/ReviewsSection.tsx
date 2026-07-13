@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import ReviewCard from '@/components/ReviewCard';
-import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useCarousel } from '@/hooks/useCarousel';
 import { useLanguage } from '@/context/LanguageContext';
+import { motion } from 'motion/react';
 
 const REVIEWS = [
   {
@@ -67,32 +67,50 @@ export default function ReviewsSection() {
     autoPlayInterval: 5000,
   });
 
-  const headerRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    childSelector: '.review-header',
-    stagger: 0.15,
-  });
+  const headerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const headerItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
   return (
     <section id="reviews" className="section-padding bg-cream relative">
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <div className="content-container">
         
-        <div ref={headerRef} className="flex flex-col md:flex-row md:items-end md:justify-between mb-16">
+        <motion.div 
+          variants={headerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between mb-16"
+        >
           <div className="text-center md:text-left">
-            <div className="review-header flex justify-center md:justify-start mb-4">
+            <motion.div variants={headerItemVariants} className="review-header flex justify-center md:justify-start mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
                 <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
                   {t('reviews')}
                 </span>
               </div>
-            </div>
-            <h2 className="review-header font-display font-bold text-[40px] md:text-[56px] text-deep-forest leading-[1.05]">
+            </motion.div>
+            <motion.h2 variants={headerItemVariants} className="review-header font-display font-bold text-[40px] md:text-[56px] text-deep-forest leading-[1.05]">
               {t('what_they_say')}
-            </h2>
+            </motion.h2>
           </div>
           
-          <div className="review-header flex items-center justify-center gap-6 mt-8 md:mt-0">
+          <motion.div variants={headerItemVariants} className="review-header flex items-center justify-center gap-6 mt-8 md:mt-0">
             <div className="flex items-center gap-3 bg-cream-dark/60 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3 shadow-lg">
               <Star className="w-5 h-5 text-sunshine fill-sunshine animate-pulse" />
               <div className="flex flex-col">
@@ -117,8 +135,8 @@ export default function ReviewsSection() {
                 <ChevronRight className="w-6 h-6" />
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Carousel */}
         <div

@@ -54,9 +54,12 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'sans-serif'],
         body:    ['Inter', 'system-ui', 'sans-serif'],
-        accent:  ['Montserrat', 'system-ui', 'sans-serif'],
+        accent:  ['"Space Mono"', '"JetBrains Mono"', 'monospace'],
+        urban:   ['"Permanent Marker"', 'cursive', 'sans-serif'],
+        graffiti: ['"Sedgwick Ave Display"', 'cursive', 'sans-serif'],
+        celtic:   ['"Uncial Antiqua"', 'cursive', 'serif'],
       },
       borderRadius: {
         xl: "calc(var(--radius) + 4px)",

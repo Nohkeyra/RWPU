@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useScrollTrigger } from '@/hooks/useScrollTrigger';
 import { useLanguage } from '@/context/LanguageContext';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { motion } from 'motion/react';
 
 const MENU_ITEMS = [
   {
@@ -91,46 +91,84 @@ export default function MenuSection() {
     return () => clearTimeout(timer);
   }, []);
 
-  const headerRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    y: 30,
-    childSelector: '.menu-header',
-    stagger: 0.15,
-  });
+  const headerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
 
-  const gridRef = useScrollTrigger<HTMLDivElement>({
-    animation: 'fade-up',
-    y: 30,
-    childSelector: '.menu-card',
-    stagger: 0.1,
-  });
+  const headerItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+  const gridVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
   return (
     <section id="menu" className="section-padding bg-cream relative">
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <div className="content-container">
         
-        <div ref={headerRef} className="text-center mb-16">
-          <div className="menu-header flex justify-center mb-4">
+        <motion.div 
+          variants={headerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="text-center mb-16"
+        >
+          <motion.div variants={headerItemVariants} className="flex justify-center mb-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
               <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
                 {t('our_menu')}
               </span>
             </div>
-          </div>
-          <h2 className="menu-header font-display font-bold text-[40px] md:text-[56px] text-deep-forest leading-[1.05] mb-6">
+          </motion.div>
+          <motion.h2 variants={headerItemVariants} className="font-display font-bold text-[40px] md:text-[56px] text-deep-forest leading-[1.05] mb-6">
             {t('menu_title')}
-          </h2>
-          <p className="menu-header font-body text-lg text-deep-forest/70 leading-relaxed max-w-[600px] mx-auto font-light">
+          </motion.h2>
+          <motion.p variants={headerItemVariants} className="font-body text-lg text-deep-forest/70 leading-relaxed max-w-[600px] mx-auto font-light">
             {t('menu_subtitle')}
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div 
+          variants={gridVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {isLoading ? (
             // Render beautiful skeleton cards during loading
             Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="menu-card relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] p-0 flex flex-col h-full">
+              <motion.div 
+                key={idx} 
+                variants={cardVariants}
+                className="menu-card relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] p-0 flex flex-col h-full"
+              >
                 <div className="aspect-[4/3] w-full relative overflow-hidden">
                   <Skeleton className="w-full h-full rounded-t-[2.5rem]" />
                 </div>
@@ -145,11 +183,15 @@ export default function MenuSection() {
                     <Skeleton className="h-5 w-1/4 rounded" />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))
           ) : (
             MENU_ITEMS.map((item) => (
-              <div key={item.nameEn} className="menu-card group relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.1)] hover:-translate-y-1 transition-all duration-500">
+              <motion.div 
+                key={item.nameEn} 
+                variants={cardVariants}
+                className="menu-card group relative bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden border border-white/[0.06] hover:border-sunshine/30 hover:shadow-[0_20px_50px_rgba(232,144,37,0.1)] hover:-translate-y-1 transition-all duration-500"
+              >
                 <div className="aspect-[4/3] overflow-hidden relative">
                   <img
                     src={item.image}
@@ -173,10 +215,10 @@ export default function MenuSection() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
