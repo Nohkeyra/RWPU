@@ -67,10 +67,10 @@ export default function Header() {
             : 'bg-transparent pb-6 pt-[calc(1.5rem+var(--sat))]'
         }`}
       >
-        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
+        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between gap-4 md:gap-6 lg:gap-8">
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
             <BrandMark />
-            <div>
+            <div className="shrink-0">
               <span className="font-display font-semibold text-xl text-deep-forest leading-none tracking-tight">
                 Restoran Wawasan
               </span>
@@ -80,7 +80,7 @@ export default function Header() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-8 shrink-0">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -92,7 +92,7 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}

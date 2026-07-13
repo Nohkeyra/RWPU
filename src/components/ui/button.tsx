@@ -4,6 +4,8 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
+import { triggerLightImpact } from "@/lib/haptics"
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-kiwi/50 focus-visible:ring-offset-2 focus-visible:ring-offset-deep-forest touch-target",
   {
@@ -58,6 +60,7 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  onClick,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -65,10 +68,18 @@ function Button({
   }) {
   const Comp = asChild ? Slot : "button"
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerLightImpact();
+    if (onClick) {
+      onClick(e);
+    }
+  }
+
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={handleClick}
       {...props}
     />
   )

@@ -39,12 +39,16 @@ export default function ParticleCanvas() {
     if (!ctx) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let width = window.innerWidth;
+    let height = window.innerHeight;
 
     const resize = () => {
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
       ctx.scale(dpr, dpr);
     };
 
@@ -55,8 +59,8 @@ export default function ParticleCanvas() {
       const colorIdx = Math.floor(Math.random() * PARTICLE_COLORS.length);
       const life = Math.random() * 200 + 100;
       return {
-        x: Math.random() * window.innerWidth,
-        y: window.innerHeight + Math.random() * 50,
+        x: Math.random() * width,
+        y: height + Math.random() * 50,
         radius: Math.random() * 2 + 1,
         color: PARTICLE_COLORS[colorIdx],
         speedY: -(Math.random() * 0.5 + 0.2),
@@ -72,17 +76,26 @@ export default function ParticleCanvas() {
 
     for (let i = 0; i < maxParticles; i++) {
       const p = createParticle();
-      p.y = Math.random() * window.innerHeight;
+      p.y = Math.random() * height;
       particlesRef.current.push(p);
     }
 
-    const animate = () => {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    let lastTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - lastTime;
+      lastTime = currentTime;
+
+      // Delta time calculation relative to a standard 60 FPS (16.67ms frame duration)
+      // Cap at 4.0 to prevent massive leaps when returning to a backgrounded tab
+      const dt = Math.min(elapsed / 16.67, 4.0);
+
+      ctx.clearRect(0, 0, width, height);
 
       particlesRef.current.forEach((p) => {
-        p.life++;
-        p.x += p.speedX + Math.sin(p.life * p.frequency + p.phase) * 0.3;
-        p.y += p.speedY;
+        p.life += dt;
+        p.x += (p.speedX + Math.sin(p.life * p.frequency + p.phase) * 0.3) * dt;
+        p.y += p.speedY * dt;
 
         if (p.life > p.maxLife || p.y < -50) {
           Object.assign(p, createParticle());

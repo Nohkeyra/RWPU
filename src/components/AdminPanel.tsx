@@ -40,7 +40,8 @@ import {
   Wifi,
   Database,
   Cpu,
-  RefreshCw
+  RefreshCw,
+  Terminal
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { Link } from 'react-router-dom';
@@ -142,6 +143,51 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
   
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+
+  const [erudaEnabled, setErudaEnabled] = useState(
+    () => localStorage.getItem('wawasan_eruda_enabled') === 'true'
+  );
+
+  const toggleEruda = async () => {
+    const nextState = !erudaEnabled;
+    setErudaEnabled(nextState);
+    localStorage.setItem('wawasan_eruda_enabled', nextState ? 'true' : 'false');
+    
+    const erudaWin = window as unknown as { eruda?: { destroy: () => void } };
+    
+    if (nextState) {
+      toast({
+        title: "Developer Toolkit Enabled",
+        description: "Loading inspector console... Look for the gear icon in the bottom-right corner of your screen.",
+      });
+      try {
+        const erudaModule = await import('eruda');
+        if (!document.getElementById('eruda') && !erudaWin.eruda) {
+          erudaModule.default.init();
+        }
+      } catch (err) {
+        console.error('Failed to load Eruda dynamically:', err);
+        toast({
+          title: "Toolkit Load Failed",
+          description: "Could not load eruda module.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Developer Toolkit Disabled",
+        description: "The inspector console has been deactivated. Refresh to fully unload.",
+      });
+      if (erudaWin.eruda) {
+        try {
+          erudaWin.eruda.destroy();
+          erudaWin.eruda = undefined;
+        } catch (e) {
+          console.warn('Eruda destroy error:', e);
+        }
+      }
+    }
+  };
 
   const runFirebaseDiag = async () => {
     setDiagFirebase({ status: 'running' });
@@ -1306,6 +1352,66 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       </p>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Mobile Developer Toolkit */}
+              <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg animate-pulse">
+                      <Terminal className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-deep-forest">Mobile Developer Toolkit</h4>
+                      <p className="text-xs text-deep-forest/40">In-app console, inspector & network traffic logger</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      onClick={toggleEruda}
+                      aria-label="Toggle Mobile Developer Toolkit"
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        erudaEnabled ? 'bg-emerald-500' : 'bg-charcoal/80'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          erudaEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
+                  <span className="text-deep-forest/50">Status:</span>
+                  {erudaEnabled ? (
+                    <span className="text-emerald-400 flex items-center gap-1.5 font-medium animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      Active (Tap the floating gear)
+                    </span>
+                  ) : (
+                    <span className="text-deep-forest/40 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cream/30"></span>
+                      Disabled
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4 bg-charcoal/30 border border-warm-gold/5 rounded-lg text-xs text-deep-forest/60 space-y-2 leading-relaxed">
+                  <p>
+                    Designed specifically for mobile-only developers. When activated, a <strong>floating gear/cog icon</strong> will appear in the bottom-right corner of your screen.
+                  </p>
+                  <p>
+                    Tapping it launches a full developer dashboard directly in your mobile browser, allowing you to:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-deep-forest/50 text-[11px] pl-1">
+                    <li><strong>Inspect DOM</strong>: View and modify HTML elements/CSS styles live.</li>
+                    <li><strong>Console Logs</strong>: Check printouts, warnings, and uncaught exceptions.</li>
+                    <li><strong>Network Traffic</strong>: Monitor live fetch/XHR requests and server API payloads.</li>
+                    <li><strong>Local Storage</strong>: View, add, and clear cookies, session state, and local storage.</li>
+                  </ul>
                 </div>
               </div>
             </div>

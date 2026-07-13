@@ -5,9 +5,11 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import { getAssetUrl } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HeroSection() {
   const { t, language } = useLanguage();
+  const { theme } = useTheme();
   const isBm = language === 'bm';
 
   const highlights = [
@@ -45,6 +47,21 @@ export default function HeroSection() {
     <section className="relative w-full overflow-hidden bg-cream pt-32 pb-16 lg:pt-40 lg:pb-24">
       {/* Interactive floating elements in the dark atmosphere */}
       <ParticleCanvas />
+
+      {/* Cinematic Background Image Backdrop with Fading & Blur Filters */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        <img
+          src={getAssetUrl(theme === 'light' ? "/assets/putrajaya-lake-evening.jpg" : "/assets/putrajaya-lake-view.jpg")}
+          alt="Putrajaya scenic backdrop"
+          className={`w-full h-full object-cover scale-105 filter blur-[1px] transition-all duration-700 ease-in-out ${
+            theme === 'light' ? 'opacity-45' : 'opacity-60'
+          }`}
+          referrerPolicy="no-referrer"
+        />
+        {/* Dual-layer fade-out and contrast overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-cream via-transparent to-cream" />
+        <div className="absolute inset-0 bg-cream/70 dark:bg-cream/75 backdrop-blur-[0.5px]" />
+      </div>
 
       {/* Decorative ambient radial glows for dark theme richness */}
       <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-sunshine/10 blur-[150px] pointer-events-none" />
@@ -93,18 +110,8 @@ export default function HeroSection() {
           </a>
         </motion.div>
 
-        {/* Stunning Feature Image */}
-        <motion.div variants={itemVariants} className="w-full mt-20 relative rounded-[2.5rem] overflow-hidden aspect-[16/9] md:aspect-[21/9] border border-white/[0.08] shadow-2xl">
-          <img
-            src={getAssetUrl("/assets/putrajaya-lake-view.jpg")}
-            alt="Putrajaya lake view"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-cream via-transparent to-transparent opacity-80" />
-        </motion.div>
-
         {/* Highlights */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full text-left">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 lg:mt-24 w-full text-left">
           {highlights.map((item) => {
             const Icon = item.icon;
             return (

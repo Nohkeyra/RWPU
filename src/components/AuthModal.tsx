@@ -26,6 +26,7 @@ import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'motion/react';
 import { SAVED_COMPANIES } from '@/constants/companies';
 import { setSecureItem } from '@/lib/preferences';
+import { triggerNotification, NotificationType } from '@/lib/haptics';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -103,6 +104,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
       if (savedEmail && savedPassword) {
         await signInWithEmailAndPassword(auth, savedEmail, savedPassword);
+        triggerNotification(NotificationType.Success);
         toast({
           title: t('Success', 'Berjaya'),
           description: t('Successfully signed in via biometrics.', 'Berjaya log masuk melalui biometrik.'),
@@ -112,6 +114,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         onSuccess?.();
         onClose();
       } else {
+        triggerNotification(NotificationType.Warning);
         toast({
           title: t('Setup Required', 'Penyediaan Diperlukan'),
           description: t('Please complete password login first to register biometrics.', 'Sila lengkapkan log masuk kata laluan terlebih dahulu untuk mendaftar biometrik.'),
@@ -128,6 +131,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           variant: 'info'
         });
       } else {
+        triggerNotification(NotificationType.Error);
         toast({
           title: t('Authentication Failed', 'Ralat Autentikasi'),
           description: t('Biometric authentication failed. Please use password.', 'Autentikasi biometrik gagal. Sila gunakan kata laluan.'),
@@ -151,6 +155,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
+      triggerNotification(NotificationType.Warning);
       toast({
         title: t('Email Required', 'E-mel Diperlukan'),
         description: t('Please enter your email address.', 'Sila masukkan alamat e-mel anda.'),
@@ -186,6 +191,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           setSecureItem('wawasan_user_password', password);
         }
 
+        triggerNotification(NotificationType.Success);
         toast({
           title: t('Success', 'Berjaya'),
           description: t('Successfully signed in.', 'Berjaya log masuk.'),
@@ -217,6 +223,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
         await setDoc(doc(db, 'users', user.uid), profileData);
 
+        triggerNotification(NotificationType.Success);
         toast({
           title: t('Account Created', 'Akaun Dicipta'),
           description: t('Profile saved successfully.', 'Profil berjaya disimpan.'),
@@ -227,6 +234,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         onClose();
       } else if (mode === 'forgot') {
         await sendPasswordResetEmail(auth, email);
+        triggerNotification(NotificationType.Success);
         toast({
           title: t('Email Sent', 'E-mel Dihantar'),
           description: t('Password reset instructions have been sent to your email.', 'Arahan set semula kata laluan telah dihantar ke e-mel anda.'),
@@ -247,6 +255,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       } else if (authError.code === 'auth/weak-password') {
         errMsg = t('Weak password. Minimum 6 characters.', 'Kata laluan lemah. Sekurang-kurangnya 6 aksara.');
       }
+      triggerNotification(NotificationType.Error);
       toast({
         title: t('Authentication Failed', 'Ralat Autentikasi'),
         description: errMsg,

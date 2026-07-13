@@ -26,6 +26,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Geolocation } from '@capacitor/geolocation';
+import { triggerNotification, NotificationType } from '@/lib/haptics';
 
 interface FormData {
   to: string;
@@ -628,8 +629,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     e.preventDefault();
     setSubmitError(null);
 
+    const triggerWarning = () => {
+      triggerNotification(NotificationType.Warning);
+    };
+
     // Deep validation of required fields to give a premium, animated toast warning feedback
     if (!formData.to) {
+      triggerWarning();
       const errMsg = t('select_company');
       setSubmitError(errMsg);
       toast({
@@ -641,6 +647,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.menu) {
+      triggerWarning();
       const errMsg = t('enter_preferred_menu');
       setSubmitError(errMsg);
       toast({
@@ -652,6 +659,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (formData.quantity === '' || formData.quantity <= 0) {
+      triggerWarning();
       const errMsg = t('invalid_quantity');
       setSubmitError(errMsg);
       toast({
@@ -663,6 +671,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.date) {
+      triggerWarning();
       const errMsg = t('select_event_date');
       setSubmitError(errMsg);
       toast({
@@ -674,6 +683,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (formData.meals.length === 0) {
+      triggerWarning();
       const errMsg = t('meal_for');
       setSubmitError(errMsg);
       toast({
@@ -685,6 +695,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.location || formData.location.trim() === '') {
+      triggerWarning();
       const errMsg = t('venue_address');
       setSubmitError(errMsg);
       toast({
@@ -696,6 +707,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.name || formData.name.trim() === '') {
+      triggerWarning();
       const errMsg = t('pic_name_required');
       setSubmitError(errMsg);
       toast({
@@ -707,6 +719,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.contact || formData.contact.trim() === '') {
+      triggerWarning();
       const errMsg = t('contact_required');
       setSubmitError(errMsg);
       toast({
@@ -718,6 +731,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (!formData.email || formData.email.trim() === '') {
+      triggerWarning();
       const errMsg = t('email_required');
       setSubmitError(errMsg);
       toast({
@@ -729,6 +743,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (formData.email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()) {
+      triggerWarning();
       const errMsg = t('email_mismatch');
       setSubmitError(errMsg);
       toast({
@@ -875,6 +890,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       }
       
       setIsSuccess(true);
+      triggerNotification(NotificationType.Success);
       toast({
         title: t('order_submitted_title'),
         description: t('order_submitted_desc'),
@@ -903,6 +919,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       
       const errMsg = `${t('order_error')}: ${errorDetail}`;
       setSubmitError(errMsg);
+      triggerNotification(NotificationType.Error);
       toast({
         title: t('error'),
         description: errMsg,
