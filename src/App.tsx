@@ -106,7 +106,7 @@ function App() {
         document.documentElement.style.setProperty('--safe-area-inset-left', `${insets.left}px`);
         document.documentElement.style.setProperty('--safe-area-inset-right', `${insets.right}px`);
 
-        SafeArea.addListener('safeAreaChanged', data => {
+        const safeAreaListenerPromise = SafeArea.addListener('safeAreaChanged', data => {
           const { insets: newInsets } = data;
           const currentPlatform = Capacitor.getPlatform();
           const newTopInset = (newInsets.top === 0 && Capacitor.isNativePlatform())
@@ -122,6 +122,8 @@ function App() {
           document.documentElement.style.setProperty('--safe-area-inset-left', `${newInsets.left}px`);
           document.documentElement.style.setProperty('--safe-area-inset-right', `${newInsets.right}px`);
         });
+
+        return safeAreaListenerPromise;
       } catch (err) {
         console.warn('SafeArea plugin error, using fallbacks:', err);
         if (Capacitor.isNativePlatform()) {
@@ -129,10 +131,15 @@ function App() {
           document.documentElement.style.setProperty('--safe-area-inset-top', platform === 'ios' ? '44px' : '28px');
           document.documentElement.style.setProperty('--safe-area-inset-bottom', '20px');
         }
+        return null;
       }
     };
     
-    setupSafeArea();
+    const listenerPromise = setupSafeArea();
+
+    return () => {
+      listenerPromise.then(handle => handle?.remove());
+    };
   }, []);
 
   return (

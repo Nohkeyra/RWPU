@@ -35,20 +35,21 @@ export function useNativeBackButton() {
       return;
     }
 
-    let listenerHandle: { remove: () => void } | undefined;
+    const setupListener = async () => {
+      const handle = await App.addListener('backButton', () => {
+        if (ROOT_PATHS.includes(location.pathname)) {
+          App.exitApp();
+        } else {
+          navigate(-1);
+        }
+      });
+      return handle;
+    };
 
-    App.addListener('backButton', () => {
-      if (ROOT_PATHS.includes(location.pathname)) {
-        App.exitApp();
-      } else {
-        navigate(-1);
-      }
-    }).then((handle) => {
-      listenerHandle = handle;
-    });
+    const handlePromise = setupListener();
 
     return () => {
-      listenerHandle?.remove();
+      handlePromise.then(handle => handle.remove());
     };
   }, [navigate, location.pathname]);
 }

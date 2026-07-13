@@ -33,8 +33,14 @@ export const useToast = () => {
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  const timersRef = React.useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    if (timersRef.current[id]) {
+      clearTimeout(timersRef.current[id]);
+      delete timersRef.current[id];
+    }
   }, []);
 
   const toast = useCallback(({ title, description, variant = 'info', duration = 4000 }: Omit<ToastMessage, 'id'>) => {
@@ -42,11 +48,18 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => [...prev, { id, title, description, variant, duration }]);
 
     if (duration > 0) {
-      setTimeout(() => {
+      timersRef.current[id] = setTimeout(() => {
         dismiss(id);
       }, duration);
     }
   }, [dismiss]);
+
+  React.useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ toast, dismiss, toasts }}>

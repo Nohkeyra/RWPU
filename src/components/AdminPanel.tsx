@@ -40,8 +40,7 @@ import {
   Wifi,
   Database,
   Cpu,
-  RefreshCw,
-  Video
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { Link } from 'react-router-dom';
@@ -55,7 +54,6 @@ import { Device } from '@capacitor/device';
 import { removeSecureItem } from '@/lib/preferences';
 import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
-import { PromoStudio } from './PromoStudio';
 
 interface Order {
   id: string;
@@ -120,7 +118,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     loading: boolean;
   }>({ ok: false, loading: true });
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'diagnostics' | 'promo'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'diagnostics'>('orders');
 
   // Diagnostics states
   const [diagFirebase, setDiagFirebase] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string; projectId?: string }>({ status: 'idle' });
@@ -897,17 +895,6 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               <Activity className="w-4 h-4" />
               <span>Diagnostics</span>
             </button>
-            <button
-              onClick={() => setActiveTab('promo')}
-              className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
-                activeTab === 'promo'
-                  ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
-                  : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
-              }`}
-            >
-              <Video className="w-4 h-4" />
-              <span>Ad Recording Studio</span>
-            </button>
           </div>
 
           {activeTab === 'orders' ? (
@@ -1020,10 +1007,6 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                 </div>
               </div>
             </>
-          ) : activeTab === 'promo' ? (
-            <div className="space-y-6 animate-fade-in">
-              <PromoStudio />
-            </div>
           ) : (
             <div className="space-y-6 animate-fade-in">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-charcoal/50 border border-warm-gold/10 rounded-xl gap-4">
