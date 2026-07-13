@@ -944,21 +944,21 @@ export default function OrderForm({ initialData }: OrderFormProps) {
           className="mb-6"
         />
         
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-left space-y-3">
-          <p className="text-xs text-charcoal/40 font-bold uppercase tracking-wider">
+        <div className="p-4 bg-white rounded-xl border border-slate-200/60 text-left space-y-3 shadow-sm">
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
             {t('invoice_status')}
           </p>
-          <div className="text-sm text-charcoal/80 space-y-2">
+          <div className="text-sm text-slate-800 space-y-2">
             <p className="flex items-start gap-2">
-              <span className="text-green-600 font-bold">✓</span>
+              <span className="text-emerald-600 font-bold">✓</span>
               <span>
                 {t('pdf_generated')}
               </span>
             </p>
             
             {emailStatus === 'sending' && (
-              <p className="flex items-start gap-2 text-charcoal/60 animate-pulse">
-                <span className="text-warm-gold font-bold">●</span>
+              <p className="flex items-start gap-2 text-slate-500 animate-pulse">
+                <span className="text-amber-500 font-bold">●</span>
                 <span>
                   {t('sending_email')}
                 </span>
@@ -966,8 +966,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
             )}
 
             {emailStatus === 'success' && (
-              <p className="flex items-start gap-2 text-slate-700">
-                <span className="text-green-600 font-bold">✓</span>
+              <p className="flex items-start gap-2 text-slate-800">
+                <span className="text-emerald-600 font-bold">✓</span>
                 <span>
                   {t('email_sent_to').replace('{email}', formData.email)}
                 </span>
