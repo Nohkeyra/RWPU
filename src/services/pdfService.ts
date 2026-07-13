@@ -1,6 +1,49 @@
 import jsPDF from 'jspdf';
 import { numberToWords } from './numberToWordsBM';
 
+let cachedLogoBase64: string | null = null;
+
+export const preloadLogoForPDF = (): Promise<string> => {
+  if (cachedLogoBase64) return Promise.resolve(cachedLogoBase64);
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      resolve('');
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 180;
+        canvas.height = 180;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Fill a white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, 180, 180);
+
+          // Draw a clean, crisp, circular mask or just draw the full image neatly inside.
+          // Since the source is circular, let's draw it centered
+          ctx.drawImage(img, 0, 0, 180, 180);
+          
+          cachedLogoBase64 = canvas.toDataURL('image/jpeg', 0.9);
+          resolve(cachedLogoBase64);
+          return;
+        }
+      } catch (err) {
+        console.error('Error scaling logo for PDF:', err);
+      }
+      resolve('');
+    };
+    img.onerror = () => {
+      console.error('Failed to load logo for PDF preloading');
+      resolve('');
+    };
+    img.src = '/assets/wawasan_logo.jpg';
+  });
+};
+
 interface Order {
   to: string;
   attn?: string;
@@ -110,6 +153,13 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   // --- 1. HEADER SECTION ---
   // Space left for logo on left, but "Logo" text is removed
   // (Left blank for a clean corporate appearance)
+  if (cachedLogoBase64) {
+    try {
+      doc.addImage(cachedLogoBase64, 'JPEG', 15, 14, 21, 21);
+    } catch (err) {
+      console.error('Error adding logo to PDF:', err);
+    }
+  }
 
   // Restoran details
   doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);

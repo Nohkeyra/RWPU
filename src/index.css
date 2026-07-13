@@ -43,6 +43,79 @@
     --input: 15 20% 15%;
     --ring: 36 80% 53%;
     --radius: 1.25rem;
+
+    --color-selection-bg: rgba(232, 144, 37, 0.3);
+    --color-selection-text: #F5EFE6;
+    --color-scrollbar-track: #0B0807;
+    --color-scrollbar-thumb: #2D211C;
+    --color-scrollbar-hover: #E89025;
+    
+    --color-input-bg: rgba(21, 16, 14, 0.6);
+    --color-input-text: #F5EFE6;
+    --color-input-border: rgba(255, 255, 255, 0.08);
+    --color-input-focus-shadow: rgba(232, 144, 37, 0.15);
+
+    --color-header-bg: rgba(11, 8, 7, 0.8);
+    --color-header-border: rgba(255, 255, 255, 0.05);
+
+    --color-card-bg: rgba(21, 16, 14, 0.85);
+    --color-card-border: rgba(255, 255, 255, 0.05);
+  }
+
+  .light {
+    /* Day mode styling - ONLY using #023341, #FD5E02, and #FCF5E3 */
+    --color-deep-forest: #023341;      /* Deep dark teal for primary text and headings */
+    --color-forest: #023341;           /* Deep dark teal */
+    --color-light-forest: rgba(2, 51, 65, 0.12); /* Lighter teal / borders */
+    
+    --color-sunshine: #FD5E02;         /* Vibrant Orange */
+    --color-honey: #FD5E02;            /* Vibrant Orange */
+    --color-crisp-carrot: #FD5E02;     /* Vibrant Orange */
+    --color-tomato-burst: #FD5E02;     /* Vibrant Orange */
+    --color-kiwi: #FD5E02;             /* Vibrant Orange */
+    
+    --color-cream: #FCF5E3;            /* Cream Background */
+    --color-cream-dark: #FCF5E3;       /* Cream Background Secondary */
+    --color-charcoal: #FCF5E3;         /* Cream Background Tertiary */
+    --color-stone: rgba(2, 51, 65, 0.7); /* Muted Deep Teal Text */
+
+    /* Shadcn tokens updated for Day mode */
+    --background: 43 75% 94%;           /* Matches #FCF5E3 */
+    --foreground: 193 94% 13%;          /* Matches #023341 */
+    --card: 43 75% 94%;                 /* Matches #FCF5E3 */
+    --card-foreground: 193 94% 13%;
+    --popover: 43 75% 94%;
+    --popover-foreground: 193 94% 13%;
+    --primary: 22 98% 50%;             /* Matches #FD5E02 */
+    --primary-foreground: 43 75% 94%;
+    --secondary: 43 75% 94%;
+    --secondary-foreground: 193 94% 13%;
+    --muted: 43 50% 88%;                /* Slightly darker cream */
+    --muted-foreground: 193 60% 30%;    /* Lighter teal */
+    --accent: 22 98% 50%;               /* Matches #FD5E02 */
+    --accent-foreground: 43 75% 94%;
+    --destructive: 22 98% 50%;
+    --destructive-foreground: 43 75% 94%;
+    --border: 193 94% 13% / 0.15;       /* Transparent teal border */
+    --input: 193 94% 13% / 0.15;
+    --ring: 22 98% 50%;
+
+    --color-selection-bg: rgba(253, 94, 2, 0.2);
+    --color-selection-text: #023341;
+    --color-scrollbar-track: #FCF5E3;
+    --color-scrollbar-thumb: rgba(2, 51, 65, 0.2);
+    --color-scrollbar-hover: #FD5E02;
+    
+    --color-input-bg: #FCF5E3;
+    --color-input-text: #023341;
+    --color-input-border: rgba(2, 51, 65, 0.2);
+    --color-input-focus-shadow: rgba(253, 94, 2, 0.15);
+
+    --color-header-bg: rgba(252, 245, 227, 0.85);
+    --color-header-border: rgba(2, 51, 65, 0.12);
+
+    --color-card-bg: rgba(252, 245, 227, 0.95);
+    --color-card-border: rgba(2, 51, 65, 0.12);
   }
 
   * {
@@ -69,49 +142,50 @@
   }
   
   ::selection {
-    background-color: rgba(232, 144, 37, 0.3);
-    color: #F5EFE6;
+    background-color: var(--color-selection-bg);
+    color: var(--color-selection-text);
   }
   
-  /* Dark mode scrollbar */
+  /* Scrollbar custom style */
   ::-webkit-scrollbar {
     width: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #0B0807;
+    background: var(--color-scrollbar-track);
   }
   ::-webkit-scrollbar-thumb {
-    background: #2D211C;
+    background: var(--color-scrollbar-thumb);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #E89025;
+    background: var(--color-scrollbar-hover);
   }
 
-  /* Global input overlays to ensure beautiful dark-inputs throughout order sheets, etc. */
+  /* Global input overlays to ensure beautiful inputs throughout order sheets, etc. */
   input, textarea, select, [role="combobox"] {
-    background-color: rgba(21, 16, 14, 0.6) !important;
-    color: #F5EFE6 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: var(--color-input-bg) !important;
+    color: var(--color-input-text) !important;
+    border-color: var(--color-input-border) !important;
   }
   input:focus, textarea:focus {
     border-color: var(--color-sunshine) !important;
-    box-shadow: 0 0 10px rgba(232, 144, 37, 0.15) !important;
+    box-shadow: 0 0 10px var(--color-input-focus-shadow) !important;
   }
 }
 
 @layer components {
-  /* Layout helpers - Updated for premium dark theme */
+  /* Layout helpers - Updated for premium theme */
   .section-padding    { @apply py-20 md:py-[120px]; }
   .content-container  { @apply max-w-[1200px] mx-auto px-6 md:px-12; }
   
-  /* Brand surfaces - Now dark with glassmorphic accents */
+  /* Brand surfaces - Now with variables */
   .nature-card {
-    background-color: rgba(21, 16, 14, 0.85);
-    @apply backdrop-blur-md rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    @apply backdrop-blur-md rounded-[2.5rem] shadow-2xl overflow-hidden;
   }
   
-  /* Brand gradient text - Updated with new hot sunset glows */
+  /* Brand gradient text */
   .gradient-text {
     @apply bg-gradient-to-r from-deep-forest via-crisp-carrot to-sunshine bg-clip-text text-transparent;
   }
@@ -130,10 +204,11 @@
     @apply text-sunshine drop-shadow-[0_0_8px_rgba(232,144,37,0.4)];
   }
   
-  /* Glassmorphism for headers - Dark version */
+  /* Glassmorphism for headers */
   .glass-header {
-    background-color: rgba(11, 8, 7, 0.8);
-    @apply backdrop-blur-xl border-b border-white/5 shadow-lg;
+    background-color: var(--color-header-bg);
+    border-bottom: 1px solid var(--color-header-border);
+    @apply backdrop-blur-xl shadow-lg;
   }
   
   /* Pattern overlay for sections - Dimmed for dark mode comfort */

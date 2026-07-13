@@ -67,6 +67,15 @@ const MENU_ITEMS = [
     priceBm: 'Daripada RM 2.50',
     image: `/assets/teh-tarik.jpg`,
   },
+  {
+    nameEn: 'Kopi 434 Kopi Kampung',
+    nameBm: 'Kopi 434 Kopi Kampung',
+    descEn: 'Classic rich, dark roasted Malaysian village black coffee, served sweet and aromatic.',
+    descBm: 'Kopi kampung hitam panggang klasik Malaysia yang pekat dan harum, dihidangkan manis aromatik.',
+    priceEn: 'From RM 2.80',
+    priceBm: 'Daripada RM 2.80',
+    image: `/assets/kopi_kampung.jpg`,
+  },
 ];
 
 export default function MenuSection() {

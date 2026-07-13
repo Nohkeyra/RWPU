@@ -4,8 +4,10 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { SafeArea } from 'capacitor-plugin-safe-area';
 import { Capacitor } from '@capacitor/core';
 import { syncPreferencesToLocalStorage } from '@/lib/preferences';
+import { preloadLogoForPDF } from '@/services/pdfService';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SettingsProvider } from '@/context/SettingsContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import PushNotificationHandler from '@/components/PushNotificationHandler';
 import NativeBackButtonHandler from '@/components/NativeBackButtonHandler';
@@ -70,6 +72,9 @@ function App() {
   useEffect(() => {
     // Sync Capacitor Preferences to localStorage for synchronous access fallback
     syncPreferencesToLocalStorage();
+
+    // Preload & scale the Restoran Wawasan logo for the invoice PDF
+    preloadLogoForPDF().catch(err => console.warn('Logo preloading failed:', err));
 
     const hideSplash = async () => {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -143,17 +148,19 @@ function App() {
   }, []);
 
   return (
-    <SettingsProvider>
-      <LanguageProvider>
-        <ToastProvider>
-          <Router>
-            <PushNotificationHandler />
-            <NativeBackButtonHandler />
-            <AppContent />
-          </Router>
-        </ToastProvider>
-      </LanguageProvider>
-    </SettingsProvider>
+    <ThemeProvider>
+      <SettingsProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <Router>
+              <PushNotificationHandler />
+              <NativeBackButtonHandler />
+              <AppContent />
+            </Router>
+          </ToastProvider>
+        </LanguageProvider>
+      </SettingsProvider>
+    </ThemeProvider>
   );
 }
 

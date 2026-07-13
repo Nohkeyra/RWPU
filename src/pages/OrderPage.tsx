@@ -11,7 +11,7 @@ function BrandMark() {
     <img
       src={getAssetUrl("/assets/wawasan_logo.jpg")}
       alt="Restoran Wawasan Logo"
-      className="w-9 h-9 rounded-xl border border-white/20 shadow-lg object-cover"
+      className="w-9 h-9 rounded-full p-1 bg-white border border-black/10 shadow-lg object-contain shrink-0"
       referrerPolicy="no-referrer"
     />
   );

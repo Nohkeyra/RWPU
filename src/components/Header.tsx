@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Menu, Languages, User as UserIcon } from 'lucide-react';
+import { Menu, Languages, User as UserIcon, Sun, Moon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 import { getAssetUrl } from '@/lib/utils';
 import MobileMenu from './MobileMenu';
 import AuthModal from './AuthModal';
@@ -23,7 +24,7 @@ function BrandMark() {
     <img
       src={getAssetUrl("/assets/wawasan_logo.jpg")}
       alt="Restoran Wawasan Logo"
-      className="w-10 h-10 rounded-xl border border-white/20 shadow-lg object-cover"
+      className="w-10 h-10 rounded-full p-1 bg-white border border-black/10 shadow-lg object-contain shrink-0"
       referrerPolicy="no-referrer"
     />
   );
@@ -33,6 +34,7 @@ export default function Header() {
   const isScrolled = useHeaderScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -91,6 +93,19 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:bg-white/5 rounded-lg transition-all duration-300"
+              aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-deep-forest animate-float" />
+              ) : (
+                <Sun className="w-5 h-5 text-sunshine animate-pulse" />
+              )}
+            </button>
+
             {/* Language toggle */}
             <button
               onClick={toggleLanguage}
@@ -123,12 +138,27 @@ export default function Header() {
             </Link>
           </div>
 
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2.5 text-deep-forest hover:bg-white/5 rounded-full transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex md:hidden items-center gap-1">
+            {/* Mobile Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 text-deep-forest hover:bg-white/5 rounded-full transition-colors"
+              aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-deep-forest" />
+              ) : (
+                <Sun className="w-5 h-5 text-sunshine" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="p-2.5 text-deep-forest hover:bg-white/5 rounded-full transition-colors"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </header>
 

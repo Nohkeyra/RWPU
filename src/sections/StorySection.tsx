@@ -32,11 +32,11 @@ export default function StorySection() {
           
           <div className="lg:col-span-5 order-2 lg:order-1" ref={imageRef}>
             <div className="relative max-w-md mx-auto lg:max-w-none">
-              <div className="relative rounded-[2rem] overflow-hidden aspect-[4/5] border border-white/[0.08] shadow-2xl bg-cream-dark">
+              <div className="relative rounded-[2rem] overflow-hidden aspect-[16/9] border border-white/[0.08] shadow-2xl bg-cream-dark flex items-center justify-center">
                 <img 
                   src={getAssetUrl("/assets/high-tea.jpg")} 
                   alt={language === 'bm' ? 'Kotak Katering Minum Petang' : 'High-Tea Catering Box'} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
