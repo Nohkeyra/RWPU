@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { Button } from '@/components/ui/button';
 
 type SceneId = 'landing' | 'order_form' | 'success_checklist' | 'member_portal';
 
