@@ -1,7 +1,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import OrderForm from '@/components/OrderForm';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getAssetUrl } from '@/lib/utils';
@@ -11,7 +11,7 @@ function BrandMark() {
     <img
       src={getAssetUrl("/assets/wawasan_logo.jpg")}
       alt="Restoran Wawasan Logo"
-      className="w-9 h-9 rounded-full p-1 bg-white border border-black/10 shadow-lg object-contain shrink-0"
+      className="w-10 h-10 object-contain shrink-0 mix-blend-multiply"
       referrerPolicy="no-referrer"
     />
   );
@@ -20,6 +20,7 @@ function BrandMark() {
 export default function OrderPage() {
   const { t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const initialData = location.state?.reorderData;
 
   return (
@@ -27,7 +28,7 @@ export default function OrderPage() {
       <div className="min-h-screen bg-cream pattern-dots">
         <header className="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-xl border-b border-white/5 shadow-sm pt-[var(--sat)]">
           <div className="flex items-center justify-between px-6 md:px-12 h-[76px]">
-            <Link to="/" className="flex items-center gap-3 group">
+            <div onClick={() => navigate('/home', { replace: true })} className="flex items-center gap-3 group cursor-pointer">
               <BrandMark />
               <div>
                 <span className="font-display font-semibold text-xl text-deep-forest leading-none tracking-tight">
@@ -37,13 +38,11 @@ export default function OrderPage() {
                   Pak Usop
                 </span>
               </div>
-            </Link>
-            <Link to="/">
-              <Button variant="ghost" className="text-stone hover:text-crisp-carrot hover:bg-white/10 rounded-full">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('back')}
-              </Button>
-            </Link>
+            </div>
+            <Button variant="ghost" onClick={() => navigate('/home', { replace: true })} className="text-stone hover:text-crisp-carrot hover:/10 rounded-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('back')}
+            </Button>
           </div>
         </header>
 

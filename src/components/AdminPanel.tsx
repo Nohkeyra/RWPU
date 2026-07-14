@@ -44,7 +44,7 @@ import {
   Terminal
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { generateInvoicePDF } from '@/services/pdfService';
 import { numberToWords } from '@/services/numberToWordsBM';
@@ -92,6 +92,7 @@ const MEAL_LABELS: Record<string, { en: string; bm: string }> = {
 export default function AdminPanel({ adminPassword }: { adminPassword?: string }) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -826,11 +827,11 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
       <header className="fixed top-0 left-0 right-0 z-50 bg-charcoal/95 backdrop-blur-xl border-b border-warm-gold/10 pt-[var(--sat)]">
         <div className="flex items-center justify-between px-6 md:px-12 h-[72px]">
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-3 group">
+            <div onClick={() => navigate('/home', { replace: true })} className="flex items-center gap-3 group cursor-pointer">
               <img
                 src={getAssetUrl("/assets/wawasan_logo.jpg")}
                 alt="Restoran Wawasan Logo"
-                className="w-9 h-9 rounded-full p-1 bg-white border border-black/10 shadow-md object-contain shrink-0"
+                className="w-10 h-10 object-contain shrink-0 mix-blend-multiply"
                 referrerPolicy="no-referrer"
               />
               <div>
@@ -841,16 +842,14 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                   Admin
                 </span>
               </div>
-            </Link>
+            </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('back')}
-              </Button>
-            </Link>
+            <Button variant="ghost" onClick={() => navigate('/home', { replace: true })} className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('back')}
+            </Button>
             <Button 
               variant="ghost" 
               className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
@@ -1376,7 +1375,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
                       }`}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full  shadow-lg ring-0 transition duration-200 ease-in-out ${
                           erudaEnabled ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />

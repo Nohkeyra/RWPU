@@ -24,7 +24,7 @@ function BrandMark() {
     <img
       src={getAssetUrl("/assets/wawasan_logo.jpg")}
       alt="Restoran Wawasan Logo"
-      className="w-10 h-10 rounded-full p-1 bg-white border border-black/10 shadow-lg object-contain shrink-0"
+      className="w-12 h-12 object-contain shrink-0 mix-blend-multiply"
       referrerPolicy="no-referrer"
     />
   );
@@ -68,7 +68,7 @@ export default function Header() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between gap-4 md:gap-6 lg:gap-8">
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <Link to="/home" className="flex items-center gap-3 group shrink-0">
             <BrandMark />
             <div className="shrink-0 flex flex-col justify-center">
               <span className="font-urban text-lg md:text-xl text-deep-forest leading-none tracking-wide">
@@ -81,22 +81,35 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-4 lg:gap-8 shrink-0">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-semibold text-deep-forest/80 hover:text-sunshine transition-colors"
-              >
-                {link.label.charAt(0).toUpperCase() + link.label.slice(1)}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) => {
+              if (link.isButton) {
+                return (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-bold text-xs hover:shadow-xl transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
+                  >
+                    {t(link.label as any)}
+                  </Link>
+                );
+              }
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-semibold text-deep-forest/80 hover:text-sunshine transition-colors"
+                >
+                  {t(link.label as any) || link.label.charAt(0).toUpperCase() + link.label.slice(1)}
+                </a>
+              );
+            })}
           </nav>
 
           <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:bg-white/5 rounded-lg transition-all duration-300"
+              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300"
               aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
             >
               {theme === 'light' ? (
@@ -109,7 +122,7 @@ export default function Header() {
             {/* Language toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 text-deep-forest/70 hover:text-deep-forest hover:bg-white/5 rounded-lg transition-all duration-300 text-sm font-medium"
+              className="flex items-center gap-2 px-3 py-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300 text-sm font-medium"
             >
               <Languages className="w-4 h-4" />
               <span className="uppercase text-xs tracking-wider">{language === 'en' ? 'BM' : 'EN'}</span>
@@ -118,7 +131,7 @@ export default function Header() {
             {/* Client login / account */}
             <button
               onClick={handleAuthClick}
-              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:bg-white/5 rounded-lg transition-all duration-300"
+              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300"
               aria-label={currentUser ? 'Account' : 'Sign in'}
             >
               {currentUser ? (
@@ -129,20 +142,13 @@ export default function Header() {
                 <UserIcon className="w-5 h-5" />
               )}
             </button>
-
-            <Link
-              to="/order"
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-bold text-sm hover:shadow-xl transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
-            >
-              {t('order_now')}
-            </Link>
           </div>
 
           <div className="flex md:hidden items-center gap-1">
             {/* Mobile Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 text-deep-forest hover:bg-white/5 rounded-full transition-colors"
+              className="p-2.5 text-deep-forest hover:/5 rounded-full transition-colors"
               aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
             >
               {theme === 'light' ? (
@@ -154,7 +160,7 @@ export default function Header() {
 
             <button
               onClick={() => setMobileOpen(true)}
-              className="p-2.5 text-deep-forest hover:bg-white/5 rounded-full transition-colors"
+              className="p-2.5 text-deep-forest hover:/5 rounded-full transition-colors"
             >
               <Menu className="w-6 h-6" />
             </button>

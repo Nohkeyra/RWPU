@@ -1,16 +1,11 @@
 
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useLanguage } from '@/context/LanguageContext';
 import ParticleCanvas from '@/components/ParticleCanvas';
 import { getAssetUrl } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function HeroSection() {
-  const { t, language } = useLanguage();
   const { theme } = useTheme();
-  const isBm = language === 'bm';
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 800], [0, 120]);
@@ -29,24 +24,23 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full overflow-hidden bg-cream pt-32 pb-16 lg:pt-40 lg:pb-24">
-      {/* Interactive floating elements in the dark atmosphere */}
-      <ParticleCanvas />
-
-      {/* Cinematic Background Image Backdrop with Fading & Blur Filters */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+    <section className="relative w-full overflow-hidden bg-cream pt-32 pb-16 lg:pt-40 lg:pb-24 min-h-[100svh] flex flex-col justify-end">
+      {/* Cinematic Background Image Backdrop */}
+      <div className="absolute top-0 left-0 right-0 w-full h-[65vh] md:h-full z-0 overflow-hidden">
         <motion.img
           src={getAssetUrl(theme === 'light' ? "/assets/putrajaya-lake-evening.jpg" : "/assets/putrajaya-lake-view.jpg")}
           alt="Putrajaya scenic backdrop"
           style={{ y }}
-          className={`w-full h-full object-cover scale-110 filter blur-[1px] transition-all duration-700 ease-in-out ${
-            theme === 'light' ? 'opacity-45' : 'opacity-60'
-          }`}
+          className="w-full h-full object-cover object-top md:object-center filter transition-all duration-700 ease-in-out opacity-100"
           referrerPolicy="no-referrer"
         />
-        {/* Dual-layer fade-out and contrast overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-cream via-transparent to-cream" />
-        <div className="absolute inset-0 bg-cream/70 dark:bg-cream/75 backdrop-blur-[0.5px]" />
+        {/* Gradient to blend with the content section below */}
+        <div className="absolute inset-x-0 bottom-0 h-40 md:h-64 bg-gradient-to-t from-cream via-cream/80 to-transparent" />
+      </div>
+
+      {/* Interactive floating elements */}
+      <div className="absolute inset-0 z-[5] pointer-events-none">
+        <ParticleCanvas />
       </div>
 
       {/* Decorative ambient radial glows for dark theme richness */}
@@ -57,37 +51,15 @@ export default function HeroSection() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="content-container flex flex-col items-center text-center relative z-10"
+        className="content-container flex flex-col items-center text-center relative z-10 w-full pb-8 md:pb-12 mt-auto"
       >
-        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-crisp-carrot animate-pulse shadow-carrot-glow" />
-          <span className="text-xs font-semibold text-deep-forest/80 uppercase tracking-[0.2em]">
-            {isBm ? 'Sejak 1986' : 'Since 1986'}
-          </span>
-        </motion.div>
-
-        <motion.h1 
-          variants={itemVariants} 
-          className="font-bold text-deep-forest leading-[1.05] tracking-tight text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] max-w-5xl"
+        <motion.div 
+          variants={itemVariants}
+          className="mt-12 animate-bounce opacity-60 text-deep-forest"
         >
-          <span className="font-celtic block mb-2 sm:mb-4">Restoran Wawasan</span>
-          <span className="font-celtic block bg-gradient-to-r from-sunshine via-honey to-crisp-carrot bg-clip-text text-transparent pr-2">Pak Usop</span>
-        </motion.h1>
-
-        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 mt-10 w-full sm:w-auto">
-          <Link
-            to="/order"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-semibold shadow-sunshine-glow hover:shadow-xl hover:scale-105 transition-all duration-300"
-          >
-            <span>{t('order_now')}</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <a
-            href="#menu"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 text-deep-forest border border-white/10 rounded-full font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-          >
-            {t('view_our_menu')}
-          </a>
+          <div className="w-5 h-8 border-2 border-deep-forest/40 rounded-full flex justify-center p-1">
+            <div className="w-1 h-2 bg-deep-forest/60 rounded-full" />
+          </div>
         </motion.div>
       </motion.div>
     </section>

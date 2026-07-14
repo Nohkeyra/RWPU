@@ -20,10 +20,10 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-cream pattern-dots">
       <Header />
-      <main className="pt-20">
+      <main>
         <HeroSection />
-        <HighlightsSection />
         <StorySection />
+        <HighlightsSection />
         <MenuSection />
         <ExperienceSection />
         <ReviewsSection />

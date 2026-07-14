@@ -81,25 +81,31 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
             </span>
           </div>
 
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={onClose}
-              className="text-3xl font-display font-bold text-deep-forest py-3 border-b border-deep-forest/10 hover:text-sunshine transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
-          
-          <Link
-            to="/order"
-            onClick={onClose}
-            className="mt-6 w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold rounded-full hover:shadow-sunshine-glow hover:scale-[1.02] transition-all duration-300 shadow-lg"
-          >
-            {t('order_now')}
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          {links.map((link) => {
+            if ((link as any).isButton) {
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={onClose}
+                  className="mt-4 mb-2 w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold rounded-full hover:shadow-sunshine-glow hover:scale-[1.02] transition-all duration-300 shadow-lg"
+                >
+                  {t(link.label as any)}
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              );
+            }
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={onClose}
+                className="text-3xl font-display font-bold text-deep-forest py-3 border-b border-deep-forest/10 hover:text-sunshine transition-colors"
+              >
+                {t(link.label as any) || link.label}
+              </a>
+            );
+          })}
 
           {/* User Account Login */}
           <button

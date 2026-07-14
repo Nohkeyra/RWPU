@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { motion } from 'motion/react';
+import { ShoppingBag, ArrowRight } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
@@ -79,6 +81,7 @@ const MENU_ITEMS = [
 ];
 
 export default function MenuSection() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const isBm = language === 'bm';
   const [isLoading, setIsLoading] = useState(true);
@@ -218,6 +221,39 @@ export default function MenuSection() {
               </motion.div>
             ))
           )}
+        </motion.div>
+
+        {/* Order Now (Guest/Direct Order) Call to Action */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 text-center max-w-2xl mx-auto px-4"
+        >
+          <div className="bg-cream-dark/60 backdrop-blur-md rounded-[2.5rem] p-8 md:p-10 border border-white/[0.08] shadow-xl relative overflow-hidden group">
+            {/* Ambient decorative gradient */}
+            <div className="absolute -inset-px bg-gradient-to-r from-sunshine/5 to-crisp-carrot/5 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-deep-forest mb-3">
+              {isBm ? 'Sedia untuk Memesan?' : 'Ready to Order?'}
+            </h3>
+            <p className="font-body text-deep-forest/70 text-sm md:text-base mb-8 max-w-md mx-auto leading-relaxed">
+              {isBm 
+                ? 'Sama ada sebagai ahli atau pelawat biasa, langkau pendaftaran dan buat pesanan katering anda secara terus.' 
+                : 'Skip registration entirely and place your catering order directly as a guest.'}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => navigate('/order')}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-sunshine/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {isBm ? 'Pesan Sekarang (Pelawat)' : 'Order Now (Guest)'}
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>

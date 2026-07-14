@@ -11,10 +11,12 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import PushNotificationHandler from '@/components/PushNotificationHandler';
 import NativeBackButtonHandler from '@/components/NativeBackButtonHandler';
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 
 import LandingPage from '@/pages/LandingPage';
 import OrderPage from '@/pages/OrderPage';
 import AdminPage from '@/pages/AdminPage';
+import LoginPage from '@/pages/LoginPage';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -57,12 +59,14 @@ function AppContent() {
     <>
       <ScrollToTop />
       <SmoothScrollHandler />
+      <ScrollToTopButton />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/home" element={<LandingPage />} />
         <Route path="/main" element={<LandingPage />} />
         <Route path="/order" element={<OrderPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<LandingPage />} />
+        <Route path="*" element={<LoginPage />} />
       </Routes>
     </>
   );
