@@ -6,11 +6,19 @@ import { Preferences } from '@capacitor/preferences';
  */
 
 // Keys that are critical and should be synced to Capacitor Preferences
+//
+// IMPORTANT: Passwords (wawasan_user_password, wawasan_admin_password) are
+// intentionally NOT stored here. They must never be written to localStorage
+// or Capacitor Preferences, since neither is encrypted — both are plaintext
+// on disk (WebView local storage DB / SharedPreferences XML respectively)
+// and readable by anyone with file access to the device (root, ADB backup).
+// Passwords for biometric-unlock are stored exclusively via
+// NativeBiometric.setCredentials() with AccessControl.BIOMETRY_ANY, which is
+// backed by the Android Keystore / iOS Keychain and requires a fresh
+// biometric prompt to decrypt. See AuthModal.tsx and AdminPage.tsx.
 export const CRITICAL_STORAGE_KEYS = [
   'wawasan_user_biometric_enabled',
   'wawasan_user_email',
-  'wawasan_user_password',
-  'wawasan_admin_password',
   'wawasan_admin_authenticated',
   'wawasan_biometric_enabled',
   'notificationsEnabled',

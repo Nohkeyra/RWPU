@@ -89,10 +89,18 @@ const MEAL_LABELS: Record<string, { en: string; bm: string }> = {
   hi_tea: { en: 'Hi-Tea', bm: 'Minum Petang (Hi-Tea)' },
 };
 
-export default function AdminPanel({ adminPassword }: { adminPassword?: string }) {
+export default function AdminPanel({ adminToken, onLogout }: { adminToken?: string; onLogout?: () => void }) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Helper: builds the Authorization header sent with every admin API call.
+  // Replaces the old pattern of resending the raw admin password in the
+  // request body — the server now validates this short-lived JWT instead.
+  const authHeaders = (): HeadersInit => ({
+    'Content-Type': 'application/json',
+    ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -313,14 +321,10 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     setIsSendingTestEmail(true);
     setDiagEmail({ status: 'running' });
     try {
-      const activePassword = localStorage.getItem('wawasan_admin_password') || adminPassword || '';
       const response = await fetch(getApiUrl('/api/diagnostics/email'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
-          password: activePassword,
           testEmail: testEmailAddress
         })
       });
@@ -400,11 +404,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     try {
       const response = await fetch(getApiUrl('/api/admin/orders'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
-          password: adminPassword || '',
           action: 'fetch'
         })
       });
@@ -417,6 +418,11 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
           }));
           setOrders(formattedOrders);
         }
+      } else if (response.status === 401) {
+        // Session token expired or invalid — force re-login rather than
+        // leaving the admin looking at a panel where every action silently fails.
+        console.warn('Admin session expired or invalid, logging out.');
+        onLogout?.();
       } else {
         console.error('Failed to fetch orders from admin endpoint');
       }
@@ -432,7 +438,7 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     fetchOrders();
     fetchCalendarState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminPassword]);
+  }, [adminToken]);
 
   const handleApprove = async (orderId: string) => {
     setIsApproving(true);
@@ -458,11 +464,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
       // Update meal prices and invoiceNo on the order document via secure admin endpoint
       const updateResponse = await fetch(getApiUrl('/api/admin/orders'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
-          password: adminPassword || '',
           action: 'update',
           orderId,
           data: {
@@ -564,11 +567,8 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
     try {
       const response = await fetch(getApiUrl('/api/admin/orders'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
-          password: adminPassword || '',
           action: 'delete',
           orderId
         })
@@ -854,9 +854,14 @@ export default function AdminPanel({ adminPassword }: { adminPassword?: string }
               variant="ghost" 
               className="text-deep-forest/60 hover:text-red-400 hover:bg-red-500/10"
               onClick={async () => {
-                await removeSecureItem('wawasan_admin_authenticated');
-                await removeSecureItem('wawasan_admin_password');
-                window.location.reload();
+                if (onLogout) {
+                  onLogout();
+                } else {
+                  // Fallback in case this component is ever rendered without
+                  // the onLogout prop wired — still clears auth state.
+                  await removeSecureItem('wawasan_admin_authenticated');
+                  window.location.reload();
+                }
               }}
             >
               <LogOut className="w-4 h-4 mr-2" />

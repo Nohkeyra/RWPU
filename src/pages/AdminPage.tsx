@@ -7,24 +7,31 @@ import { useNavigate } from 'react-router-dom';
 import AdminPanel from '@/components/AdminPanel';
 import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
-import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { NativeBiometric, AccessControl } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
-import { setSecureItem } from '@/lib/preferences';
+import { setSecureItem, removeSecureItem } from '@/lib/preferences';
 
 const ADMIN_AUTH_STORAGE_KEY = 'wawasan_admin_authenticated';
-const ADMIN_PASSWORD_STORAGE_KEY = 'wawasan_admin_password';
+// NOTE: the admin password itself is never stored anywhere on the device
+// (not localStorage, not Preferences, not even the biometric Keystore vault).
+// It is sent to the server exactly once, at login, in exchange for a
+// short-lived (12h) JWT session token. That token — never the password —
+// is what gets persisted and resent on subsequent admin API calls.
+const ADMIN_TOKEN_STORAGE_KEY = 'wawasan_admin_token';
 const BIOMETRIC_ENABLED_KEY = 'wawasan_biometric_enabled';
+const BIOMETRIC_SERVER_KEY = 'com.wawasanpakusop.app.admin';
 
 export default function AdminPage() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  
+
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => localStorage.getItem(ADMIN_AUTH_STORAGE_KEY) === 'true'
   );
-  const [password, setPassword] = useState(
-    () => localStorage.getItem(ADMIN_PASSWORD_STORAGE_KEY) || ''
+  const [token, setToken] = useState(
+    () => localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || ''
   );
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -54,23 +61,36 @@ export default function AdminPage() {
       setError('');
       setIsLoading(true);
 
-      await NativeBiometric.verifyIdentity({
+      // getSecureCredentials triggers the OS biometric prompt itself (needed
+      // to decrypt the Keystore-protected entry) — no separate verifyIdentity()
+      // call, that would prompt the user twice.
+      const creds = await NativeBiometric.getSecureCredentials({
+        server: BIOMETRIC_SERVER_KEY,
         reason: 'Authenticate to access Admin Panel',
         title: 'Restoran Wawasan Admin',
-        subtitle: 'Use fingerprint or face ID',
       });
 
-      // Success
-      const savedPassword = localStorage.getItem(ADMIN_PASSWORD_STORAGE_KEY);
-      if (savedPassword) {
-        setPassword(savedPassword);
-        setIsAuthenticated(true);
-        setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+      if (creds.username && creds.password) {
+        // The admin password is only ever kept transiently in memory here,
+        // long enough to exchange it for a fresh session token. It is never
+        // written back to localStorage or Preferences.
+        const response = await fetch(getApiUrl('/api/admin/login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: creds.password })
+        });
+        const data = await response.json();
 
-        // Automatically ensure biometric is enabled if authenticated successfully
-        if (!biometricEnabled) {
-          setSecureItem(BIOMETRIC_ENABLED_KEY, 'true');
-          setBiometricEnabled(true);
+        if (response.ok && data.success && data.token) {
+          setToken(data.token);
+          localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
+          setIsAuthenticated(true);
+          setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+        } else {
+          setError(tText(
+            'Saved biometric credentials were rejected by the server. Please log in with your password again.',
+            'Kelayakan biometrik yang disimpan ditolak oleh server. Sila log masuk semula dengan kata laluan.'
+          ));
         }
       } else {
         setError(tText(
@@ -98,22 +118,26 @@ export default function AdminPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch(getApiUrl('/api/admin/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
       });
-      
+
       const data = await response.json();
-      
-      if (response.ok && data.success) {
+
+      if (response.ok && data.success && data.token) {
+        setToken(data.token);
+        localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
         setIsAuthenticated(true);
         setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
-        setSecureItem(ADMIN_PASSWORD_STORAGE_KEY, password);
 
-        // Offer to enable biometrics after first successful login
+        // Offer to enable biometrics after first successful login. The
+        // password (still held in this function's local state at this
+        // point, never persisted) is saved to the native Keystore-backed
+        // vault, gated by biometric access control — not to localStorage.
         if (biometricAvailable && !biometricEnabled) {
           const enable = window.confirm(
             tText(
@@ -122,8 +146,18 @@ export default function AdminPage() {
             )
           );
           if (enable) {
-            setSecureItem(BIOMETRIC_ENABLED_KEY, 'true');
-            setBiometricEnabled(true);
+            try {
+              await NativeBiometric.setCredentials({
+                username: 'admin',
+                password: password,
+                server: BIOMETRIC_SERVER_KEY,
+                accessControl: AccessControl.BIOMETRY_ANY,
+              });
+              await setSecureItem(BIOMETRIC_ENABLED_KEY, 'true');
+              setBiometricEnabled(true);
+            } catch (credErr) {
+              console.error('Failed to save biometric credentials:', credErr);
+            }
           }
         }
       } else {
@@ -263,5 +297,15 @@ export default function AdminPage() {
   }
 
   // Admin Dashboard
-  return <AdminPanel adminPassword={password} />;
+  return (
+    <AdminPanel
+      adminToken={token}
+      onLogout={() => {
+        localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+        removeSecureItem(ADMIN_AUTH_STORAGE_KEY);
+        setIsAuthenticated(false);
+        setToken('');
+      }}
+    />
+  );
 }

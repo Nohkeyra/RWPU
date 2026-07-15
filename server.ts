@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import nodemailer from "nodemailer";
 import cors from "cors";
 import * as admin from "firebase-admin"; // Changed to namespace import for better compatibility
@@ -9,6 +10,7 @@ import { cert, App } from "firebase-admin/app";
 import { getFirestore as getFirestoreModular, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { google } from "googleapis";
+import jwt from "jsonwebtoken";
 
 interface FirebaseConfig {
   apiKey: string;
@@ -767,14 +769,9 @@ async function startServer() {
   });
 
   // Diagnostics endpoint: verifies SMTP is configured and can send a test email.
-  app.post("/api/diagnostics/email", async (req, res) => {
+  app.post("/api/diagnostics/email", verifyAdminToken, async (req, res) => {
     try {
-      const { password, testEmail } = req.body;
-      const adminPassword = process.env.ADMIN_PASSWORD;
-
-      if (!password || password !== adminPassword) {
-        return res.status(401).json({ error: "Unauthorized: Invalid password" });
-      }
+      const { testEmail } = req.body;
 
       if (!testEmail) {
         return res.status(400).json({ error: "Missing testEmail" });
@@ -1731,6 +1728,41 @@ async function startServer() {
   });
 
   // Admin Login Endpoint
+  // JWT secret for admin session tokens. This MUST be set in Render's
+  // environment variables. The fallback below only exists so the server
+  // doesn't crash if it's missing, but using the fallback means every
+  // restart invalidates all issued tokens (weak, but not silently insecure
+  // like a fixed default password would be).
+  const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
+  if (!ADMIN_JWT_SECRET) {
+    console.warn(
+      "[Admin Auth] ADMIN_JWT_SECRET is not set in environment variables. " +
+      "Falling back to a random secret generated at server startup. " +
+      "This means all admin sessions will be invalidated every time the " +
+      "server restarts. Set ADMIN_JWT_SECRET in Render's dashboard to fix this."
+    );
+  }
+  const effectiveJwtSecret = ADMIN_JWT_SECRET || crypto.randomBytes(32).toString("hex");
+
+  // Express middleware: verifies the Authorization: Bearer <token> header
+  // issued by /api/admin/login. Replaces the old pattern of resending the
+  // raw admin password on every request.
+  function verifyAdminToken(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: Missing admin session token" });
+    }
+
+    try {
+      jwt.verify(token, effectiveJwtSecret);
+      next();
+    } catch (err) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or expired admin session token" });
+    }
+  }
+
   app.post("/api/admin/login", (req, res) => {
     try {
       const { password } = req.body;
@@ -1740,7 +1772,8 @@ async function startServer() {
         return res.status(401).json({ success: false, error: "Unauthorized: Invalid password" });
       }
 
-      return res.json({ success: true });
+      const token = jwt.sign({ role: "admin" }, effectiveJwtSecret, { expiresIn: "12h" });
+      return res.json({ success: true, token });
     } catch (err) {
       console.error("Admin login API error:", err);
       res.status(500).json({ error: err instanceof Error ? err.message : "Internal server error" });
@@ -1765,14 +1798,9 @@ async function startServer() {
     }
   });
 
-  app.post("/api/admin/orders", async (req, res) => {
+  app.post("/api/admin/orders", verifyAdminToken, async (req, res) => {
     try {
-      const { password, action, orderId, data } = req.body;
-      const adminPassword = process.env.ADMIN_PASSWORD;
-
-      if (!password || password !== adminPassword) {
-        return res.status(401).json({ error: "Unauthorized: Invalid password" });
-      }
+      const { action, orderId, data } = req.body;
 
       if (action === "fetch") {
         const orders: Record<string, unknown>[] = [];
