@@ -218,20 +218,26 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.setFontSize(8.5);
   doc.text('MENU', 18, 120);
 
-  // Menu Content Area
+  // Menu Content Area with dynamic wrapping
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  const menuString = order.menu || 'Set Box Makanan & Minuman';
+  const splitMenu = doc.splitTextToSize(menuString, 174);
+  const lineCount = splitMenu.length;
+  const menuBoxHeight = Math.max(12, lineCount * 4.5 + 4);
+
   doc.setFillColor(cCreamBg[0], cCreamBg[1], cCreamBg[2]);
-  doc.rect(15, 122, 180, 12, 'F');
+  doc.rect(15, 122, 180, menuBoxHeight, 'F');
   doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
   doc.setLineWidth(0.35);
-  doc.rect(15, 122, 180, 12, 'S');
+  doc.rect(15, 122, 180, menuBoxHeight, 'S');
 
   doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(order.menu || 'Set box Makanan & Minuman', 18, 129.5);
+  // Render multi-line wrapped text
+  doc.text(splitMenu, 18, 126.5);
 
   // --- 4. MEAL ITEMS TABLE ---
-  const tableStartY = 139;
+  const tableStartY = 122 + menuBoxHeight + 5;
   
   // Table Header Row
   doc.setFillColor(cDarkBrown[0], cDarkBrown[1], cDarkBrown[2]);

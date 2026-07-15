@@ -59,6 +59,7 @@ interface OrderState {
   notes: string;
   companyName: string;
   customCompany: string;
+  customMenu: string;
 }
 
 // FOOD MENU CONSTANTS FROM KIMI HTML
@@ -114,7 +115,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     delivery: 'delivery',
     notes: '',
     companyName: '',
-    customCompany: ''
+    customCompany: '',
+    customMenu: ''
   });
 
   const tText = (en: string, bm: string) => (language === 'bm' ? bm : en);
@@ -195,7 +197,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         delivery: initialData.delivery === 'pickup' ? 'pickup' : 'delivery',
         notes: initialData.notes || '',
         companyName: initialData.to || '',
-        customCompany: ''
+        customCompany: '',
+        customMenu: ''
       });
     }
   }, [initialData]);
@@ -332,24 +335,6 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
 
     if (step === 2) {
-      if (orderState.dishes.length < 3) {
-        triggerWarning();
-        toast({
-          title: tText('Dishes Selection', 'Pilihan Lauk Utama'),
-          description: tText('Please select a minimum of 3 main dishes.', 'Sila pilih sekurang-kurangnya 3 lauk utama.'),
-          variant: 'warning'
-        });
-        return;
-      }
-      if (orderState.veggies.length < 1) {
-        triggerWarning();
-        toast({
-          title: tText('Vegetables Selection', 'Pilihan Sayur-sayuran'),
-          description: tText('Please select a minimum of 1 vegetable option.', 'Sila pilih sekurang-kurangnya 1 jenis sayuran.'),
-          variant: 'warning'
-        });
-        return;
-      }
       setCurrentStep(3);
     }
 
@@ -436,7 +421,18 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       // Construct dishes list text for the single menu string field
       const dishListText = orderState.dishes.map(d => d.nameBm).join(', ');
       const vegListText = orderState.veggies.map(v => v.nameBm).join(', ');
-      const combinedMenuStr = `Lauk Utama: ${dishListText} | Sayuran: ${vegListText}`;
+      
+      let combinedMenuStr = '';
+      if (dishListText || vegListText) {
+        combinedMenuStr = `Lauk Utama: ${dishListText || '-'} | Sayuran: ${vegListText || '-'}`;
+        if (orderState.customMenu) {
+          combinedMenuStr += ` | Menu Lain: ${orderState.customMenu}`;
+        }
+      } else if (orderState.customMenu) {
+        combinedMenuStr = `Menu Lain: ${orderState.customMenu}`;
+      } else {
+        combinedMenuStr = 'Set Box Makanan & Minuman';
+      }
 
       const formattedDateStr = orderState.date; // YYYY-MM-DD
       const pricePerPax = getPricePerPax();
@@ -587,7 +583,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       delivery: 'delivery',
       notes: '',
       companyName: '',
-      customCompany: ''
+      customCompany: '',
+      customMenu: ''
     });
     setReferenceNumber('');
     setSubmittedOrder(null);
@@ -604,8 +601,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
   const handleShareReceipt = async () => {
     const textMsg = tText(
-      `Restoran Wawasan Catering Booking Reference: ${referenceNumber}. Estimated Total: RM ${getGrandTotal().toFixed(2)}. Form Link:`,
-      `Rujukan Tempahan Katering Restoran Wawasan: ${referenceNumber}. Anggaran Jumlah: RM ${getGrandTotal().toFixed(2)}. Pautan:`
+      `Restoran Wawasan Catering Booking Reference: ${referenceNumber}. Status: Quotation Pending. Form Link:`,
+      `Rujukan Tempahan Katering Restoran Wawasan: ${referenceNumber}. Status: Menunggu Sebut Harga. Pautan:`
     );
 
     const shareData = {
@@ -933,10 +930,6 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                               {tText(d.descEn, d.descBm)}
                             </span>
                           </div>
-                          
-                          <span className="text-xs font-black text-crisp-carrot shrink-0">
-                            RM {d.price}/pax
-                          </span>
                         </div>
                       );
                     })}
@@ -983,17 +976,35 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                               {tText(v.descEn, v.descBm)}
                             </span>
                           </div>
-                          
-                          <span className="text-xs font-black text-crisp-carrot shrink-0">
-                            RM {v.price}/pax
-                          </span>
                         </div>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* REALTIME BUDGET COMPUTATION PANEL FROM KIMI HTML */}
+                {/* Custom Menu Request */}
+                <div className="space-y-2 pt-2 border-t border-stone/10">
+                  <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                    {tText('Other / Custom Menu Request (Optional)', 'Permintaan Menu Lain / Khas (Pilihan)')}
+                  </Label>
+                  <p className="text-[11px] text-stone font-light leading-tight">
+                    {tText(
+                      'Feel free to specify any custom dishes, drinks, or requests. If you skip this menu step completely, the app will auto-setup to our default "Set Box Makanan & Minuman".',
+                      'Sila nyatakan jika ada lauk, minuman atau permintaan khas. Jika anda melangkau bahagian menu ini, tempahan akan ditetapkan secara automatik kepada "Set Box Makanan & Minuman".'
+                    )}
+                  </p>
+                  <Textarea
+                    placeholder={tText(
+                      'e.g. Nasi Minyak dengan Ayam Masak Merah, Air Sirap Bandung, vegetarian options...',
+                      'cth. Nasi Minyak dengan Ayam Masak Merah, Air Sirap Bandung, menu vegetarian...'
+                    )}
+                    value={orderState.customMenu}
+                    onChange={(e) => setOrderState(prev => ({ ...prev, customMenu: e.target.value }))}
+                    className="w-full min-h-[90px] border-stone/20 rounded-2xl p-3 bg-white text-xs text-charcoal focus:border-crisp-carrot focus:ring-1 focus:ring-crisp-carrot"
+                  />
+                </div>
+
+                {/* REALTIME SELECTION SUMMARY PANEL */}
                 <div className="bg-[#FAF8F5] border border-[#C2932D]/30 p-4.5 rounded-2xl space-y-2.5 shadow-sm">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Quantity:', 'Kuantiti:')}</span>
@@ -1006,19 +1017,11 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     </span>
                   </div>
                   <div className="border-t border-stone/10 pt-2.5 flex justify-between items-center">
-                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
-                      {tText('Est. Price per Pax:', 'Harga Se-pax:')}
-                    </span>
-                    <span className="text-sm font-black text-crisp-carrot">
-                      RM {getPricePerPax()} / pax
-                    </span>
-                  </div>
-                  <div className="border-t border-stone/10 pt-2.5 flex justify-between items-center">
                     <span className="text-sm font-bold text-charcoal uppercase tracking-wider">
-                      {tText('Est. Grand Total:', 'Anggaran Harga:')}
+                      {tText('Pricing Status:', 'Status Harga:')}
                     </span>
-                    <span className="text-lg font-black text-crisp-carrot">
-                      RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                    <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                      {tText('To Be Quoted by Admin', 'Ditentukan oleh Admin')}
                     </span>
                   </div>
                 </div>
@@ -1366,45 +1369,73 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     </div>
                   </div>
 
-                  {/* Selected Menu Dishes Summary */}
-                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
-                      {tText('Selected Dishes Menu', 'Senarai Hidangan')}
-                    </span>
-                    <div className="text-xs text-charcoal space-y-1 font-semibold">
-                      <p className="text-stone text-[11px] uppercase">{tText('Main Lauk:', 'Lauk Utama:')}</p>
-                      <div className="pl-2 flex flex-wrap gap-1">
-                        {orderState.dishes.map(d => (
-                          <span key={d.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
-                            {tText(d.nameEn, d.nameBm)}
-                          </span>
-                        ))}
-                      </div>
+                    {/* Selected Menu Dishes Summary */}
+                    <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
+                      <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                        {tText('Selected Dishes Menu', 'Senarai Hidangan')}
+                      </span>
+                      <div className="text-xs text-charcoal space-y-1 font-semibold">
+                        {orderState.dishes.length > 0 && (
+                          <>
+                            <p className="text-stone text-[11px] uppercase">{tText('Main Lauk:', 'Lauk Utama:')}</p>
+                            <div className="pl-2 flex flex-wrap gap-1">
+                              {orderState.dishes.map(d => (
+                                <span key={d.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                                  {tText(d.nameEn, d.nameBm)}
+                                </span>
+                              ))}
+                            </div>
+                          </>
+                        )}
 
-                      <p className="text-stone text-[11px] uppercase pt-1">{tText('Vegetables:', 'Sayur-sayuran:')}</p>
-                      <div className="pl-2 flex flex-wrap gap-1">
-                        {orderState.veggies.map(v => (
-                          <span key={v.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
-                            {tText(v.nameEn, v.nameBm)}
-                          </span>
-                        ))}
+                        {orderState.veggies.length > 0 && (
+                          <>
+                            <p className="text-stone text-[11px] uppercase pt-1">{tText('Vegetables:', 'Sayur-sayuran:')}</p>
+                            <div className="pl-2 flex flex-wrap gap-1">
+                              {orderState.veggies.map(v => (
+                                <span key={v.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                                  {tText(v.nameEn, v.nameBm)}
+                                </span>
+                              ))}
+                            </div>
+                          </>
+                        )}
+
+                        {orderState.customMenu && (
+                          <>
+                            <p className="text-stone text-[11px] uppercase pt-1">{tText('Custom Menu / Request:', 'Menu Khas / Permintaan:')}</p>
+                            <p className="pl-2 text-[11px] font-normal text-charcoal italic whitespace-pre-wrap bg-white p-2 rounded-lg border border-stone/5 mt-0.5">
+                              "{orderState.customMenu}"
+                            </p>
+                          </>
+                        )}
+
+                        {orderState.dishes.length === 0 && orderState.veggies.length === 0 && !orderState.customMenu && (
+                          <div className="bg-amber-50/50 border border-amber-500/20 p-2.5 rounded-lg text-center mt-2">
+                            <p className="text-xs font-bold text-[#8C6510]">
+                              {tText('Set Box Makanan & Minuman (Default)', 'Set Box Makanan & Minuman (Lalai)')}
+                            </p>
+                            <p className="text-[10px] text-stone font-light mt-0.5 leading-tight">
+                              {tText('You have skipped individual dish selection. Standard boxed meal set will be served.', 'Anda melangkau pilihan lauk. Set hidangan kotak standard akan disediakan.')}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
 
                     <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
                       <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
-                        {tText('Total Estimation:', 'Jumlah Anggaran:')}
+                        {tText('Catering Price:', 'Harga Katering:')}
                       </span>
-                      <span className="text-base font-black text-crisp-carrot">
-                        RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                      <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                        {tText('Quotation Pending', 'Menunggu Sebut Harga')}
                       </span>
                     </div>
                   </div>
 
                   <p className="text-[10px] text-stone leading-tight italic text-center px-4">
                     {tText(
-                      '* Note: Prices shown are estimations. The restaurant will review your booking and contact you within 24 hours to confirm finalized custom pricing.',
-                      '* Nota: Harga yang dipaparkan adalah anggaran sahaja. Pihak restoran akan menyemak butiran dan menghubungi anda dalam masa 24 jam untuk pengesahan harga muktamad.'
+                      '* Note: The restaurant admin will review your booking details and provide a finalized quote via WhatsApp or Email within 24 hours.',
+                      '* Nota: Admin restoran akan menyemak butiran tempahan dan memberikan sebut harga muktamad melalui WhatsApp atau E-mel dalam masa 24 jam.'
                     )}
                   </p>
 
@@ -1493,10 +1524,10 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   
                   <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
                     <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
-                      {tText('Estimated Price:', 'Jumlah Anggaran:')}
+                      {tText('Catering Price:', 'Harga Katering:')}
                     </span>
-                    <span className="text-base font-black text-crisp-carrot">
-                      RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                    <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                      {tText('Quotation Pending', 'Menunggu Sebut Harga')}
                     </span>
                   </div>
                 </div>
