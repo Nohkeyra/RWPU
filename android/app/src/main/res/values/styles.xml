@@ -19,4 +19,19 @@
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:windowBackground">@drawable/splash</item>
     </style>
+
+    <!-- Required by @capgo/capacitor-native-biometric's AuthActivity, which
+         is merged into this app's manifest via Android's manifest merger
+         (see the plugin's own AndroidManifest.xml). Without this theme,
+         launching AuthActivity (triggered by setCredentials/getSecureCredentials
+         with an accessControl value) crashes immediately at runtime, before
+         the fingerprint/Face ID system prompt ever appears. -->
+    <style name="AppTheme.Transparent" parent="Theme.AppCompat.Translucent">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
 </resources>

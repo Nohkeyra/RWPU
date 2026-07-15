@@ -9,9 +9,8 @@ import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
 import { NativeBiometric, AccessControl } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
-import { setSecureItem, removeSecureItem } from '@/lib/preferences';
+import { setSecureItem } from '@/lib/preferences';
 
-const ADMIN_AUTH_STORAGE_KEY = 'wawasan_admin_authenticated';
 // NOTE: the admin password itself is never stored anywhere on the device
 // (not localStorage, not Preferences, not even the biometric Keystore vault).
 // It is sent to the server exactly once, at login, in exchange for a
@@ -25,12 +24,17 @@ export default function AdminPage() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => localStorage.getItem(ADMIN_AUTH_STORAGE_KEY) === 'true'
-  );
   const [token, setToken] = useState(
     () => localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || ''
   );
+  // isAuthenticated is derived directly from whether a token string exists —
+  // NOT from a separate persisted flag. A separate flag (the previous
+  // approach) never gets cleared when the token expires on its own, so the
+  // UI kept showing the admin panel as "logged in" with a stale/expired
+  // token that the server would reject on the first real request. If the
+  // token turns out to be expired, AdminPanel's own 401 handling on
+  // fetchOrders calls onLogout() to correct this after the fact.
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(token));
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -85,7 +89,6 @@ export default function AdminPage() {
           setToken(data.token);
           localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
           setIsAuthenticated(true);
-          setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
         } else {
           setError(tText(
             'Saved biometric credentials were rejected by the server. Please log in with your password again.',
@@ -132,7 +135,6 @@ export default function AdminPage() {
         setToken(data.token);
         localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
         setIsAuthenticated(true);
-        setSecureItem(ADMIN_AUTH_STORAGE_KEY, 'true');
 
         // Offer to enable biometrics after first successful login. The
         // password (still held in this function's local state at this
@@ -302,7 +304,6 @@ export default function AdminPage() {
       adminToken={token}
       onLogout={() => {
         localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-        removeSecureItem(ADMIN_AUTH_STORAGE_KEY);
         setIsAuthenticated(false);
         setToken('');
       }}

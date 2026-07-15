@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Restoran Wawasan</string>
     <string name="title_activity_main">Restoran Wawasan</string>
+    <!-- Required by @capgo/capacitor-native-biometric's AuthActivity manifest entry -->
+    <string name="title_activity_auth_activity">Authenticate</string>
     <string name="package_name">com.wawasanpakusop.app</string>
     <string name="custom_url_scheme">com.wawasanpakusop.app</string>
 </resources>
