@@ -118,7 +118,7 @@ export default function VisitSection() {
             
             <div className="flex gap-3">
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Pak+Usop+Putrajaya"
+                href="https://www.google.com/maps/search/?api=1&query=Restoran+Wawasan+Pak+Usop+Menara+PjH+Putrajaya"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-semibold text-sm hover:shadow-[0_8px_30px_rgba(232,144,37,0.2)] hover:scale-105 transition-all"

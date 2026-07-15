@@ -1,16 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Input } from '@/components/ui/input';
-import { FormError } from '@/components/ui/FormError';
-import { SuccessState } from '@/components/ui/SuccessState';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Loader2, Utensils, User as UserIcon, Building2, Share2, Check, X, MapPin } from 'lucide-react';
+import { 
+  Loader2, 
+  Utensils, 
+  Share2, 
+  Check, 
+  MapPin, 
+  Phone, 
+  Clock, 
+  Truck, 
+  Store, 
+  CheckCircle2, 
+  ArrowRight, 
+  ArrowLeft,
+  Briefcase,
+  Smile,
+  Coffee,
+  Sun
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { generateInvoicePDF } from '@/services/pdfService';
@@ -28,431 +41,171 @@ import { Share } from '@capacitor/share';
 import { Geolocation } from '@capacitor/geolocation';
 import { triggerNotification, NotificationType } from '@/lib/haptics';
 
-interface FormData {
-  to: string;
-  attn: string;
+// TYPES
+interface OrderState {
+  eventType: 'pejabat' | 'lain' | '';
+  mealType: 'sarapan' | 'tengahari' | 'hitea' | '';
+  guests: number;
+  dishes: typeof LAUK_UTAMA[number][];
+  veggies: typeof SAYURAN[number][];
   name: string;
   contact: string;
   email: string;
-  date: Date | undefined;
+  confirmEmail: string;
+  date: string;
   time: string;
   location: string;
-  quantity: number | '';
-  meals: string[];
-  menu: string;
+  delivery: 'delivery' | 'pickup';
   notes: string;
+  companyName: string;
+  customCompany: string;
 }
 
-const MEAL_DROPDOWN_OPTIONS = [
-  { value: 'breakfast', labelEn: 'Breakfast', labelBm: 'Sarapan' },
-  { value: 'lunch', labelEn: 'Lunch', labelBm: 'Makan Tengah Hari' },
-  { value: 'tea_break', labelEn: 'High Tea', labelBm: 'Minum Petang' },
-  { value: 'dinner', labelEn: 'Dinner', labelBm: 'Makan Malam' },
+// FOOD MENU CONSTANTS FROM KIMI HTML
+const LAUK_UTAMA = [
+  { id: 'asam_pedas', nameEn: 'Asam Pedas', nameBm: 'Asam Pedas', descEn: 'Fresh fish cooked in spicy, tangy herbal gravy', descBm: 'Ikan segar dimasak asam pedas berempah', price: 12 },
+  { id: 'ayam_goreng', nameEn: 'Spiced Fried Chicken', nameBm: 'Ayam Goreng Berempah', descEn: 'Crispy fried chicken with aromatic traditional spices', descBm: 'Ayam goreng crispy dengan rempah istimewa', price: 10 },
+  { id: 'daging_masak_merah', nameEn: 'Beef Masak Merah', nameBm: 'Daging Masak Merah', descEn: 'Tender beef cooked in rich sweet and savory tomato sauce', descBm: 'Daging lembu dimasak merah dengan tomato', price: 14 },
+  { id: 'sambal_sotong', nameEn: 'Sambal Squid', nameBm: 'Sambal Sotong', descEn: 'Squid cooked in rich chili sambal paste', descBm: 'Sotong dimasak sambal petai', price: 13 },
+  { id: 'ikan_keli', nameEn: 'Sambal Catfish', nameBm: 'Ikan Keli Sambal', descEn: 'Crispy fried catfish tossed in fiery house sambal', descBm: 'Ikan keli goreng dengan sambal', price: 11 },
+  { id: 'rendang_daging', nameEn: 'Beef Rendang', nameBm: 'Rendang Daging', descEn: 'Slow-cooked traditional caramelized beef curry', descBm: 'Rendang daging lembu tradisional', price: 15 },
+  { id: 'kari_kambing', nameEn: 'Mutton Curry', nameBm: 'Kari Kambing', descEn: 'Rich, thick spiced mutton curry', descBm: 'Kari kambing berempah pekat', price: 16 },
+  { id: 'udang_goreng', nameEn: 'Crispy Fried Prawns', nameBm: 'Udang Goreng Tepung', descEn: 'Crispy golden batter-fried fresh prawns', descBm: 'Udang goreng tepung rangup', price: 14 }
 ];
 
-const ShimmerText = ({ isTyping, text }: { isTyping: boolean; text: string | number | React.ReactNode }) => {
-  return (
-    <span className={cn(
-      "transition-all duration-300",
-      isTyping ? "text-crisp-carrot animate-pulse bg-crisp-carrot/10 px-1.5 py-0.5 rounded shadow-sunshine-glow font-bold animate-shimmer" : ""
-    )}>
-      {text}
-    </span>
-  );
-};
-
-const A4InvoiceSheet = ({
-  data,
-  isTyping,
-  language,
-  t
-}: {
-  data: FormData;
-  isTyping: Record<string, boolean>;
-  language: string;
-  t: (key: string) => string;
-}) => {
-  return (
-    <div className="bg-white border border-slate-200 shadow-xl rounded-lg p-6 sm:p-8 relative min-h-[1000px] flex flex-col justify-between font-sans text-xs text-[#1A1816]">
-      {/* PAGE 1 */}
-      <div className="space-y-6">
-        {/* Draft watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-          <span className="text-6xl font-black border-[12px] border-slate-900 p-6 rounded transform -rotate-12 tracking-widest">
-            {t('draft_preliminary')}
-          </span>
-        </div>
-
-        {/* Header Section */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-xl font-black text-[#A67C1E] tracking-tight">RESTORAN WAWASAN</h2>
-            <p className="text-[10px] text-slate-600 leading-tight">
-              Unit 3, Level B3, Menara PjH<br />
-              Jalan P2a, Presint 2, 62100 Putrajaya<br />
-              Est. 1986
-            </p>
-          </div>
-          <div className="text-right">
-            <h1 className="text-3xl font-black text-[#A67C1E] tracking-wider mb-1">INVOICE</h1>
-            <p className="text-[10px] text-[#1A1816]">
-              {t('date')}: {new Date().toLocaleDateString(language === 'bm' ? 'ms-MY' : 'en-MY')}
-            </p>
-          </div>
-        </div>
-
-        {/* Cream Grid Boxes */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Invoice No */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
-            <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('invoice_no_label')}</span>
-            <span className="text-[10.5px] font-bold text-[#1A1816]">RW — PENDING</span>
-          </div>
-
-          {/* Event Date */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
-            <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('tarikh_acara')}</span>
-            <span className="text-[10.5px] font-bold text-[#1A1816]">
-              <ShimmerText isTyping={isTyping.date} text={data.date && !isNaN(data.date.getTime()) ? format(data.date, 'dd/MM/yyyy') : '—'} />
-            </span>
-          </div>
-        </div>
-
-        {/* Recipient Full Width Box */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
-          <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('kepada')}</span>
-          <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
-            <ShimmerText 
-              isTyping={isTyping.to || isTyping.attn} 
-              text={<>{data.to || '—'} {data.attn ? <span className="text-slate-500 font-medium">(Attn: {data.attn})</span> : ''}</>} 
-            />
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {/* Event Location */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
-            <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('lokasi_acara')}</span>
-            <span className="text-[10.5px] font-bold text-[#1A1816] break-words">
-              <ShimmerText isTyping={isTyping.location} text={data.location || '—'} />
-            </span>
-          </div>
-
-          {/* Meal For */}
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2.5 rounded shadow-sm">
-            <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('jenis_hidangan')}</span>
-            <span className="text-[10.5px] font-bold text-[#1A1816]">
-              <ShimmerText 
-                isTyping={isTyping.meals} 
-                text={data.meals.length > 0 ? data.meals.map((m: string) => t(m)).join(' / ') : '—'} 
-              />
-            </span>
-          </div>
-        </div>
-
-        {/* Quantity Full Width */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-2 rounded shadow-sm">
-          <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-1">{t('bilangan_pax')}</span>
-          <span className="text-[10.5px] font-bold text-[#1A1816]">
-            <ShimmerText isTyping={isTyping.quantity} text={data.quantity ? `${data.quantity} PAX` : '—'} />
-          </span>
-        </div>
-
-        {/* Menu Section */}
-        <div className="space-y-0.5">
-          <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
-            MENU
-          </div>
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-3 rounded-b shadow-sm">
-            <span className="text-[10px] font-bold text-[#1A1816]">
-              <ShimmerText isTyping={isTyping.menu} text={data.menu || 'Set box Makanan & Minuman'} />
-            </span>
-          </div>
-        </div>
-
-        {/* Itemized Table */}
-        <div className="space-y-0.5">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-[#604008] text-white">
-                <th className="p-2 text-left text-[8px] font-black uppercase tracking-wider">{t('meals')}</th>
-                <th className="p-2 text-center text-[8px] font-black uppercase tracking-wider w-28">{t('price_pax')}</th>
-                <th className="p-2 text-right text-[8px] font-black uppercase tracking-wider w-28">{t('amount_rm')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.meals.length === 0 ? (
-                <tr className="bg-[#FAF7F0] border border-[#C2932D]/20">
-                  <td colSpan={3} className="p-4 text-center text-slate-400 italic text-xs">
-                    {t('no_meals')}
-                  </td>
-                </tr>
-              ) : (
-                data.meals.map((mealVal: string) => {
-                  return (
-                    <tr key={mealVal} className="bg-[#FAF7F0] border-b border-l border-r border-[#C2932D]/20">
-                      <td className="p-2 border-r border-[#C2932D]/20 font-bold text-[10px] text-[#1A1816] uppercase">
-                        {t(mealVal)}
-                      </td>
-                      <td className="p-2 border-r border-[#C2932D]/20 text-center text-[10px] text-[#1A1816] font-medium italic">
-                        {t('quote_pending')}
-                      </td>
-                      <td className="p-2 text-right text-[10px] font-bold text-[#1A1816] italic">
-                        {t('pending')}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-              {/* Grand Total Bar */}
-              <tr className="bg-[#604008] text-white">
-                <td colSpan={2} className="p-2 font-black text-[8px] uppercase tracking-wider">
-                  {t('grand_total_preview')}
-                </td>
-                <td className="p-2 text-right font-black text-[9.5px]">
-                  RM —
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Letter representation and disclaimers */}
-        <div className="space-y-3.5">
-          <div className="text-[10px] text-[#1A1816] font-bold italic">
-            RINGGIT MALAYSIA <span className="underline">____________________________________________________________________</span> SAHAJA
-          </div>
-          <div className="flex gap-2.5 items-start">
-            <div className="w-1 bg-sunshine h-8 shrink-0"></div>
-            <div className="text-[8.5px] text-[#1A1816] italic space-y-0.5 leading-snug">
-              <p>* Harga yang diberikan termasuk caj perkhidmatan & set pembungkusan biodegradable.</p>
-              <p>* The price given includes service charge & biodegradable packaging sets.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bank Account Details */}
-        <div className="bg-[#FAF7F0] border border-[#C2932D]/30 p-3 rounded shadow-sm">
-          <div className="text-[8.5px] font-black text-[#A67C1E] uppercase tracking-wider mb-2">
-            MAKLUMAT AKAUN BANK / BANK ACCOUNT DETAILS
-          </div>
-          <table className="w-full text-[9px] text-[#1A1816]">
-            <tbody>
-              <tr>
-                <td className="py-0.5 w-20 text-slate-500">Nama</td>
-                <td className="py-0.5 font-bold">RESTORAN WAWASAN</td>
-              </tr>
-              <tr>
-                <td className="py-0.5 w-20 text-slate-500">Bank</td>
-                <td className="py-0.5 font-bold">BANK MUAMALAT</td>
-              </tr>
-              <tr>
-                <td className="py-0.5 w-20 text-slate-500">No. Akaun</td>
-                <td className="py-0.5 font-bold">16010000-405710</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Page 1 Bottom Footer Line */}
-        <div className="border-t border-deep-forest/10 pt-2 text-center text-[8px] text-slate-500 font-medium">
-          Restoran Wawasan | Unit 3, Level B3, Menara PjH, Putrajaya | Est. 1986
-        </div>
-      </div>
-
-      {/* CUT LINE REPRESENTING PAGE BREAK */}
-      <div className="my-8 border-t-2 border-dashed border-slate-300 relative">
-        <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-100 px-3 py-1 rounded text-[8px] font-black text-slate-400 uppercase tracking-widest">
-          PAGE BREAK / KERATAN DOKUMEN
-        </span>
-      </div>
-
-      {/* PAGE 2 */}
-      <div className="space-y-6">
-        {/* Page 2 Header */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xs font-black text-[#A67C1E] tracking-wider">RESTORAN WAWASAN — INVOICE</h3>
-            <p className="text-[8.5px] text-slate-500">Maklumat Pegawai Bertanggungjawab / Person in Charge Details</p>
-          </div>
-          <div className="text-right text-[8.5px] text-slate-600">
-            Invoice No: RW — PENDING
-          </div>
-        </div>
-
-        {/* Person in Charge Box */}
-        <div className="space-y-0.5">
-          <div className="bg-sunshine text-white text-[8px] font-bold px-3 py-1 uppercase rounded-t tracking-wider">
-            PERSON IN CHARGE DETAILS
-          </div>
-          <div className="bg-[#FAF7F0] border border-[#C2932D]/30 rounded-b shadow-sm overflow-hidden divide-y divide-[#C2932D]/20">
-            <div className="grid grid-cols-2 divide-x divide-[#C2932D]/20">
-              <div className="p-2.5">
-                <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">NAMA / NAME</span>
-                <span className="text-[9.5px] font-bold text-[#1A1816]">
-                  <ShimmerText isTyping={isTyping.name} text={data.name || '—'} />
-                </span>
-              </div>
-              <div className="p-2.5">
-                <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">NO. TELEFON / CONTACT NUMBER</span>
-                <span className="text-[9.5px] font-bold text-[#1A1816]">
-                  <ShimmerText isTyping={isTyping.contact} text={data.contact || '—'} />
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 divide-x divide-[#C2932D]/20">
-              <div className="p-2.5">
-                <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">E-MEL / EMAIL</span>
-                <span className="text-[9.5px] font-bold text-[#1A1816] break-all">
-                  <ShimmerText isTyping={isTyping.email} text={data.email || '—'} />
-                </span>
-              </div>
-              <div className="p-2.5">
-                <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">ATTN</span>
-                <span className="text-[9.5px] font-bold text-[#1A1816]">
-                  <ShimmerText isTyping={isTyping.attn} text={data.attn || '—'} />
-                </span>
-              </div>
-            </div>
-            <div className="p-2.5">
-              <span className="block text-[7.5px] font-black text-[#8C6510] uppercase mb-0.5">NOTA / NOTES</span>
-              <span className="text-[9px] text-[#1A1816] leading-relaxed block whitespace-pre-wrap">
-                <ShimmerText isTyping={isTyping.notes} text={data.notes || '—'} />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Signatures Row */}
-        <div className="grid grid-cols-2 gap-10 pt-8 pb-4">
-          <div className="space-y-12">
-            <div>
-              <span className="block text-[8px] font-black text-[#8C6510] uppercase mb-0.5">DISEDIAKAN OLEH / PREPARED BY</span>
-              <span className="text-[9px] font-medium text-slate-700">Restoran Wawasan</span>
-            </div>
-            <div className="border-b border-[#1A1816] w-full"></div>
-          </div>
-          {/* Empty right column since Received By was removed */}
-          <div></div>
-        </div>
-
-        {/* Page 2 Bottom Footer */}
-        <div className="border-t border-deep-forest/10 pt-3 text-center space-y-0.5">
-          <p className="text-[8px] font-bold text-[#1A1816]">
-            Terima kasih di atas kepercayaan anda | ON BEHALF OF RESTORAN WAWASAN
-          </p>
-          <p className="text-[7.5px] text-slate-400 italic">
-            * This file is computer generated — no company stamp required
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
+const SAYURAN = [
+  { id: 'sayur_campur', nameEn: 'Mixed Vegetables', nameBm: 'Sayur Campur', descEn: 'Stir-fried mixed vegetables with soft tofu', descBm: 'Sayur campur goreng dengan tahu', price: 5 },
+  { id: 'kangkung_belacan', nameEn: 'Kangkung Belacan', nameBm: 'Kangkung Belacan', descEn: 'Stir-fried water spinach with spicy shrimp paste', descBm: 'Kangkung tumis belacan pedas', price: 5 },
+  { id: 'pucuk_paku', nameEn: 'Pucuk Paku Lemak', nameBm: 'Pucuk Paku Masak Lemak', descEn: 'Jungle fern shoots cooked in rich yellow coconut gravy', descBm: 'Pucuk paku masak lemak dengan udang kering', price: 6 }
+];
 
 interface OrderFormProps {
-  initialData?: Partial<FormData>;
+  initialData?: Record<string, unknown> | null;
 }
 
 export default function OrderForm({ initialData }: OrderFormProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'failed'>('idle');
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [confirmEmail, setConfirmEmail] = useState<string>('');
-  const [copied, setCopied] = useState(false);
-  const [isBannerVisible, setIsBannerVisible] = useState(true);
-
-  // window.location.origin resolves to http://localhost inside the Capacitor
-  // WebView on native builds — that's meaningless to anyone the link gets
-  // shared with, since it points at their own device, not our server. Use
-  // the real production URL on native; window.location is still correct
-  // for the web build (Render serves the app from its own real domain there).
-  const getShareableUrl = () => {
-    if (Capacitor.isNativePlatform()) {
-      return 'https://restoran-wawasan-bio.onrender.com/' + window.location.hash;
-    }
-    return window.location.origin + '/' + window.location.hash;
-  };
-
-  const handleShare = async () => {
-    const shareData = {
-      title: 'Restoran Wawasan Booking Form',
-      text: 'Sila isi borang tempahan katering Restoran Wawasan di sini / Please fill in the Restoran Wawasan catering booking form here:',
-      url: getShareableUrl(),
-    };
-
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.warn('Share cancelled or failed:', err);
-        copyToClipboard();
-      }
-    } else {
-      copyToClipboard();
-    }
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(getShareableUrl());
-    setCopied(true);
-    toast({
-      title: t('link_copied'),
-      description: t('link_copied_desc'),
-      variant: 'success',
-      duration: 3000
-    });
-    setTimeout(() => setCopied(false), 2000);
-  };
   
-  const [formData, setFormData] = useState<FormData>({
-    to: '',
-    attn: '',
-    name: '',
-    contact: '',
-    email: '',
-    date: undefined,
-    time: '12:00',
-    location: '',
-    quantity: '',
-    meals: ['breakfast'],
-    menu: 'Set box Makanan & Minuman',
-    notes: '',
-  });
-
-  const [debouncedFormData, setDebouncedFormData] = useState<FormData>({
-    to: '',
-    attn: '',
-    name: '',
-    contact: '',
-    email: '',
-    date: undefined,
-    time: '12:00',
-    location: '',
-    quantity: '',
-    meals: ['breakfast'],
-    menu: 'Set box Makanan & Minuman',
-    notes: '',
-  });
-
-  const [isTypingField, setIsTypingField] = useState<Record<string, boolean>>({});
-  const [showMobileDraft, setShowMobileDraft] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [referenceNumber, setReferenceNumber] = useState('');
+  
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'failed'>('idle');
+
+  // Multi-step State
+  const [orderState, setOrderState] = useState<OrderState>({
+    eventType: '',
+    mealType: '',
+    guests: 50,
+    dishes: [],
+    veggies: [],
+    name: '',
+    contact: '',
+    email: '',
+    confirmEmail: '',
+    date: '',
+    time: '12:00',
+    location: '',
+    delivery: 'delivery',
+    notes: '',
+    companyName: '',
+    customCompany: ''
+  });
 
   const tText = (en: string, bm: string) => (language === 'bm' ? bm : en);
 
+  // Sync Logged-In User Profile details
+  useEffect(() => {
+    setIsProfileLoading(true);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user && !initialData) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const profile = userSnap.data();
+            setOrderState(prev => ({
+              ...prev,
+              companyName: profile.to || prev.companyName,
+              name: profile.name || prev.name,
+              contact: profile.contact || prev.contact,
+              email: profile.email || prev.email,
+              confirmEmail: profile.email || prev.confirmEmail,
+            }));
+          } else {
+            setOrderState(prev => ({
+              ...prev,
+              name: user.displayName || prev.name,
+              email: user.email || prev.email,
+              confirmEmail: user.email || prev.confirmEmail,
+              contact: user.phoneNumber || prev.contact,
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching user profile for wizard form:", err);
+        } finally {
+          setIsProfileLoading(false);
+        }
+      } else {
+        setIsProfileLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [initialData]);
+
+  // Load Reorder state if initialData is provided
+  useEffect(() => {
+    if (initialData) {
+      let initialDateStr = '';
+      if (initialData.date) {
+        try {
+          const d = new Date(initialData.date);
+          if (!isNaN(d.getTime())) {
+            initialDateStr = format(d, 'yyyy-MM-dd');
+          }
+        } catch (err) {
+          console.error('Error parsing prefill date:', err);
+        }
+      }
+
+      // Restore chosen dishes from previous order text or menu field
+      const previousMenuText = (initialData.menu || '').toLowerCase();
+      const matchedDishes = LAUK_UTAMA.filter(d => previousMenuText.includes(d.nameBm.toLowerCase()) || previousMenuText.includes(d.nameEn.toLowerCase()));
+      const matchedVeggies = SAYURAN.filter(v => previousMenuText.includes(v.nameBm.toLowerCase()) || previousMenuText.includes(v.nameEn.toLowerCase()));
+
+      setOrderState({
+        eventType: initialData.to ? 'pejabat' : 'lain',
+        mealType: initialData.meals?.[0] === 'breakfast' ? 'sarapan' : initialData.meals?.[0] === 'lunch' ? 'tengahari' : 'hitea',
+        guests: Number(initialData.quantity) || 50,
+        dishes: matchedDishes,
+        veggies: matchedVeggies,
+        name: initialData.name || '',
+        contact: initialData.contact || '',
+        email: initialData.email || '',
+        confirmEmail: initialData.email || '',
+        date: initialDateStr,
+        time: initialData.time || '12:00',
+        location: initialData.location || '',
+        delivery: initialData.delivery === 'pickup' ? 'pickup' : 'delivery',
+        notes: initialData.notes || '',
+        companyName: initialData.to || '',
+        customCompany: ''
+      });
+    }
+  }, [initialData]);
+
+  // Auto Geolocate Reverse Address lookup
   const handleDetectLocation = async () => {
     try {
       setIsDetectingLocation(true);
-      
-      // Request permission if on native platform
+      triggerNotification(NotificationType.Success);
+
       if (Capacitor.isNativePlatform()) {
         const permResult = await Geolocation.checkPermissions();
         if (permResult.location !== 'granted') {
@@ -469,8 +222,6 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       });
 
       const { latitude, longitude } = coordinates.coords;
-
-      // Reverse geocode via OpenStreetMap Nominatim
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
       );
@@ -482,7 +233,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       const data = await response.json();
       const displayName = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
       
-      handleInputChange('location', displayName);
+      setOrderState(prev => ({ ...prev, location: displayName }));
       toast({
         title: tText('Location Detected', 'Lokasi Diperoleh'),
         description: tText('Successfully auto-filled your location.', 'Berjaya mengisi lokasi anda secara automatik.'),
@@ -503,328 +254,253 @@ export default function OrderForm({ initialData }: OrderFormProps) {
     }
   };
 
-  useEffect(() => {
-    setIsProfileLoading(true);
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user && !initialData) {
-        // Automatically populate if no initial data is given
-        try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const profile = userSnap.data();
-            setFormData(prev => ({
-              ...prev,
-              to: profile.to || prev.to,
-              attn: profile.attn || prev.attn,
-              name: profile.name || prev.name,
-              contact: profile.contact || prev.contact,
-              email: profile.email || prev.email,
-            }));
-            if (profile.email) setConfirmEmail(profile.email);
-            if (profile.to) setSelectedCompany(profile.to);
-          } else {
-             // Use auth profile info
-            setFormData(prev => ({
-              ...prev,
-              name: user.displayName || prev.name,
-              email: user.email || prev.email,
-              contact: user.phoneNumber || prev.contact,
-            }));
-            if (user.email) setConfirmEmail(user.email);
-          }
-        } catch(err) {
-          console.error("Error fetching user profile for order form:", err);
-        } finally {
-          setIsProfileLoading(false);
-        }
-      } else {
-        setIsProfileLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [initialData]);
-
-  // Map initial data (from saved profile or past order reorder)
-  useEffect(() => {
-    if (initialData) {
-      // Safely parse initial date which might be a Firestore Timestamp or ISO string
-      let parsedInitialDate: Date | undefined = undefined;
-      if (initialData.date) {
-        const rawDate = initialData.date as unknown;
-        if (rawDate instanceof Date) {
-          parsedInitialDate = rawDate;
-        } else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate && typeof (rawDate as { toDate: () => unknown }).toDate === 'function') {
-          const possibleDate = (rawDate as { toDate: () => unknown }).toDate();
-          if (possibleDate instanceof Date) {
-            parsedInitialDate = possibleDate;
-          }
-        } else if (rawDate && typeof rawDate === 'object' && 'seconds' in rawDate && typeof (rawDate as { seconds: unknown }).seconds === 'number') {
-          parsedInitialDate = new Date((rawDate as { seconds: number }).seconds * 1000);
-        } else {
-          const d = new Date(rawDate as string | number);
-          if (!isNaN(d.getTime())) {
-            parsedInitialDate = d;
-          }
-        }
-      }
-
-      const parsedData = {
-        to: initialData.to || '',
-        attn: initialData.attn || '',
-        name: initialData.name || '',
-        contact: initialData.contact || '',
-        email: initialData.email || '',
-        date: parsedInitialDate,
-        time: initialData.time || '12:00',
-        location: initialData.location || '',
-        quantity: initialData.quantity !== undefined ? Number(initialData.quantity) : '',
-        meals: Array.isArray(initialData.meals) ? initialData.meals : ['breakfast'],
-        menu: initialData.menu || 'Set box Makanan & Minuman',
-        notes: initialData.notes || '',
-      };
-      setFormData(parsedData);
-      setDebouncedFormData(parsedData);
-      if (initialData.to) {
-        setSelectedCompany(initialData.to);
-      }
-      if (initialData.email) {
-        setConfirmEmail(initialData.email);
-      }
-    }
-  }, [initialData]);
-
-  // Debounce form data updates to the A4 preview (300ms)
-  useEffect(() => {
-    const typingStates: Record<string, boolean> = {};
-    let hasDiff = false;
-    
-    (Object.keys(formData) as Array<keyof FormData>).forEach((key) => {
-      const val1 = formData[key];
-      const val2 = debouncedFormData[key];
-      if (JSON.stringify(val1) !== JSON.stringify(val2)) {
-        typingStates[key] = true;
-        hasDiff = true;
-      }
-    });
-    
-    if (hasDiff) {
-      setIsTypingField(typingStates);
-      
-      const timer = setTimeout(() => {
-        setDebouncedFormData(formData);
-        setIsTypingField({});
-      }, 300);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [formData, debouncedFormData]);
-
-  const handleInputChange = (field: keyof FormData, value: FormData[keyof FormData]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // REALTIME CALCULATIONS FOR STEP 2 BUDGET PREVIEW
+  const getPricePerPax = () => {
+    const dishSum = orderState.dishes.reduce((acc, curr) => acc + curr.price, 0);
+    const vegSum = orderState.veggies.reduce((acc, curr) => acc + curr.price, 0);
+    return dishSum + vegSum;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError(null);
+  const getGrandTotal = () => {
+    return getPricePerPax() * orderState.guests;
+  };
 
-    const triggerWarning = () => {
-      triggerNotification(NotificationType.Warning);
-    };
+  // HANDLERS FOR FIELD UPDATES
+  const handleToggleDish = (dish: typeof LAUK_UTAMA[number]) => {
+    setOrderState(prev => {
+      const exists = prev.dishes.some(d => d.id === dish.id);
+      if (exists) {
+        return { ...prev, dishes: prev.dishes.filter(d => d.id !== dish.id) };
+      } else {
+        return { ...prev, dishes: [...prev.dishes, dish] };
+      }
+    });
+  };
 
-    // Deep validation of required fields to give a premium, animated toast warning feedback
-    if (!formData.to) {
-      triggerWarning();
-      const errMsg = t('select_company');
-      setSubmitError(errMsg);
-      toast({
-        title: t('missing_details'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
+  const handleToggleVeggie = (veg: typeof SAYURAN[number]) => {
+    setOrderState(prev => {
+      const exists = prev.veggies.some(v => v.id === veg.id);
+      if (exists) {
+        return { ...prev, veggies: prev.veggies.filter(v => v.id !== veg.id) };
+      } else {
+        return { ...prev, veggies: [...prev.veggies, veg] };
+      }
+    });
+  };
+
+  const adjustGuests = (delta: number) => {
+    setOrderState(prev => {
+      let g = prev.guests + delta;
+      if (g < 30) g = 30; // Min 30 pax as requested
+      if (g > 5000) g = 5000; // Allow high max cap
+      return { ...prev, guests: g };
+    });
+  };
+
+  const handleStepNext = (step: number) => {
+    const triggerWarning = () => triggerNotification(NotificationType.Warning);
+
+    if (step === 1) {
+      if (!orderState.eventType) {
+        triggerWarning();
+        toast({
+          title: tText('Event Type Required', 'Pilih Jenis Majlis'),
+          description: tText('Please select whether this is a corporate or other event.', 'Sila pilih sama ada ini jamuan pejabat atau majlis lain.'),
+          variant: 'warning'
+        });
+        return;
+      }
+      if (!orderState.mealType) {
+        triggerWarning();
+        toast({
+          title: tText('Meal Type Required', 'Pilih Jenis Hidangan'),
+          description: tText('Please select the serving time/meal block.', 'Sila pilih hidangan yang diperlukan.'),
+          variant: 'warning'
+        });
+        return;
+      }
+      if (!orderState.guests || orderState.guests < 30) {
+        triggerWarning();
+        toast({
+          title: tText('Minimum Quantity Required', 'Kuantiti Minimum Diperlukan'),
+          description: tText('Minimum catering order is 30 pax.', 'Minimum tempahan katering adalah 30 orang.'),
+          variant: 'warning'
+        });
+        return;
+      }
+      setCurrentStep(2);
     }
 
-    if (!formData.menu) {
-      triggerWarning();
-      const errMsg = t('enter_preferred_menu');
-      setSubmitError(errMsg);
-      toast({
-        title: t('preferred_menu'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
+    if (step === 2) {
+      if (orderState.dishes.length < 3) {
+        triggerWarning();
+        toast({
+          title: tText('Dishes Selection', 'Pilihan Lauk Utama'),
+          description: tText('Please select a minimum of 3 main dishes.', 'Sila pilih sekurang-kurangnya 3 lauk utama.'),
+          variant: 'warning'
+        });
+        return;
+      }
+      if (orderState.veggies.length < 1) {
+        triggerWarning();
+        toast({
+          title: tText('Vegetables Selection', 'Pilihan Sayur-sayuran'),
+          description: tText('Please select a minimum of 1 vegetable option.', 'Sila pilih sekurang-kurangnya 1 jenis sayuran.'),
+          variant: 'warning'
+        });
+        return;
+      }
+      setCurrentStep(3);
     }
 
-    if (formData.quantity === '' || formData.quantity <= 0) {
-      triggerWarning();
-      const errMsg = t('invalid_quantity');
-      setSubmitError(errMsg);
-      toast({
-        title: t('invalid_quantity'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+    if (step === 3) {
+      // Validate customer & billing info
+      if (orderState.eventType === 'pejabat') {
+        if (!orderState.companyName) {
+          triggerWarning();
+          toast({
+            title: tText('Company Billing Info', 'Nama Syarikat/Jabatan'),
+            description: tText('Please select or specify your department billing address.', 'Sila pilih atau nyatakan jabatan untuk rujukan bil.'),
+            variant: 'warning'
+          });
+          return;
+        }
+        if (orderState.companyName === 'other' && !orderState.customCompany) {
+          triggerWarning();
+          toast({
+            title: tText('Company Name Needed', 'Nama Jabatan'),
+            description: tText('Please write your department or company name.', 'Sila masukkan nama syarikat/jabatan secara manual.'),
+            variant: 'warning'
+          });
+          return;
+        }
+      }
 
-    if (!formData.date) {
-      triggerWarning();
-      const errMsg = t('select_event_date');
-      setSubmitError(errMsg);
-      toast({
-        title: t('select_event_date'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.name.trim()) {
+        triggerWarning();
+        toast({ title: tText('Name Needed', 'Nama Diperlukan'), description: tText('Please enter your full name.', 'Sila masukkan nama penuh anda.'), variant: 'warning' });
+        return;
+      }
 
-    if (formData.meals.length === 0) {
-      triggerWarning();
-      const errMsg = t('meal_for');
-      setSubmitError(errMsg);
-      toast({
-        title: t('meal_for'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.contact.trim()) {
+        triggerWarning();
+        toast({ title: tText('Contact Needed', 'No. Telefon Diperlukan'), description: tText('Please enter a valid phone number.', 'Sila masukkan nombor telefon yang sah.'), variant: 'warning' });
+        return;
+      }
 
-    if (!formData.location || formData.location.trim() === '') {
-      triggerWarning();
-      const errMsg = t('venue_address');
-      setSubmitError(errMsg);
-      toast({
-        title: t('missing_location'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.email.trim()) {
+        triggerWarning();
+        toast({ title: tText('Email Needed', 'Emel Diperlukan'), description: tText('Please enter your email address for invoices.', 'Sila masukkan alamat emel anda untuk penerimaan invois.'), variant: 'warning' });
+        return;
+      }
 
-    if (!formData.name || formData.name.trim() === '') {
-      triggerWarning();
-      const errMsg = t('pic_name_required');
-      setSubmitError(errMsg);
-      toast({
-        title: t('pic_name_required'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (orderState.email.trim().toLowerCase() !== orderState.confirmEmail.trim().toLowerCase()) {
+        triggerWarning();
+        toast({ title: tText('Email Mismatch', 'Emel Tidak Sepadan'), description: tText('The confirm email field does not match.', 'Alamat emel pengesahan tidak sepadan.'), variant: 'warning' });
+        return;
+      }
 
-    if (!formData.contact || formData.contact.trim() === '') {
-      triggerWarning();
-      const errMsg = t('contact_required');
-      setSubmitError(errMsg);
-      toast({
-        title: t('contact_required'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.date) {
+        triggerWarning();
+        toast({ title: tText('Date Required', 'Tarikh Diperlukan'), description: tText('Please choose your event date.', 'Sila pilih tarikh majlis anda.'), variant: 'warning' });
+        return;
+      }
 
-    if (!formData.email || formData.email.trim() === '') {
-      triggerWarning();
-      const errMsg = t('email_required');
-      setSubmitError(errMsg);
-      toast({
-        title: t('email_required'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.time) {
+        triggerWarning();
+        toast({ title: tText('Time Required', 'Masa Diperlukan'), description: tText('Please select a serving time.', 'Sila tetapkan masa majlis anda.'), variant: 'warning' });
+        return;
+      }
 
-    if (formData.email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()) {
-      triggerWarning();
-      const errMsg = t('email_mismatch');
-      setSubmitError(errMsg);
-      toast({
-        title: t('email_mismatch_title'),
-        description: errMsg,
-        variant: 'warning'
-      });
-      return;
-    }
+      if (!orderState.location.trim()) {
+        triggerWarning();
+        toast({ title: tText('Location Required', 'Lokasi Diperlukan'), description: tText('Please enter your event location or address.', 'Sila isi alamat atau lokasi majlis.'), variant: 'warning' });
+        return;
+      }
 
+      setCurrentStep(4);
+    }
+  };
+
+  // FINAL ORDER SUBMISSION PIPELINE
+  const handleOrderSubmission = async () => {
+    setIsSubmitting(false);
     setIsSubmitting(true);
 
     try {
-      const formattedDateStr = format(formData.date, 'yyyy-MM-dd');
-      
-      // Map initial prices of all selected meals to 0
-      const initialPrices: Record<string, number> = {};
-      formData.meals.forEach(meal => {
-        initialPrices[meal] = 0;
-      });
+      const activeMeal = orderState.mealType === 'sarapan' ? 'breakfast' : orderState.mealType === 'tengahari' ? 'lunch' : 'tea_break';
+      const billingCompany = orderState.eventType === 'pejabat' 
+        ? (orderState.companyName === 'other' ? orderState.customCompany : orderState.companyName)
+        : '';
 
-      const orderData = {
-        to: formData.to,
-        attn: formData.attn,
-        name: formData.name,
-        contact: formData.contact,
-        email: formData.email,
-        date: formattedDateStr,
-        time: formData.time,
-        location: formData.location,
-        quantity: Number(formData.quantity),
-        meals: formData.meals,
-        menu: formData.menu,
-        notes: formData.notes,
-        dateTime: new Date(`${formattedDateStr}T${formData.time || '12:00'}`).toISOString(),
-        lang: language,
-        status: 'menunggu', // "menunggu" is pending status as requested
-        approvedAt: new Date().toISOString(),
-        prices: initialPrices,
-        totalAmount: 0,
-        userId: currentUser?.uid || null,
+      // Construct dishes list text for the single menu string field
+      const dishListText = orderState.dishes.map(d => d.nameBm).join(', ');
+      const vegListText = orderState.veggies.map(v => v.nameBm).join(', ');
+      const combinedMenuStr = `Lauk Utama: ${dishListText} | Sayuran: ${vegListText}`;
+
+      const formattedDateStr = orderState.date; // YYYY-MM-DD
+      const pricePerPax = getPricePerPax();
+
+      const pricesRecord: Record<string, number> = {
+        [activeMeal]: pricePerPax
       };
 
-      let docRefId = '';
-      let invoiceNo = '';
+      const orderData = {
+        to: billingCompany || 'Majlis Persendirian',
+        attn: orderState.name,
+        name: orderState.name,
+        contact: orderState.contact,
+        email: orderState.email,
+        date: formattedDateStr,
+        time: orderState.time,
+        location: orderState.location,
+        quantity: orderState.guests,
+        meals: [activeMeal],
+        menu: combinedMenuStr,
+        notes: orderState.notes,
+        dateTime: new Date(`${formattedDateStr}T${orderState.time || '12:00'}`).toISOString(),
+        lang: language,
+        status: 'menunggu', // Pending status inside database
+        approvedAt: new Date().toISOString(),
+        prices: pricesRecord,
+        totalAmount: getGrandTotal(),
+        userId: currentUser?.uid || null,
+        delivery: orderState.delivery
+      };
+
+      // Submit to Backend Server API
       const response = await fetch(getApiUrl('/api/orders'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
       });
+
       if (!response.ok) {
-        throw new Error(`Server submission failed with status code ${response.status}: ${response.statusText || 'No Status Text'}`);
+        throw new Error(`Submission failed with status: ${response.status}`);
       }
+
       const resData = await response.json();
-      docRefId = resData.id;
-      invoiceNo = resData.invoiceNo;
-      
-      console.log('Order submitted with ID:', docRefId, 'Invoice Number:', invoiceNo);
-      
-      // Auto-respond with Preliminary Invoice
+      const generatedOrderId = resData.id;
+      const finalInvoiceNo = resData.invoiceNo;
+
+      setReferenceNumber(finalInvoiceNo);
+
+      // Generate Invoice PDF & Auto Mail
       try {
         setEmailStatus('sending');
-        
-        // Construct the full order object expected by generateInvoicePDF
         const pdfData = {
           ...orderData,
-          id: docRefId,
-          invoiceNo,
-          dateTime: orderData.dateTime,
+          id: generatedOrderId,
+          invoiceNo: finalInvoiceNo,
         };
-        
-        // Generate PDF using existing logic
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pdfDoc = generateInvoicePDF(pdfData as any, false, language);
-        
-        const fileName = `Invois_Wawasan_${docRefId}.pdf`;
-        const pdfBase64 = pdfDoc.output('datauristring').split(',')[1];
-        
-        // Download/save PDF on the client-side
+        const fileName = `Invois_Wawasan_${finalInvoiceNo}.pdf`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pdfBase64 = (pdfDoc as any).output('datauristring').split(',')[1];
+
+        // Trigger native download / Share sheets
         if (Capacitor.isNativePlatform()) {
           try {
             const savedFile = await Filesystem.writeFile({
@@ -837,93 +513,57 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               url: savedFile.uri,
             });
           } catch (shareErr) {
-            console.error('Error sharing PDF on mobile:', shareErr);
+            console.error('Error sharing PDF:', shareErr);
           }
         } else {
           pdfDoc.save(fileName);
         }
-        
-        // Send it via our Express backend
-        const response = await fetch(getApiUrl('/api/send-invoice'), {
+
+        // Email it using Brevo / Nodemailer on backend
+        const emailResponse = await fetch(getApiUrl('/api/send-invoice'), {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: orderData.email,
             name: orderData.name,
-            invoiceNo: invoiceNo,
+            invoiceNo: finalInvoiceNo,
             pdfBase64: pdfBase64,
             isFinal: false,
             lang: language,
             orderDetails: orderData
           })
         });
-        
-        if (!response.ok) {
-          console.warn('Failed to send auto-response email. Ensure SMTP is configured in the backend (.env).');
-          setEmailStatus('failed');
-          toast({
-            title: t('error'),
-            description: t('email_failed').replace('{email}', orderData.email),
-            variant: 'warning',
-            duration: 6000
-          });
-        } else {
-          console.log('Auto-response email sent to customer!');
+
+        if (emailResponse.ok) {
           setEmailStatus('success');
           toast({
             title: t('invoice_emailed'),
             description: t('email_sent_to').replace('{email}', orderData.email),
-            variant: 'success',
-            duration: 5000
+            variant: 'success'
           });
+        } else {
+          setEmailStatus('failed');
+          console.warn('Backend failed to send email relay.');
         }
-      } catch (emailError) {
-        console.error('Error sending auto-response email:', emailError);
+      } catch (pdfErr) {
+        console.error('Error generating/sending preliminary PDF invoice:', pdfErr);
         setEmailStatus('failed');
-        toast({
-          title: t('error'),
-          description: t('email_failed').replace('{email}', formData.email),
-          variant: 'error'
-        });
       }
-      
-      setIsSuccess(true);
+
       triggerNotification(NotificationType.Success);
       toast({
-        title: t('order_submitted_title'),
-        description: t('order_submitted_desc'),
-        variant: 'success',
-        duration: 5000
+        title: tText('Booking Sent', 'Tempahan Dihantar'),
+        description: tText('Your catering inquiry has been processed.', 'Permohonan tempahan katering anda telah berjaya dihantar.'),
+        variant: 'success'
       });
-    } catch (error) {
-      console.error('Error submitting order:', error);
-      let errorDetail = '';
-      if (error instanceof Error) {
-        errorDetail = error.message;
-        // If the error message is a stringified JSON Firestore error, extract the nested error message
-        try {
-          if (errorDetail.startsWith('{') && errorDetail.endsWith('}')) {
-            const parsed = JSON.parse(errorDetail);
-            if (parsed && parsed.error) {
-              errorDetail = parsed.error;
-            }
-          }
-        } catch {
-          // Fallback to raw error message
-        }
-      } else {
-        errorDetail = String(error);
-      }
-      
-      const errMsg = `${t('order_error')}: ${errorDetail}`;
-      setSubmitError(errMsg);
+      setCurrentStep(5);
+    } catch (err) {
+      console.error('Catering submission error:', err);
       triggerNotification(NotificationType.Error);
       toast({
         title: t('error'),
-        description: errMsg,
-        variant: 'error'
+        description: err instanceof Error ? err.message : String(err),
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
@@ -931,614 +571,1040 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   };
 
   const handleResetForm = () => {
-    setIsSuccess(false);
-    setEmailStatus('idle');
-    setConfirmEmail('');
-    setSelectedCompany('');
-    setFormData({
-      to: '',
-      attn: '',
+    setOrderState({
+      eventType: '',
+      mealType: '',
+      guests: 50,
+      dishes: [],
+      veggies: [],
       name: '',
       contact: '',
       email: '',
-      date: undefined,
+      confirmEmail: '',
+      date: '',
       time: '12:00',
       location: '',
-      quantity: '',
-      meals: ['breakfast'],
-      menu: 'Set box Makanan & Minuman',
+      delivery: 'delivery',
       notes: '',
+      companyName: '',
+      customCompany: ''
     });
+    setReferenceNumber('');
+    setSubmittedOrder(null);
+    setEmailStatus('idle');
+    setCurrentStep(1);
   };
 
-  if (isSuccess) {
-    return (
-      <div className="py-12 max-w-lg mx-auto">
-        <SuccessState 
-          title={t('success') + '!'} 
-          subtitle={t('order_success')}
-          showConfetti={true}
-          className="mb-6"
-        />
-        
-        <div className="p-4 bg-white rounded-xl border border-slate-200/60 text-left space-y-3 shadow-sm">
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-            {t('invoice_status')}
-          </p>
-          <div className="text-sm text-slate-800 space-y-2">
-            <p className="flex items-start gap-2">
-              <span className="text-emerald-600 font-bold">✓</span>
-              <span>
-                {t('pdf_generated')}
-              </span>
-            </p>
-            
-            {emailStatus === 'sending' && (
-              <p className="flex items-start gap-2 text-slate-500 animate-pulse">
-                <span className="text-amber-500 font-bold">●</span>
-                <span>
-                  {t('sending_email')}
-                </span>
-              </p>
-            )}
+  const getShareableUrl = () => {
+    if (Capacitor.isNativePlatform()) {
+      return 'https://restoran-wawasan-bio.onrender.com/' + window.location.hash;
+    }
+    return window.location.origin + '/' + window.location.hash;
+  };
 
-            {emailStatus === 'success' && (
-              <p className="flex items-start gap-2 text-slate-800">
-                <span className="text-emerald-600 font-bold">✓</span>
-                <span>
-                  {t('email_sent_to').replace('{email}', formData.email)}
-                </span>
-              </p>
-            )}
-
-            {emailStatus === 'failed' && (
-              <FormError message={t('email_failed').replace('{email}', formData.email)} />
-            )}
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-          <button
-            onClick={handleResetForm}
-            className="px-6 py-2.5 bg-warm-gold hover:bg-warm-gold/90 text-white rounded-xl font-semibold text-sm transition-colors cursor-pointer"
-          >
-            {t('create_another')}
-          </button>
-
-          <button
-            onClick={handleShare}
-            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-charcoal rounded-xl font-semibold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2 border border-slate-200"
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 text-green-600 animate-bounce" />
-                <span>{t('link_copied')}</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4 text-[#A67C1E]" />
-                <span>{t('share_link')}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+  const handleShareReceipt = async () => {
+    const textMsg = tText(
+      `Restoran Wawasan Catering Booking Reference: ${referenceNumber}. Estimated Total: RM ${getGrandTotal().toFixed(2)}. Form Link:`,
+      `Rujukan Tempahan Katering Restoran Wawasan: ${referenceNumber}. Anggaran Jumlah: RM ${getGrandTotal().toFixed(2)}. Pautan:`
     );
-  }
+
+    const shareData = {
+      title: 'Restoran Wawasan Catering Receipt',
+      text: `${textMsg} ${getShareableUrl()}`,
+      url: getShareableUrl()
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        navigator.clipboard.writeText(getShareableUrl());
+        toast({ title: t('link_copied'), variant: 'success' });
+      }
+    } else {
+      navigator.clipboard.writeText(getShareableUrl());
+      toast({ title: t('link_copied'), variant: 'success' });
+    }
+  };
 
   return (
     <>
-      <AuthModal 
-        isOpen={authModalOpen} 
-        onClose={() => setAuthModalOpen(false)}
-      />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Form Fields - Left Column */}
-          <div className="lg:col-span-7 bg-cream-dark/60 backdrop-blur-md p-6 sm:p-8 rounded-[2.5rem] border border-white/[0.06] shadow-xl space-y-6">
-            {!currentUser && isBannerVisible && (
-              <div className="relative bg-white/5 border border-crisp-carrot/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm mb-6 animate-fade-in">
-                <UserIcon className="w-5 h-5 text-crisp-carrot shrink-0 mt-0.5" />
-                <div className="flex-1 text-sm text-deep-forest font-sans pr-6">
-                  Returning Customer?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setAuthModalOpen(true)}
-                    className="text-sunshine hover:text-honey hover:underline transition-colors cursor-pointer font-semibold"
-                  >
-                    Click here to login
-                  </button>{' '}
-                  to auto-fill your company billing details.
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsBannerVisible(false)}
-                  className="absolute top-3 right-3 text-stone hover:text-deep-forest transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              
-              {/* Customer Information Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                <Building2 className="w-5 h-5 text-crisp-carrot" />
-                <h3 className="text-lg font-semibold text-deep-forest font-display">
-                  {t('billing_info')}
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company-select" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('to')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <>
-                      <Select
-                        value={selectedCompany}
-                        onValueChange={(val) => {
-                          setSelectedCompany(val);
-                          if (val === 'other') {
-                            handleInputChange('to', '');
-                          } else {
-                            handleInputChange('to', val);
-                          }
-                        }}
-                        required
-                      >
-                        <SelectTrigger id="company-select" className="w-full h-11 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-base text-deep-forest focus:border-sunshine/50 focus:outline-none focus:ring-2 focus:ring-sunshine/20 shadow-sm font-sans transition-all duration-300">
-                          <SelectValue placeholder={`-- ${t('select_company')} --`} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-charcoal border-white/10 text-deep-forest">
-                          {SAVED_COMPANIES.map((company, idx) => (
-                            <SelectItem key={idx} value={company} className="text-deep-forest focus:bg-white/10 focus:text-deep-forest">
-                              {company}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="other" className="text-crisp-carrot font-semibold focus:bg-white/10 focus:text-crisp-carrot">
-                            {t('other_company')}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
-                      {selectedCompany === 'other' && (
-                        <Input
-                          id="to"
-                          value={formData.to}
-                          onChange={(e) => handleInputChange('to', e.target.value)}
-                          placeholder={t('specify_company')}
-                          required
-                          className="mt-2 animate-fade-in font-sans"
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="attn" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('attn')} <span className="text-stone/40">({t('optional')})</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <Input
-                      id="attn"
-                      value={formData.attn}
-                      onChange={(e) => handleInputChange('attn', e.target.value)}
-                      placeholder={t('dept_attn')}
-                      className="font-sans"
-                    />
-                  )}
-                </div>
-              </div>
+      {/* Main Container mirroring Kimi mockup mobile shell but fully responsive on large screens */}
+      <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl border border-stone/10 shadow-2xl overflow-hidden font-sans">
+        
+        {/* App Header Bar mimicking Kimi style */}
+        <div className="bg-charcoal text-white p-5 rounded-b-[24px] shadow-lg border-b border-white/5">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="text-[11px] text-sunshine font-bold uppercase tracking-widest block mb-0.5">
+                {tText('CATERING BOOKING', 'TEMPAHAN KATERING')}
+              </span>
+              <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 font-display">
+                Restoran Wawasan
+              </h1>
+              <p className="text-[10px] text-stone font-light tracking-wide mt-0.5">
+                Unit 3, Level B3, Menara PjH, Putrajaya
+              </p>
             </div>
+            <div className="w-10 h-10 rounded-full bg-crisp-carrot flex items-center justify-center font-bold text-sm shadow-md text-white border border-white/10 select-none">
+              RW
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mt-4 items-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/40 text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {tText('Accepting Bookings', 'Menerima Tempahan')}
+            </span>
+            <a 
+              href="tel:+60178582642" 
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-stone hover:text-white text-[11px] font-semibold transition-colors"
+            >
+              <Phone className="w-3 h-3 text-crisp-carrot" />
+              +60 17-858 2642
+            </a>
+          </div>
+        </div>
 
-            {/* Event Details Section */}
-            <div className="space-y-4 pt-4 border-t border-white/5">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                <Utensils className="w-5 h-5 text-crisp-carrot" />
-                <h3 className="text-lg font-semibold text-deep-forest font-display">
-                  {t('event_details')}
-                </h3>
-              </div>
+        {/* Progress Bar Indicator */}
+        {currentStep <= 4 && (
+          <div className="px-6 pt-5 pb-2">
+            <div className="flex items-center justify-between">
+              {[
+                { s: 1, label: tText('Event', 'Jenis') },
+                { s: 2, label: tText('Menu', 'Menu') },
+                { s: 3, label: tText('Billing', 'Butiran') },
+                { s: 4, label: tText('Review', 'Semakan') }
+              ].map((item, idx) => (
+                <div key={item.s} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex flex-col items-center gap-1 relative z-10">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition-all duration-300",
+                      currentStep === item.s 
+                        ? "bg-crisp-carrot border-crisp-carrot text-white shadow-crisp" 
+                        : currentStep > item.s 
+                          ? "bg-emerald-600 border-emerald-600 text-white" 
+                          : "bg-[#FAF8F5] border-stone/20 text-stone"
+                    )}>
+                      {currentStep > item.s ? <Check className="w-4 h-4" /> : item.s}
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-semibold transition-colors duration-300",
+                      currentStep === item.s ? "text-crisp-carrot font-bold" : "text-stone"
+                    )}>
+                      {item.label}
+                    </span>
+                  </div>
+                  
+                  {idx < 3 && (
+                    <div className="flex-1 h-[2px] mx-2 bg-stone/10 relative -translate-y-2.5">
+                      <div 
+                        className="absolute inset-y-0 left-0 bg-emerald-600 transition-all duration-500" 
+                        style={{ width: currentStep > item.s ? '100%' : '0%' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="menu-custom-input" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('preferred_menu')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  <Input
-                    id="menu-custom-input"
-                    value={formData.menu}
-                    onChange={(e) => handleInputChange('menu', e.target.value)}
-                    required
-                    className="font-sans"
-                    placeholder={t('enter_preferred_menu')}
-                  />
-                  <p className="text-[11px] text-stone/60 leading-relaxed italic">
-                    {t('menu_hint')}
+        {/* Stepper Wizard Panels */}
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            
+            {/* STEP 1: PILIH JENIS MAJLIS & HIDANGAN */}
+            {currentStep === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6 text-left"
+              >
+                <div>
+                  <h2 className="text-lg font-bold text-charcoal font-display">
+                    {tText('Select Event Type', 'Pilih Jenis Majlis')}
+                  </h2>
+                  <p className="text-xs text-stone font-light mt-0.5">
+                    {tText('Choose your catering hosting style.', 'Sila tentukan jenis majlis catering anda.')}
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('quantity')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={formData.quantity}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      handleInputChange('quantity', val === '' ? '' : Math.max(1, parseInt(val) || 0));
-                    }}
-                    required
-                    placeholder={t('quantity_placeholder')}
-                    className="font-sans"
-                  />
-                </div>
-              </div>
+                {/* Event Type option cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOrderState(prev => ({ ...prev, eventType: 'pejabat' }))}
+                    className={cn(
+                      "p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 cursor-pointer relative",
+                      orderState.eventType === 'pejabat' 
+                        ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                        : "bg-[#FAF8F5] hover:bg-[#FAF8F5]/80 border-stone/15 text-stone"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                      orderState.eventType === 'pejabat' ? "bg-crisp-carrot text-white" : "bg-white border border-stone/10 text-stone"
+                    )}>
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold block">{tText('Office Feast', 'Jamuan Pejabat')}</span>
+                    <span className="text-[10px] text-stone leading-tight font-light">{tText('Meetings, workshops & corporate.', 'Urusan rasmi menteri, mesyuarat, kursus.')}</span>
+                  </button>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('datetime')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  <div className="flex gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          className={cn(
-                            "flex-1 h-11 justify-start text-left font-normal border-white/10 bg-white/5 text-deep-forest hover:bg-white/10 hover:text-sunshine focus:border-sunshine/50",
-                            !formData.date && "text-stone/40"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-crisp-carrot" />
-                          {formData.date && !isNaN(formData.date.getTime()) ? format(formData.date, 'PPP') : t('pick_a_date')}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-charcoal border border-white/10" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.date}
-                          onSelect={(date) => handleInputChange('date', date)}
-                          initialFocus
-                          className="bg-charcoal text-deep-forest"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <Input
-                      type="time"
-                      value={formData.time}
-                      onChange={(e) => handleInputChange('time', e.target.value)}
-                      className="w-32 h-11 font-sans"
-                      required
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOrderState(prev => ({ ...prev, eventType: 'lain' }))}
+                    className={cn(
+                      "p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 cursor-pointer relative",
+                      orderState.eventType === 'lain' 
+                        ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                        : "bg-[#FAF8F5] hover:bg-[#FAF8F5]/80 border-stone/15 text-stone"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                      orderState.eventType === 'lain' ? "bg-crisp-carrot text-white" : "bg-white border border-stone/10 text-stone"
+                    )}>
+                      <Smile className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold block">{tText('Private Events', 'Lain-lain')}</span>
+                    <span className="text-[10px] text-stone leading-tight font-light">{tText('Birthday, reunion, gatherings.', 'Sambutan hari jadi, tahlil, reuni.')}</span>
+                  </button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('meal_for')} <span className="text-crisp-carrot">*</span>
+                {/* Meal Type selection */}
+                <div className="space-y-2 pt-2">
+                  <Label className="text-xs font-bold text-stone uppercase tracking-wider">
+                    {tText('Meals For / Hidangan Untuk', 'Hidangan Untuk *')}
                   </Label>
-                  <div className="grid grid-cols-2 gap-3 mt-1">
-                    {MEAL_DROPDOWN_OPTIONS.map((mealOpt) => {
-                      const isSelected = formData.meals.includes(mealOpt.value);
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'sarapan', label: () => tText('Breakfast', 'Sarapan'), time: '7AM - 10AM', icon: Coffee },
+                      { id: 'tengahari', label: () => tText('Lunch', 'Makan Tengah Hari'), time: '12PM - 3PM', icon: Sun },
+                      { id: 'hitea', label: () => tText('Hi-Tea', 'Hi-Tea'), time: '3PM - 6PM', icon: Utensils }
+                    ].map(m => {
+                      const Icon = m.icon;
                       return (
                         <button
-                          key={mealOpt.value}
+                          key={m.id}
                           type="button"
-                          onClick={() => {
-                            const currentMeals = [...formData.meals];
-                            if (currentMeals.includes(mealOpt.value)) {
-                              handleInputChange('meals', currentMeals.filter(m => m !== mealOpt.value));
-                            } else {
-                              handleInputChange('meals', [...currentMeals, mealOpt.value]);
-                            }
-                          }}
+                          onClick={() => setOrderState(prev => ({ ...prev, mealType: m.id as 'sarapan' | 'tengahari' | 'hitea' }))}
                           className={cn(
-                            "flex items-center gap-2 p-2 rounded-xl border text-left transition-all duration-200 cursor-pointer h-11",
-                            isSelected 
-                              ? "border-crisp-carrot bg-crisp-carrot/10 text-crisp-carrot font-medium ring-1 ring-crisp-carrot/30" 
-                              : "border-white/10 bg-white/5 text-stone hover:bg-white/10 hover:text-deep-forest"
+                            "p-3 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
+                            orderState.mealType === m.id 
+                              ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                              : "bg-[#FAF8F5] border-stone/15 text-stone"
                           )}
                         >
-                          <div className={cn(
-                            "w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0",
-                            isSelected 
-                              ? "border-crisp-carrot bg-crisp-carrot text-white" 
-                              : "border-white/10 bg-white/5"
-                          )}>
-                            {isSelected && (
-                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                          <span className="text-xs font-sans truncate">
-                            {t(mealOpt.value)}
-                          </span>
+                          <Icon className={cn("w-4 h-4", orderState.mealType === m.id ? "text-crisp-carrot" : "text-stone")} />
+                          <span className="text-[11px] font-bold block leading-none">{m.label()}</span>
+                          <span className="text-[9px] text-stone leading-none font-light">{m.time}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                  {t('location')} <span className="text-crisp-carrot">*</span>
-                </Label>
-                <div className="relative flex items-center">
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder={t('venue_address')}
-                    required
-                    className="font-sans pr-24"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDetectLocation}
-                    disabled={isDetectingLocation}
-                    className="absolute right-2 px-2.5 py-1.5 text-xs font-bold text-warm-gold bg-stone-900 border border-warm-gold/20 hover:bg-warm-gold/10 rounded-md transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isDetectingLocation ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <MapPin className="w-3.5 h-3.5" />
-                    )}
-                    {tText('Detect', 'Kesan')}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                  {t('notes')} <span className="text-stone/40">({t('optional')})</span>
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder={t('additional_notes')}
-                  className="font-sans h-24"
-                />
-              </div>
-            </div>
-
-            {/* Officer Information Section */}
-            <div className="space-y-4 pt-4 border-t border-white/5">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                <UserIcon className="w-5 h-5 text-crisp-carrot" />
-                <h3 className="text-lg font-semibold text-deep-forest font-display">
-                  {t('officer_info')}
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('name')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="e.g. Ahmad bin Ali"
-                      required
-                      className="font-sans"
-                    />
-                  )}
+                {/* Quantity Counter */}
+                <div className="bg-[#FAF8F5] border border-stone/10 p-5 rounded-2xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <Label className="text-sm font-bold text-charcoal">
+                        {tText('Quantity', 'Kuantiti')}
+                      </Label>
+                      <span className="text-[10px] text-stone font-light block leading-none mt-1">
+                        {tText('Minimum order: 30 pax.', 'Minima tempahan katering: 30 orang.')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => adjustGuests(-1)}
+                        className="w-10 h-10 rounded-xl bg-white border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
+                      >
+                        –
+                      </button>
+                      <input
+                        type="number"
+                        min="30"
+                        max="5000"
+                        value={orderState.guests || ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setOrderState(prev => ({
+                            ...prev,
+                            guests: isNaN(val) ? 0 : val
+                          }));
+                        }}
+                        onBlur={() => {
+                          setOrderState(prev => ({
+                            ...prev,
+                            guests: prev.guests < 30 ? 30 : prev.guests
+                          }));
+                        }}
+                        className="text-xl font-bold text-charcoal w-20 text-center bg-white border border-stone/15 rounded-xl h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:border-crisp-carrot"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => adjustGuests(1)}
+                        className="w-10 h-10 rounded-xl bg-white border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="contact" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('contact')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <Input
-                      id="contact"
-                      type="tel"
-                      value={formData.contact}
-                      onChange={(e) => handleInputChange('contact', e.target.value)}
-                      placeholder="+60 XX-XXXX XXXX"
-                      required
-                      className="font-sans"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('email')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="email@example.com"
-                      required
-                      className="font-sans"
-                    />
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmEmail" className="text-stone text-xs font-semibold uppercase tracking-wider">
-                    {t('confirm_email')} <span className="text-crisp-carrot">*</span>
-                  </Label>
-                  {isProfileLoading ? (
-                    <Skeleton className="h-11 w-full rounded-md" />
-                  ) : (
-                    <Input
-                      id="confirmEmail"
-                      type="email"
-                      value={confirmEmail}
-                      onChange={(e) => setConfirmEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      required
-                      className="font-sans"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              {submitError && (
-                <div className="p-3 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-400 text-sm text-center font-medium animate-fade-in font-sans">
-                  {submitError}
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Next Button */}
                 <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 h-14 min-h-[56px] bg-crisp-carrot text-white font-semibold text-base sm:text-lg hover:bg-sunshine active:scale-[0.98] transition-all duration-300 disabled:opacity-50 font-display rounded-lg shadow-lg shadow-crisp-carrot/10"
+                  onClick={() => handleStepNext(1)}
+                  className="w-full bg-crisp-carrot hover:bg-crisp-carrot/95 text-white h-12 rounded-2xl font-bold text-sm tracking-wide shadow-crisp"
                 >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2 justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {t('loading')}
-                    </span>
-                  ) : (
-                    t('submit_order_download')
-                  )}
+                  {tText('Next: Choose Menu', 'Seterusnya: Pilih Menu')}
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
+              </motion.div>
+            )}
 
-                <Button
-                  type="button"
-                  onClick={handleShare}
-                  variant="outline"
-                  className="h-14 min-h-[56px] px-5 border-2 border-crisp-carrot/30 hover:border-crisp-carrot hover:bg-crisp-carrot/5 text-crisp-carrot font-semibold flex items-center justify-center gap-2 transition-all duration-300 rounded-lg"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-5 h-5 text-crisp-carrot animate-bounce" />
-                      <span className="text-sm">{t('link_copied')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-5 h-5 text-crisp-carrot" />
-                      <span className="text-sm">{t('share_form')}</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-              <p className="text-center text-xs text-stone/60 mt-4 leading-relaxed">
-                {t('terms_agree')}
-              </p>
-            </div>
-          </form>
-        </div>
-
-        {/* Live-Updating Invoice Preview - Right Column */}
-        <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-6 space-y-4">
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-lg text-center text-xs text-sunshine font-sans font-semibold uppercase tracking-wider">
-            {t('live_preview')} / Draf Invois Semasa
-          </div>
-          
-          <A4InvoiceSheet 
-            data={debouncedFormData} 
-            isTyping={isTypingField} 
-            language={language} 
-            t={t} 
-          />
-        </div>
-
-      </div>
-
-      {/* Mobile Bottom Float Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-charcoal/90 backdrop-blur-md border-t border-white/5 p-4 flex items-center justify-between shadow-2xl pb-safe">
-        <div>
-          <p className="text-[10px] text-stone uppercase font-bold tracking-wider">Estimated Draft / Anggaran</p>
-          <p className="text-crisp-carrot font-bold text-sm font-sans">
-            {debouncedFormData.quantity ? `${debouncedFormData.quantity} Pax / ` : ''}{debouncedFormData.meals.length} Meal(s)
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowMobileDraft(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold text-xs rounded-full hover:scale-105 active:scale-95 transition-all shadow-md shadow-crisp-carrot/10 cursor-pointer"
-        >
-          {language === 'bm' ? 'Lihat Draf' : 'View Draft'}
-        </button>
-      </div>
-
-      {/* Mobile Bottom Slide-up Sheet Modal */}
-      <AnimatePresence>
-        {showMobileDraft && (
-          <div className="fixed inset-0 z-[1100] flex flex-col justify-end lg:hidden">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowMobileDraft(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            />
-            {/* Animated Sheet */}
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative bg-white w-full max-h-[90vh] rounded-t-2xl shadow-2xl overflow-hidden z-10 flex flex-col border-t border-white/5"
-            >
-              {/* Header bar of mobile draft */}
-              <div className="sticky top-0 bg-white border-b border-deep-forest/10 p-4 flex items-center justify-between text-deep-forest z-10">
+            {/* STEP 2: PILIH LAUK PAUK & CALCULATE PRICE */}
+            {currentStep === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6 text-left"
+              >
                 <div>
-                  <h3 className="font-display font-bold text-sm text-crisp-carrot">{t('live_preview', 'Live Preview')}</h3>
-                  <p className="text-[10px] text-stone">{t('preview_desc', 'Draf Invois Semasa / Current Invoice Draft')}</p>
+                  <h2 className="text-lg font-bold text-charcoal font-display">
+                    {tText('Select Menu Dishes', 'Pilih Hidangan Lauk-Pauk')}
+                  </h2>
+                  <p className="text-xs text-stone font-light mt-0.5">
+                    {tText('Includes steam white rice, mineral cups and utensils automatically.', 'Nasi putih, air minuman cawan, dan set hidangan dimasukkan percuma.')}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowMobileDraft(false)}
-                  className="p-2 text-stone hover:text-deep-forest hover:bg-deep-forest/10 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="p-4 sm:p-6 overflow-y-auto bg-slate-100 flex-1">
-                <div className="max-w-xl mx-auto">
-                  <A4InvoiceSheet 
-                    data={debouncedFormData} 
-                    isTyping={isTypingField} 
-                    language={language} 
-                    t={t} 
-                  />
+
+                {/* Main Dishes */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-stone/10 pb-1.5">
+                    <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                      {tText('Main Dishes (Select min 3)', 'Lauk Utama (Pilih minima 3) *')}
+                    </Label>
+                    <span className="text-[10px] font-bold text-crisp-carrot bg-crisp-carrot/10 px-2 py-0.5 rounded-full">
+                      {orderState.dishes.length} / 8
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                    {LAUK_UTAMA.map(d => {
+                      const isSelected = orderState.dishes.some(x => x.id === d.id);
+                      return (
+                        <div
+                          key={d.id}
+                          onClick={() => handleToggleDish(d)}
+                          className={cn(
+                            "p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all duration-200",
+                            isSelected 
+                              ? "bg-crisp-carrot/5 border-crisp-carrot shadow-sm" 
+                              : "bg-[#FAF8F5] border-stone/10 hover:bg-[#FAF8F5]/80"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
+                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-white"
+                          )}>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold block text-charcoal truncate">
+                              {tText(d.nameEn, d.nameBm)}
+                            </span>
+                            <span className="text-[10px] text-stone leading-tight block truncate font-light">
+                              {tText(d.descEn, d.descBm)}
+                            </span>
+                          </div>
+                          
+                          <span className="text-xs font-black text-crisp-carrot shrink-0">
+                            RM {d.price}/pax
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+
+                {/* Vegetables */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-stone/10 pb-1.5">
+                    <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                      {tText('Vegetable Selection (Select min 1)', 'Sayur-sayuran (Pilih minima 1) *')}
+                    </Label>
+                    <span className="text-[10px] font-bold text-crisp-carrot bg-crisp-carrot/10 px-2 py-0.5 rounded-full">
+                      {orderState.veggies.length} / 3
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {SAYURAN.map(v => {
+                      const isSelected = orderState.veggies.some(x => x.id === v.id);
+                      return (
+                        <div
+                          key={v.id}
+                          onClick={() => handleToggleVeggie(v)}
+                          className={cn(
+                            "p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all duration-200",
+                            isSelected 
+                              ? "bg-crisp-carrot/5 border-crisp-carrot shadow-sm" 
+                              : "bg-[#FAF8F5] border-stone/10 hover:bg-[#FAF8F5]/80"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
+                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-white"
+                          )}>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold block text-charcoal truncate">
+                              {tText(v.nameEn, v.nameBm)}
+                            </span>
+                            <span className="text-[10px] text-stone leading-tight block truncate font-light">
+                              {tText(v.descEn, v.descBm)}
+                            </span>
+                          </div>
+                          
+                          <span className="text-xs font-black text-crisp-carrot shrink-0">
+                            RM {v.price}/pax
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* REALTIME BUDGET COMPUTATION PANEL FROM KIMI HTML */}
+                <div className="bg-[#FAF8F5] border border-[#C2932D]/30 p-4.5 rounded-2xl space-y-2.5 shadow-sm">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('Quantity:', 'Kuantiti:')}</span>
+                    <span className="font-bold text-charcoal">{orderState.guests} {tText('pax', 'orang')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('Dishes Selected:', 'Hidangan Dipilih')}</span>
+                    <span className="font-bold text-charcoal">
+                      {orderState.dishes.length + orderState.veggies.length} {tText('dishes', 'lauk')}
+                    </span>
+                  </div>
+                  <div className="border-t border-stone/10 pt-2.5 flex justify-between items-center">
+                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                      {tText('Est. Price per Pax:', 'Harga Se-pax:')}
+                    </span>
+                    <span className="text-sm font-black text-crisp-carrot">
+                      RM {getPricePerPax()} / pax
+                    </span>
+                  </div>
+                  <div className="border-t border-stone/10 pt-2.5 flex justify-between items-center">
+                    <span className="text-sm font-bold text-charcoal uppercase tracking-wider">
+                      {tText('Est. Grand Total:', 'Anggaran Harga:')}
+                    </span>
+                    <span className="text-lg font-black text-crisp-carrot">
+                      RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Buttons Navigation */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setCurrentStep(1)}
+                    variant="outline"
+                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-stone cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />
+                    {t('back')}
+                  </Button>
+                  <Button
+                    onClick={() => handleStepNext(2)}
+                    className="flex-1 bg-crisp-carrot hover:bg-crisp-carrot/95 text-white h-12 rounded-2xl font-bold text-sm shadow-crisp"
+                  >
+                    {tText('Next: Details', 'Seterusnya: Butiran')}
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 3: BUTIRAN TEMPAHAN */}
+            {currentStep === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-5 text-left"
+              >
+                <div>
+                  <h2 className="text-lg font-bold text-charcoal font-display">
+                    {tText('Enter Booking Details', 'Butiran Tempahan')}
+                  </h2>
+                  <p className="text-xs text-stone font-light mt-0.5">
+                    {tText('Fill in event details, billing and delivery method.', 'Isi maklumat majlis, pembayar, dan kaedah penghantaran.')}
+                  </p>
+                </div>
+
+                <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+                  
+                  {/* Conditionally Render Company/Department selection for Office event */}
+                  {orderState.eventType === 'pejabat' && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">
+                        {tText('Syarikat / Kementerian / Jabatan', 'Syarikat / Kementerian / Jabatan *')}
+                      </Label>
+                      {isProfileLoading ? (
+                        <Skeleton className="h-11 w-full rounded-2xl" />
+                      ) : (
+                        <>
+                          <Select
+                            value={orderState.companyName}
+                            onValueChange={(val) => setOrderState(prev => ({ ...prev, companyName: val }))}
+                            required
+                          >
+                            <SelectTrigger className="w-full h-11 rounded-2xl border-stone/20 bg-[#FAF8F5] focus:ring-crisp-carrot/20">
+                              <SelectValue placeholder={`-- ${tText('Select Organization', 'Pilih Jabatan')} --`} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-stone/10">
+                              {SAVED_COMPANIES.map((company, idx) => (
+                                <SelectItem key={idx} value={company} className="text-charcoal focus:bg-crisp-carrot/10">
+                                  {company}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="other" className="text-crisp-carrot font-bold">
+                                {tText('Other Organization / Syarikat Lain', 'Syarikat Lain (Taip Manual)')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {orderState.companyName === 'other' && (
+                            <Input
+                              value={orderState.customCompany}
+                              onChange={(e) => setOrderState(prev => ({ ...prev, customCompany: e.target.value }))}
+                              placeholder={tText('Type Company/Department Name', 'Taip nama syarikat atau kementerian')}
+                              required
+                              className="mt-2 h-11 rounded-2xl font-sans"
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Name Input */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Full Name', 'Nama Penuh *')}</Label>
+                    <Input
+                      value={orderState.name}
+                      onChange={(e) => setOrderState(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder={tText('e.g. Ahmad bin Abdullah', 'Contoh: Ahmad bin Abdullah')}
+                      className="h-11 rounded-2xl font-sans"
+                    />
+                  </div>
+
+                  {/* Phone Input */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Contact Phone', 'Nombor Telefon *')}</Label>
+                    <Input
+                      type="tel"
+                      value={orderState.contact}
+                      onChange={(e) => setOrderState(prev => ({ ...prev, contact: e.target.value }))}
+                      placeholder={tText('e.g. 012-345 6789', 'Contoh: 012-345 6789')}
+                      className="h-11 rounded-2xl font-sans"
+                    />
+                  </div>
+
+                  {/* Email & Confirm Email Inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Email Address', 'Alamat E-mel *')}</Label>
+                      <Input
+                        type="email"
+                        value={orderState.email}
+                        onChange={(e) => setOrderState(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder={tText('e.g. ahmad@gmail.com', 'Contoh: ahmad@gmail.com')}
+                        className="h-11 rounded-2xl font-sans"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Confirm Email', 'Sahkan E-mel *')}</Label>
+                      <Input
+                        type="email"
+                        value={orderState.confirmEmail}
+                        onChange={(e) => setOrderState(prev => ({ ...prev, confirmEmail: e.target.value }))}
+                        placeholder={tText('Re-type email address', 'Ulang alamat e-mel')}
+                        className="h-11 rounded-2xl font-sans"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Date & Time Inputs */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Event Date', 'Tarikh Majlis *')}</Label>
+                      <input
+                        type="date"
+                        value={orderState.date}
+                        min={format(new Date(), 'yyyy-MM-dd')}
+                        onChange={(e) => setOrderState(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full h-11 px-4 border border-stone/10 bg-white text-charcoal rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Serving Time', 'Masa Majlis *')}</Label>
+                      <input
+                        type="time"
+                        value={orderState.time}
+                        onChange={(e) => setOrderState(prev => ({ ...prev, time: e.target.value }))}
+                        className="w-full h-11 px-4 border border-stone/10 bg-white text-charcoal rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Geolocation Autocomplete Venue Location */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-bold text-stone uppercase tracking-wider">
+                        {tText('Event Venue Address', 'Lokasi / Alamat Majlis *')}
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={handleDetectLocation}
+                        disabled={isDetectingLocation}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-crisp-carrot hover:text-crisp-carrot/80 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {isDetectingLocation ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>{tText('Detecting...', 'Mengesan...')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{tText('Autofill Location', 'Kesan Lokasi')}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <Textarea
+                      value={orderState.location}
+                      onChange={(e) => setOrderState(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder={tText('e.g. No 10, Jalan Presint 8, Putrajaya', 'Contoh: No 10, Jalan Presint 8, Putrajaya')}
+                      className="rounded-2xl min-h-[70px] font-sans"
+                    />
+                  </div>
+
+                  {/* Delivery vs Pickup Method Cards */}
+                  <div className="space-y-2 pt-1">
+                    <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Delivery Method', 'Kaedah Penghantaran')}</Label>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setOrderState(prev => ({ ...prev, delivery: 'delivery' }))}
+                        className={cn(
+                          "p-4.5 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
+                          orderState.delivery === 'delivery' 
+                            ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                            : "bg-[#FAF8F5] border-stone/15 text-stone"
+                        )}
+                      >
+                        <Truck className="w-5 h-5 text-crisp-carrot" />
+                        <span className="text-xs font-bold block">{tText('Delivery to Location', 'Hantar ke Lokasi')}</span>
+                        <span className="text-[9px] text-stone leading-tight font-light">{tText('Delivered to your event address.', 'Dihantar terus ke tapak majlis.')}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setOrderState(prev => ({ ...prev, delivery: 'pickup' }))}
+                        className={cn(
+                          "p-4.5 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
+                          orderState.delivery === 'pickup' 
+                            ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                            : "bg-[#FAF8F5] border-stone/15 text-stone"
+                        )}
+                      >
+                        <Store className="w-5 h-5 text-crisp-carrot" />
+                        <span className="text-xs font-bold block">{tText('Pickup at Restaurant', 'Ambil di Restoran')}</span>
+                        <span className="text-[9px] text-stone leading-tight font-light">{tText('Collect directly from Pak Usop.', 'Ambil sendiri di Restoran Wawasan.')}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notes input */}
+                  <div className="space-y-1.5 pt-1">
+                    <Label className="text-xs font-bold text-stone uppercase tracking-wider">{tText('Additional Notes (Optional)', 'Nota Tambahan (pilihan)')}</Label>
+                    <Textarea
+                      value={orderState.notes}
+                      onChange={(e) => setOrderState(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder={tText('e.g. Vegetarian attendees, buffer tables needed, etc.', 'Contoh: Ada tetamu yang vegetarian, perlu meja buffet, dll.')}
+                      className="rounded-2xl min-h-[70px] font-sans"
+                    />
+                  </div>
+
+                </div>
+
+                {/* Buttons Navigation */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setCurrentStep(2)}
+                    variant="outline"
+                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-stone cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />
+                    {t('back')}
+                  </Button>
+                  <Button
+                    onClick={() => handleStepNext(3)}
+                    className="flex-1 bg-crisp-carrot hover:bg-crisp-carrot/95 text-white h-12 rounded-2xl font-bold text-sm shadow-crisp"
+                  >
+                    {tText('Next: Review', 'Seterusnya: Semak')}
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 4: REVIEW & CONFIRMATION */}
+            {currentStep === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-5 text-left"
+              >
+                <div>
+                  <h2 className="text-lg font-bold text-charcoal font-display">
+                    {tText('Review & Confirm Inquiry', 'Semak & Sahkan')}
+                  </h2>
+                  <p className="text-xs text-stone font-light mt-0.5">
+                    {tText('Double check all information below before submitting.', 'Sila semak butiran tempahan anda sebelum menghantar.')}
+                  </p>
+                </div>
+
+                {/* Info summary table cards */}
+                <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+                  
+                  {/* Event & Serve Summary */}
+                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                      {tText('Event Summary', 'Maklumat Majlis')}
+                    </span>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('Event Type', 'Jenis Majlis')}</span>
+                      <span className="font-bold text-charcoal">{orderState.eventType === 'pejabat' ? tText('Corporate Feast', 'Jamuan Pejabat') : tText('Private Event', 'Lain-lain')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('Catering Block', 'Hidangan Untuk')}</span>
+                      <span className="font-bold text-charcoal">
+                        {orderState.mealType === 'sarapan' ? tText('Breakfast', 'Sarapan') : orderState.mealType === 'tengahari' ? tText('Lunch', 'Makan Tengah Hari') : tText('Hi-Tea', 'Hi-Tea')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('Quantity', 'Kuantiti')}</span>
+                      <span className="font-bold text-charcoal">{orderState.guests} {tText('pax', 'orang')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('Date & Time', 'Tarikh & Masa')}</span>
+                      <span className="font-bold text-charcoal">{orderState.date} @ {orderState.time}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('Method', 'Kaedah')}</span>
+                      <span className="font-bold text-charcoal">{orderState.delivery === 'delivery' ? tText('Delivery to Location', 'Hantar ke Lokasi') : tText('Collect at Restaurant', 'Ambil di Restoran')}</span>
+                    </div>
+                  </div>
+
+                  {/* Customer Billing Summary */}
+                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                      {tText('Customer & Billing Info', 'Maklumat Pembayar')}
+                    </span>
+                    {orderState.eventType === 'pejabat' && (
+                      <div className="flex justify-between items-start text-xs gap-4">
+                        <span className="text-stone shrink-0">{tText('Organization', 'Syarikat/Jabatan')}</span>
+                        <span className="font-bold text-charcoal text-right">
+                          {orderState.companyName === 'other' ? orderState.customCompany : orderState.companyName}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('PIC Name', 'Nama')}</span>
+                      <span className="font-bold text-charcoal">{orderState.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('PIC Phone', 'Telefon')}</span>
+                      <span className="font-bold text-charcoal">{orderState.contact}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-stone">{tText('PIC Email', 'E-mel')}</span>
+                      <span className="font-bold text-charcoal break-all text-right">{orderState.email}</span>
+                    </div>
+                    <div className="flex justify-between items-start text-xs gap-4">
+                      <span className="text-stone shrink-0">{tText('Venue Location', 'Lokasi')}</span>
+                      <span className="font-bold text-charcoal text-right">{orderState.location}</span>
+                    </div>
+                  </div>
+
+                  {/* Selected Menu Dishes Summary */}
+                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                      {tText('Selected Dishes Menu', 'Senarai Hidangan')}
+                    </span>
+                    <div className="text-xs text-charcoal space-y-1 font-semibold">
+                      <p className="text-stone text-[11px] uppercase">{tText('Main Lauk:', 'Lauk Utama:')}</p>
+                      <div className="pl-2 flex flex-wrap gap-1">
+                        {orderState.dishes.map(d => (
+                          <span key={d.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                            {tText(d.nameEn, d.nameBm)}
+                          </span>
+                        ))}
+                      </div>
+
+                      <p className="text-stone text-[11px] uppercase pt-1">{tText('Vegetables:', 'Sayur-sayuran:')}</p>
+                      <div className="pl-2 flex flex-wrap gap-1">
+                        {orderState.veggies.map(v => (
+                          <span key={v.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                            {tText(v.nameEn, v.nameBm)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
+                      <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                        {tText('Total Estimation:', 'Jumlah Anggaran:')}
+                      </span>
+                      <span className="text-base font-black text-crisp-carrot">
+                        RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-stone leading-tight italic text-center px-4">
+                    {tText(
+                      '* Note: Prices shown are estimations. The restaurant will review your booking and contact you within 24 hours to confirm finalized custom pricing.',
+                      '* Nota: Harga yang dipaparkan adalah anggaran sahaja. Pihak restoran akan menyemak butiran dan menghubungi anda dalam masa 24 jam untuk pengesahan harga muktamad.'
+                    )}
+                  </p>
+
+                </div>
+
+                {/* Submitting Actions */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setCurrentStep(3)}
+                    disabled={isSubmitting}
+                    variant="outline"
+                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-stone cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />
+                    {t('back')}
+                  </Button>
+                  <Button
+                    onClick={handleOrderSubmission}
+                    disabled={isSubmitting}
+                    className="flex-1 bg-crisp-carrot hover:bg-crisp-carrot/95 text-white h-12 rounded-2xl font-bold text-sm shadow-crisp"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        <span>{t('loading')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{tText('Submit Order', 'Hantar Tempahan')}</span>
+                        <Check className="w-4 h-4 ml-1.5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 5: KEJAYAAN / SUCCESS */}
+            {currentStep === 5 && (
+              <motion.div
+                key="step5"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 text-center"
+              >
+                <div className="py-4">
+                  <div className="w-16 h-108 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 scale-110 shadow-sm">
+                    <CheckCircle2 className="w-12 h-12" />
+                  </div>
+                  <h2 className="text-xl font-bold text-charcoal font-display">
+                    {tText('Booking Request Sent!', 'Tempahan Dihantar!')}
+                  </h2>
+                  <p className="text-xs text-stone font-light max-w-sm mx-auto mt-1">
+                    {tText(
+                      'Thank you. Restoran Wawasan will review your booking details and contact you within 24 hours to confirm.',
+                      'Terima kasih. Pihak Restoran Wawasan akan menyemak butiran dan menghubungi anda dalam masa 24 jam untuk pengesahan.'
+                    )}
+                  </p>
+                </div>
+
+                {/* Bill details receipt box */}
+                <div className="bg-[#FAF8F5] border border-stone/10 p-5 rounded-2xl text-left space-y-2.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('Reference Number:', 'Nombor Rujukan')}</span>
+                    <span className="font-bold text-[#8C6510] text-sm tracking-wider select-all">{referenceNumber}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('PIC Name:', 'Nama')}</span>
+                    <span className="font-bold text-charcoal">{orderState.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('PIC Contact:', 'Telefon')}</span>
+                    <span className="font-bold text-charcoal">{orderState.contact}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('Event Date:', 'Tarikh Majlis')}</span>
+                    <span className="font-bold text-charcoal">{orderState.date}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone">{tText('Meal serving:', 'Hidangan Untuk')}</span>
+                    <span className="font-bold text-charcoal">
+                      {orderState.mealType === 'sarapan' ? tText('Breakfast', 'Sarapan') : orderState.mealType === 'tengahari' ? tText('Lunch', 'Makan Tengah Hari') : tText('Hi-Tea', 'Hi-Tea')}
+                    </span>
+                  </div>
+                  
+                  <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
+                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                      {tText('Estimated Price:', 'Jumlah Anggaran:')}
+                    </span>
+                    <span className="text-base font-black text-crisp-carrot">
+                      RM {getGrandTotal().toLocaleString(language === 'bm' ? 'ms-MY' : 'en-MY', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Email Delivery relay receipt check */}
+                <div className="p-4 bg-white rounded-2xl border border-stone/10 text-left space-y-2.5 shadow-sm">
+                  <span className="text-[10px] text-stone font-bold uppercase tracking-wider block">
+                    {tText('INVOICE / RECEIPT STATUS', 'STATUS PENGHANTARAN INVOIS')}
+                  </span>
+                  
+                  <div className="space-y-1.5 text-xs text-stone">
+                    <p className="flex items-center gap-1.5 text-charcoal font-semibold">
+                      <span className="text-emerald-600">✓</span>
+                      <span>{tText('Preliminary PDF generated', 'Invois PDF dihasilkan')}</span>
+                    </p>
+                    
+                    {emailStatus === 'sending' && (
+                      <p className="flex items-center gap-1.5 animate-pulse text-amber-500">
+                        <span className="text-amber-500 font-bold">●</span>
+                        <span>{tText('Mailing PDF copy...', 'Sedang menghantar salinan emel...')}</span>
+                      </p>
+                    )}
+
+                    {emailStatus === 'success' && (
+                      <p className="flex items-center gap-1.5 text-charcoal font-semibold">
+                        <span className="text-emerald-600">✓</span>
+                        <span>{tText(`E-mailed copy successfully to ${orderState.email}`, `Salinan invois emel berjaya dihantar ke ${orderState.email}`)}</span>
+                      </p>
+                    )}
+
+                    {emailStatus === 'failed' && (
+                      <p className="flex items-center gap-1.5 text-rose-600 font-semibold">
+                        <span className="text-rose-600 font-bold">×</span>
+                        <span>{tText('SMTP delivery deferred. Admin will send copy manually.', 'Penghantaran emel tertangguh. Invois akan dihantar manual.')}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-stone italic">
+                  {tText('Please save or share this reference number for future inquiries.', 'Sila simpan nombor rujukan ini untuk rujukan masa hadapan.')}
+                </p>
+
+                {/* Success Screen Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    onClick={handleResetForm}
+                    className="flex-1 bg-crisp-carrot hover:bg-crisp-carrot/95 text-white h-12 rounded-2xl font-bold text-sm shadow-crisp"
+                  >
+                    {tText('New Order Inquiry', 'Tempahan Baharu')}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleShareReceipt}
+                    variant="outline"
+                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-charcoal cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Share2 className="w-4 h-4 text-crisp-carrot" />
+                    <span>{tText('Share Invoice / Receipt', 'Kongsi Resit')}</span>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom Navigation mimics Kimi bottom bar layout */}
+        {currentStep <= 4 && (
+          <div className="bg-white border-t border-stone/10 p-3 pb-6 flex justify-around items-center select-none">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={cn(
+                "flex flex-col items-center gap-0.5 cursor-pointer text-xs font-semibold px-4 py-1.5 rounded-xl transition-all",
+                currentStep < 5 ? "text-crisp-carrot bg-crisp-carrot/5" : "text-stone"
+              )}
+            >
+              <Utensils className="w-5 h-5 shrink-0" />
+              <span>{tText('Booking', 'Tempahan')}</span>
+            </button>
+
+            <a
+              href="tel:+60178582642"
+              className="flex flex-col items-center gap-0.5 cursor-pointer text-xs font-semibold text-stone hover:text-crisp-carrot px-4 py-1.5 rounded-xl transition-all"
+            >
+              <Phone className="w-5 h-5 shrink-0" />
+              <span>{tText('Call Now', 'Hubungi')}</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => {
+                toast({
+                  title: tText('Restoran Wawasan', 'Restoran Wawasan'),
+                  description: tText('Putrajaya, Malaysia. Open Mon-Sat 7AM - 4PM.', 'Putrajaya, Malaysia. Buka Isnin-Sabtu 7AM - 4PM.'),
+                  variant: 'success'
+                });
+              }}
+              className="flex flex-col items-center gap-0.5 cursor-pointer text-xs font-semibold text-stone hover:text-crisp-carrot px-4 py-1.5 rounded-xl transition-all"
+            >
+              <Clock className="w-5 h-5 shrink-0" />
+              <span>{tText('Information', 'Maklumat')}</span>
+            </button>
           </div>
         )}
-      </AnimatePresence>
-    </div>
+
+      </div>
     </>
   );
 }

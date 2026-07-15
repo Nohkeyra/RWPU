@@ -89,7 +89,7 @@ export default function Header() {
                     to={link.href}
                     className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-sunshine to-crisp-carrot text-white rounded-full font-bold text-xs hover:shadow-xl transition-all duration-300 hover:shadow-sunshine-glow hover:-translate-y-0.5"
                   >
-                    {t(link.label as any)}
+                    {t(link.label as Parameters<typeof t>[0])}
                   </Link>
                 );
               }
@@ -99,7 +99,7 @@ export default function Header() {
                   href={link.href}
                   className="text-sm font-semibold text-deep-forest/80 hover:text-sunshine transition-colors"
                 >
-                  {t(link.label as any) || link.label.charAt(0).toUpperCase() + link.label.slice(1)}
+                  {t(link.label as Parameters<typeof t>[0]) || link.label.charAt(0).toUpperCase() + link.label.slice(1)}
                 </a>
               );
             })}

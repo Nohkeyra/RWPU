@@ -9,7 +9,7 @@ import type { User } from 'firebase/auth';
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; isButton?: boolean }[];
   currentUser?: User | null;
   onAuthClick?: () => void;
 }
@@ -82,7 +82,7 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
           </div>
 
           {links.map((link) => {
-            if ((link as any).isButton) {
+            if (link.isButton) {
               return (
                 <Link
                   key={link.href}
@@ -90,7 +90,7 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
                   onClick={onClose}
                   className="mt-4 mb-2 w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sunshine to-crisp-carrot text-white font-bold rounded-full hover:shadow-sunshine-glow hover:scale-[1.02] transition-all duration-300 shadow-lg"
                 >
-                  {t(link.label as any)}
+                  {t(link.label as Parameters<typeof t>[0])}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               );
@@ -102,7 +102,7 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
                 onClick={onClose}
                 className="text-3xl font-display font-bold text-deep-forest py-3 border-b border-deep-forest/10 hover:text-sunshine transition-colors"
               >
-                {t(link.label as any) || link.label}
+                {t(link.label as Parameters<typeof t>[0]) || link.label}
               </a>
             );
           })}
