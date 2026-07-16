@@ -9,6 +9,7 @@ import * as admin from "firebase-admin"; // Changed to namespace import for bett
 import { cert, App } from "firebase-admin/app";
 import { getFirestore as getFirestoreModular, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
 import { google } from "googleapis";
 import jwt from "jsonwebtoken";
 
@@ -85,6 +86,28 @@ function getAdminApp() {
     }
   }
   return adminApp;
+}
+
+// Verifies a Firebase Auth ID token sent by the customer app and returns the
+// authenticated uid. Previously /api/orders/cancel and /api/orders/delete
+// trusted a plain `userId` field in the request body with no proof it came
+// from that user's actual session — anyone who knew (or guessed) an orderId +
+// userId pair could cancel or delete someone else's order, since these
+// endpoints use the Admin SDK and therefore bypass firestore.rules entirely.
+// This checks the token's signature against the real Firebase project, so
+// the uid it returns cannot be spoofed by the client.
+async function verifyCustomerIdToken(req: express.Request): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+  const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+  if (!idToken) return null;
+
+  try {
+    const decoded = await getAuth(getAdminApp()).verifyIdToken(idToken);
+    return decoded.uid;
+  } catch (err) {
+    console.warn("[Auth] Failed to verify customer ID token:", err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 function getFirestore() {
@@ -1139,10 +1162,17 @@ async function startServer() {
   // Cancel order request endpoint (called by member/user)
   app.post("/api/orders/cancel", async (req, res) => {
     try {
-      const { orderId, userId } = req.body;
+      const { orderId } = req.body;
 
-      if (!orderId || !userId) {
-        return res.status(400).json({ success: false, error: "Missing orderId or userId" });
+      if (!orderId) {
+        return res.status(400).json({ success: false, error: "Missing orderId" });
+      }
+
+      // Verify the caller's identity from a real Firebase ID token instead of
+      // trusting a client-supplied userId field (see verifyCustomerIdToken).
+      const callerUid = await verifyCustomerIdToken(req);
+      if (!callerUid) {
+        return res.status(401).json({ success: false, error: "Unauthorized: Missing or invalid session token" });
       }
 
       // 1. Fetch document from Firestore or Local JSON
@@ -1174,7 +1204,7 @@ async function startServer() {
 
       // 2. Security validation: ensure order belongs to requesting user
       const orderUserId = data.userId || data.uid;
-      if (orderUserId !== userId) {
+      if (orderUserId !== callerUid) {
         return res.status(403).json({ success: false, error: "Unauthorized: You do not own this order" });
       }
 
@@ -1236,10 +1266,17 @@ async function startServer() {
   // Direct delete of billed order endpoint (called by member/user)
   app.post("/api/orders/delete", async (req, res) => {
     try {
-      const { orderId, userId } = req.body;
+      const { orderId } = req.body;
 
-      if (!orderId || !userId) {
-        return res.status(400).json({ success: false, error: "Missing orderId or userId" });
+      if (!orderId) {
+        return res.status(400).json({ success: false, error: "Missing orderId" });
+      }
+
+      // Verify the caller's identity from a real Firebase ID token instead of
+      // trusting a client-supplied userId field (see verifyCustomerIdToken).
+      const callerUid = await verifyCustomerIdToken(req);
+      if (!callerUid) {
+        return res.status(401).json({ success: false, error: "Unauthorized: Missing or invalid session token" });
       }
 
       // 1. Fetch document from Firestore or Local JSON
@@ -1271,7 +1308,7 @@ async function startServer() {
 
       // 2. Security validation: ensure order belongs to requesting user
       const orderUserId = data.userId || data.uid;
-      if (orderUserId !== userId) {
+      if (orderUserId !== callerUid) {
         return res.status(403).json({ success: false, error: "Unauthorized: You do not own this order" });
       }
 
@@ -1306,7 +1343,7 @@ async function startServer() {
   });
 
   // Invoice Billing and Delivery system for Submissions/Orders collection
-  app.post("/api/submissions/bill", async (req, res) => {
+  app.post("/api/submissions/bill", verifyAdminToken, async (req, res) => {
     try {
       const { submissionId, totalAmount, pdfBase64, fileName, collectionName = 'submissions' } = req.body;
 

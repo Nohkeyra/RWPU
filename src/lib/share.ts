@@ -2,17 +2,31 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
+ * Live public origin of the deployed app (no trailing slash). Needed because
+ * window.location.origin resolves to http://localhost inside the Capacitor
+ * WebView on native builds, which is never a usable link to share.
+ */
+export const PROD_ORIGIN = 'https://restoran-wawasan-bio.onrender.com';
+
+/**
  * Live public URL of the deployed order form. This is a plain web link that
  * opens in ANY browser — customers do not need the app installed. The site is
  * a HashRouter SPA, so the order form lives at the #/order route.
  */
-export const ORDER_FORM_URL = 'https://restoran-wawasan-bio.onrender.com/#/order';
+export const ORDER_FORM_URL = `${PROD_ORIGIN}/#/order`;
 
 /**
  * Canonical shareable URL that opens the (empty) order form so the customer
  * can fill in their own order details.
  */
 export const buildOrderFormUrl = (): string => ORDER_FORM_URL;
+
+/**
+ * Resolves a shareable absolute URL for the given in-app hash route (e.g.
+ * '#/order'), always pointing at the real production origin rather than
+ * window.location.origin, which is unusable (http://localhost) on native.
+ */
+export const buildShareableUrl = (hash: string): string => `${PROD_ORIGIN}/${hash}`;
 
 /**
  * Trigger the system's native share sheet (Android ACTION_SEND / iOS share) to

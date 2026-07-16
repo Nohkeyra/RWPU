@@ -289,14 +289,15 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
 
     setCancellingOrderId(orderId);
     try {
+      const idToken = await currentUser.getIdToken();
       const response = await fetch(getApiUrl('/api/orders/cancel'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           orderId,
-          userId: currentUser.uid,
         }),
       });
 
@@ -339,14 +340,15 @@ export default function UserProfileDashboard({ isOpen, onClose, onReorder }: Use
 
     setDeletingOrderId(orderId);
     try {
+      const idToken = await currentUser.getIdToken();
       const response = await fetch(getApiUrl('/api/orders/delete'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           orderId,
-          userId: currentUser.uid,
         }),
       });
 

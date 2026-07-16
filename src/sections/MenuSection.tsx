@@ -85,9 +85,18 @@ export default function MenuSection() {
   const { t, language } = useLanguage();
   const isBm = language === 'bm';
   const [isLoading, setIsLoading] = useState(true);
+  const [menuItems, setMenuItems] = useState(MENU_ITEMS);
 
   useEffect(() => {
-    // Simulate loading menu items from a network request
+    // Basic localStorage caching strategy for menu items
+    const cachedItems = localStorage.getItem('menu_items');
+    if (cachedItems) {
+      setMenuItems(JSON.parse(cachedItems));
+    } else {
+      localStorage.setItem('menu_items', JSON.stringify(MENU_ITEMS));
+    }
+
+    // Simulate loading menu items
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 850);
@@ -189,7 +198,7 @@ export default function MenuSection() {
               </motion.div>
             ))
           ) : (
-            MENU_ITEMS.map((item) => (
+            menuItems.map((item) => (
               <motion.div 
                 key={item.nameEn} 
                 variants={cardVariants}

@@ -39,6 +39,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Geolocation } from '@capacitor/geolocation';
+import { buildShareableUrl } from '@/lib/share';
 import { triggerNotification, NotificationType } from '@/lib/haptics';
 
 // TYPES
@@ -594,7 +595,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
   const getShareableUrl = () => {
     if (Capacitor.isNativePlatform()) {
-      return 'https://restoran-wawasan-bio.onrender.com/' + window.location.hash;
+      return buildShareableUrl(window.location.hash);
     }
     return window.location.origin + '/' + window.location.hash;
   };

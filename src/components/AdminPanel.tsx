@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,8 @@ import {
   Terminal,
   Palette,
   Sun,
-  Moon
+  Moon,
+  Bell
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { useNavigate } from 'react-router-dom';
@@ -439,6 +441,10 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
   useEffect(() => {
     fetchOrders();
     fetchCalendarState();
+    
+    const interval = setInterval(fetchOrders, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminToken]);
 
@@ -518,9 +524,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
         
         const response = await fetch(getApiUrl('/api/submissions/bill'), {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders(),
           body: JSON.stringify({
             submissionId: orderId,
             totalAmount: total,
@@ -851,10 +855,13 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
   };
 
   const filteredOrders = orders.filter(order => 
-    order.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.email.toLowerCase().includes(searchTerm.toLowerCase())
+    order.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    order.status !== 'cancelled'
   );
+
+  const cancelRequests = orders.filter(o => o.status === 'cancel_requested');
 
   if (loading) {
     return (
@@ -987,6 +994,16 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             >
               <FileText className="w-4 h-4" />
               <span>{t('orders') || 'Orders'}</span>
+              {cancelRequests.length > 0 && (
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="ml-2 flex items-center gap-1 bg-amber-500 text-white px-2 py-0.5 rounded-full text-xs font-bold"
+                >
+                  <Bell className="w-3 h-3" />
+                  <span>{cancelRequests.length}</span>
+                </motion.div>
+              )}
             </button>
             <button
               onClick={() => {
@@ -1017,6 +1034,69 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
           {activeTab === 'orders' ? (
             <>
+              {/* Cancellation Requests Section */}
+              {cancelRequests.length > 0 && (
+                <div className="mb-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                  <h2 className="text-xl font-bold text-amber-800 mb-4 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    {t('cancellation_requests') || 'Cancellation Requests'}
+                  </h2>
+                  <div className="space-y-3">
+                    {cancelRequests.map(order => (
+                      <div key={order.id} className="flex items-center justify-between p-4 bg-white dark:bg-card border border-amber-500/10 rounded-lg">
+                        <div>
+                          <p className="font-semibold">{order.name} ({order.quantity} pax)</p>
+                          <p className="text-sm text-deep-forest/60">{order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200"
+                            onClick={async () => {
+                              setIsApproving(true);
+                              try {
+                                const response = await fetch(getApiUrl('/api/admin/orders'), {
+                                  method: 'POST',
+                                  headers: authHeaders(),
+                                  body: JSON.stringify({
+                                    action: 'update',
+                                    orderId: order.id,
+                                    data: { status: 'cancelled' }
+                                  })
+                                });
+                                if (response.ok) {
+                                  toast({
+                                    title: t('success'),
+                                    description: t('cancellation_approved'),
+                                    variant: 'success'
+                                  });
+                                  fetchOrders();
+                                }
+                              } catch (e) {
+                                console.error(e);
+                              } finally {
+                                setIsApproving(false);
+                              }
+                            }}
+                          >
+                            {t('approve')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200"
+                            onClick={() => handleRejectCancellation(order.id)}
+                          >
+                            {t('reject')}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Search */}
               <div className="mb-6 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-deep-forest/40" />
