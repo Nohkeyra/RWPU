@@ -294,7 +294,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
   const adjustGuests = (delta: number) => {
     setOrderState(prev => {
       let g = prev.guests + delta;
-      if (g < 30) g = 30; // Min 30 pax as requested
+      if (g < 1) g = 1; // Min 1 pax as requested
       if (g > 5000) g = 5000; // Allow high max cap
       return { ...prev, guests: g };
     });
@@ -322,11 +322,11 @@ export default function OrderForm({ initialData }: OrderFormProps) {
         });
         return;
       }
-      if (!orderState.guests || orderState.guests < 30) {
+      if (!orderState.guests || orderState.guests < 1) {
         triggerWarning();
         toast({
           title: tText('Minimum Quantity Required', 'Kuantiti Minimum Diperlukan'),
-          description: tText('Minimum catering order is 30 pax.', 'Minimum tempahan katering adalah 30 orang.'),
+          description: tText('Minimum catering order is 1 pax.', 'Minimum tempahan katering adalah 1 orang.'),
           variant: 'warning'
         });
         return;
@@ -629,11 +629,12 @@ export default function OrderForm({ initialData }: OrderFormProps) {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* Main Container mirroring Kimi mockup mobile shell but fully responsive on large screens */}
-      <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl border border-stone/10 shadow-2xl overflow-hidden font-sans">
+      <div className="w-full max-w-2xl mx-auto bg-card rounded-3xl border border-stone/10 shadow-2xl overflow-hidden font-sans">
         
-        {/* App Header Bar mimicking Kimi style */}
-        <div className="bg-charcoal text-white p-5 rounded-b-[24px] shadow-lg border-b border-white/5">
-          <div className="flex justify-between items-center">
+        {/* App Header Bar mirroring Wawasan brand */}
+        <div className="bg-charcoal text-white p-5 rounded-b-[24px] shadow-lg border-b border-charcoal/80 relative overflow-hidden">
+          <div className="absolute inset-0 pattern-dots opacity-20 pointer-events-none" />
+          <div className="flex justify-between items-center relative z-10">
             <div>
               <span className="text-[11px] text-sunshine font-bold uppercase tracking-widest block mb-0.5">
                 {tText('CATERING BOOKING', 'TEMPAHAN KATERING')}
@@ -641,25 +642,25 @@ export default function OrderForm({ initialData }: OrderFormProps) {
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 font-display">
                 Restoran Wawasan
               </h1>
-              <p className="text-[10px] text-stone font-light tracking-wide mt-0.5">
+              <p className="text-[10px] text-stone font-medium tracking-wide mt-0.5">
                 Unit 3, Level B3, Menara PjH, Putrajaya
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-crisp-carrot flex items-center justify-center font-bold text-sm shadow-md text-white border border-white/10 select-none">
+            <div className="w-10 h-10 rounded-full bg-sunshine flex items-center justify-center font-bold text-sm shadow-md text-white border border-white/20 select-none">
               RW
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 mt-4 items-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/40 text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex flex-wrap gap-2 mt-4 items-center relative z-10">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-kiwi/20 text-kiwi text-[11px] font-bold border border-kiwi/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-kiwi animate-pulse" />
               {tText('Accepting Bookings', 'Menerima Tempahan')}
             </span>
             <a 
               href="tel:+60178582642" 
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-stone hover:text-white text-[11px] font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition-colors"
             >
-              <Phone className="w-3 h-3 text-crisp-carrot" />
+              <Phone className="w-3 h-3 text-sunshine" />
               +60 17-858 2642
             </a>
           </div>
@@ -682,8 +683,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       currentStep === item.s 
                         ? "bg-crisp-carrot border-crisp-carrot text-white shadow-crisp" 
                         : currentStep > item.s 
-                          ? "bg-emerald-600 border-emerald-600 text-white" 
-                          : "bg-[#FAF8F5] border-stone/20 text-stone"
+                          ? "bg-[#A8E10C] border-[#A8E10C] text-[#161618]" 
+                          : "bg-muted border-stone/20 text-stone"
                     )}>
                       {currentStep > item.s ? <Check className="w-4 h-4" /> : item.s}
                     </div>
@@ -698,7 +699,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   {idx < 3 && (
                     <div className="flex-1 h-[2px] mx-2 bg-stone/10 relative -translate-y-2.5">
                       <div 
-                        className="absolute inset-y-0 left-0 bg-emerald-600 transition-all duration-500" 
+                        className="absolute inset-y-0 left-0 bg-[#A8E10C] transition-all duration-500" 
                         style={{ width: currentStep > item.s ? '100%' : '0%' }}
                       />
                     </div>
@@ -724,7 +725,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 className="space-y-6 text-left"
               >
                 <div>
-                  <h2 className="text-lg font-bold text-charcoal font-display">
+                  <h2 className="text-lg font-bold text-deep-forest font-display">
                     {tText('Select Event Type', 'Pilih Jenis Majlis')}
                   </h2>
                   <p className="text-xs text-stone font-light mt-0.5">
@@ -740,13 +741,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     className={cn(
                       "p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 cursor-pointer relative",
                       orderState.eventType === 'pejabat' 
-                        ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
-                        : "bg-[#FAF8F5] hover:bg-[#FAF8F5]/80 border-stone/15 text-stone"
+                        ? "bg-crisp-carrot/15 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                        : "bg-muted hover:bg-muted/80 border-stone/15 text-stone"
                     )}
                   >
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                      orderState.eventType === 'pejabat' ? "bg-crisp-carrot text-white" : "bg-white border border-stone/10 text-stone"
+                      orderState.eventType === 'pejabat' ? "bg-crisp-carrot text-white" : "bg-card border border-stone/10 text-stone"
                     )}>
                       <Briefcase className="w-5 h-5" />
                     </div>
@@ -760,13 +761,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     className={cn(
                       "p-4 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 cursor-pointer relative",
                       orderState.eventType === 'lain' 
-                        ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
-                        : "bg-[#FAF8F5] hover:bg-[#FAF8F5]/80 border-stone/15 text-stone"
+                        ? "bg-crisp-carrot/15 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                        : "bg-muted hover:bg-muted/80 border-stone/15 text-stone"
                     )}
                   >
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                      orderState.eventType === 'lain' ? "bg-crisp-carrot text-white" : "bg-white border border-stone/10 text-stone"
+                      orderState.eventType === 'lain' ? "bg-crisp-carrot text-white" : "bg-card border border-stone/10 text-stone"
                     )}>
                       <Smile className="w-5 h-5" />
                     </div>
@@ -796,8 +797,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           className={cn(
                             "p-3 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
                             orderState.mealType === m.id 
-                              ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
-                              : "bg-[#FAF8F5] border-stone/15 text-stone"
+                              ? "bg-crisp-carrot/15 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                              : "bg-muted border-stone/15 text-stone"
                           )}
                         >
                           <Icon className={cn("w-4 h-4", orderState.mealType === m.id ? "text-crisp-carrot" : "text-stone")} />
@@ -810,14 +811,14 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 </div>
 
                 {/* Quantity Counter */}
-                <div className="bg-[#FAF8F5] border border-stone/10 p-5 rounded-2xl space-y-3">
+                <div className="bg-muted border border-stone/10 p-5 rounded-2xl space-y-3">
                   <div className="flex justify-between items-center">
                     <div>
-                      <Label className="text-sm font-bold text-charcoal">
+                      <Label className="text-sm font-bold text-deep-forest">
                         {tText('Quantity', 'Kuantiti')}
                       </Label>
                       <span className="text-[10px] text-stone font-light block leading-none mt-1">
-                        {tText('Minimum order: 30 pax.', 'Minima tempahan katering: 30 orang.')}
+                        {tText('Minimum order: 1 pax.', 'Minima tempahan katering: 1 orang.')}
                       </span>
                     </div>
                     
@@ -825,13 +826,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       <button
                         type="button"
                         onClick={() => adjustGuests(-1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
+                        className="w-10 h-10 rounded-xl bg-card border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
                       >
                         –
                       </button>
                       <input
                         type="number"
-                        min="30"
+                        min="1"
                         max="5000"
                         value={orderState.guests || ''}
                         onChange={(e) => {
@@ -844,15 +845,15 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         onBlur={() => {
                           setOrderState(prev => ({
                             ...prev,
-                            guests: prev.guests < 30 ? 30 : prev.guests
+                            guests: prev.guests < 1 ? 1 : prev.guests
                           }));
                         }}
-                        className="text-xl font-bold text-charcoal w-20 text-center bg-white border border-stone/15 rounded-xl h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:border-crisp-carrot"
+                        className="text-xl font-bold text-deep-forest w-20 text-center bg-card border border-stone/15 rounded-xl h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:border-crisp-carrot"
                       />
                       <button
                         type="button"
                         onClick={() => adjustGuests(1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
+                        className="w-10 h-10 rounded-xl bg-card border border-stone/15 flex items-center justify-center font-bold text-lg hover:border-crisp-carrot hover:text-crisp-carrot cursor-pointer transition-colors shadow-sm select-none"
                       >
                         +
                       </button>
@@ -882,7 +883,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 className="space-y-6 text-left"
               >
                 <div>
-                  <h2 className="text-lg font-bold text-charcoal font-display">
+                  <h2 className="text-lg font-bold text-deep-forest font-display">
                     {tText('Select Menu Dishes', 'Pilih Hidangan Lauk-Pauk')}
                   </h2>
                   <p className="text-xs text-stone font-light mt-0.5">
@@ -893,7 +894,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 {/* Main Dishes */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center border-b border-stone/10 pb-1.5">
-                    <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                    <Label className="text-xs font-black text-[#A8E10C] uppercase tracking-wider block">
                       {tText('Main Dishes (Select min 3)', 'Lauk Utama (Pilih minima 3) *')}
                     </Label>
                     <span className="text-[10px] font-bold text-crisp-carrot bg-crisp-carrot/10 px-2 py-0.5 rounded-full">
@@ -911,19 +912,19 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           className={cn(
                             "p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all duration-200",
                             isSelected 
-                              ? "bg-crisp-carrot/5 border-crisp-carrot shadow-sm" 
-                              : "bg-[#FAF8F5] border-stone/10 hover:bg-[#FAF8F5]/80"
+                              ? "bg-crisp-carrot/15 border-crisp-carrot shadow-sm" 
+                              : "bg-muted border-stone/10 hover:bg-muted/80"
                           )}
                         >
                           <div className={cn(
                             "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
-                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-white"
+                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-card"
                           )}>
                             {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-bold block text-charcoal truncate">
+                            <span className="text-xs font-bold block text-deep-forest truncate">
                               {tText(d.nameEn, d.nameBm)}
                             </span>
                             <span className="text-[10px] text-stone leading-tight block truncate font-light">
@@ -939,7 +940,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 {/* Vegetables */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center border-b border-stone/10 pb-1.5">
-                    <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                    <Label className="text-xs font-black text-[#A8E10C] uppercase tracking-wider block">
                       {tText('Vegetable Selection (Select min 1)', 'Sayur-sayuran (Pilih minima 1) *')}
                     </Label>
                     <span className="text-[10px] font-bold text-crisp-carrot bg-crisp-carrot/10 px-2 py-0.5 rounded-full">
@@ -957,19 +958,19 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                           className={cn(
                             "p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all duration-200",
                             isSelected 
-                              ? "bg-crisp-carrot/5 border-crisp-carrot shadow-sm" 
-                              : "bg-[#FAF8F5] border-stone/10 hover:bg-[#FAF8F5]/80"
+                              ? "bg-crisp-carrot/15 border-crisp-carrot shadow-sm" 
+                              : "bg-muted border-stone/10 hover:bg-muted/80"
                           )}
                         >
                           <div className={cn(
                             "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
-                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-white"
+                            isSelected ? "bg-crisp-carrot border-crisp-carrot text-white" : "border-stone/20 bg-card"
                           )}>
                             {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-bold block text-charcoal truncate">
+                            <span className="text-xs font-bold block text-deep-forest truncate">
                               {tText(v.nameEn, v.nameBm)}
                             </span>
                             <span className="text-[10px] text-stone leading-tight block truncate font-light">
@@ -984,7 +985,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
                 {/* Custom Menu Request */}
                 <div className="space-y-2 pt-2 border-t border-stone/10">
-                  <Label className="text-xs font-black text-[#8C6510] uppercase tracking-wider block">
+                  <Label className="text-xs font-black text-[#A8E10C] uppercase tracking-wider block">
                     {tText('Other / Custom Menu Request (Optional)', 'Permintaan Menu Lain / Khas (Pilihan)')}
                   </Label>
                   <p className="text-[11px] text-stone font-light leading-tight">
@@ -1000,27 +1001,27 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                     )}
                     value={orderState.customMenu}
                     onChange={(e) => setOrderState(prev => ({ ...prev, customMenu: e.target.value }))}
-                    className="w-full min-h-[90px] border-stone/20 rounded-2xl p-3 bg-white text-xs text-charcoal focus:border-crisp-carrot focus:ring-1 focus:ring-crisp-carrot"
+                    className="w-full min-h-[90px] border-stone/20 rounded-2xl p-3 bg-card text-xs text-deep-forest focus:border-crisp-carrot focus:ring-1 focus:ring-crisp-carrot"
                   />
                 </div>
 
                 {/* REALTIME SELECTION SUMMARY PANEL */}
-                <div className="bg-[#FAF8F5] border border-[#C2932D]/30 p-4.5 rounded-2xl space-y-2.5 shadow-sm">
+                <div className="bg-muted border border-[#A8E10C]/30 p-4.5 rounded-2xl space-y-2.5 shadow-sm">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Quantity:', 'Kuantiti:')}</span>
-                    <span className="font-bold text-charcoal">{orderState.guests} {tText('pax', 'orang')}</span>
+                    <span className="font-bold text-deep-forest">{orderState.guests} {tText('pax', 'orang')}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Dishes Selected:', 'Hidangan Dipilih')}</span>
-                    <span className="font-bold text-charcoal">
+                    <span className="font-bold text-deep-forest">
                       {orderState.dishes.length + orderState.veggies.length} {tText('dishes', 'lauk')}
                     </span>
                   </div>
                   <div className="border-t border-stone/10 pt-2.5 flex justify-between items-center">
-                    <span className="text-sm font-bold text-charcoal uppercase tracking-wider">
+                    <span className="text-sm font-bold text-deep-forest uppercase tracking-wider">
                       {tText('Pricing Status:', 'Status Harga:')}
                     </span>
-                    <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                    <span className="text-xs font-bold text-[#A8E10C] bg-[#A8E10C]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
                       {tText('To Be Quoted by Admin', 'Ditentukan oleh Admin')}
                     </span>
                   </div>
@@ -1058,7 +1059,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 className="space-y-5 text-left"
               >
                 <div>
-                  <h2 className="text-lg font-bold text-charcoal font-display">
+                  <h2 className="text-lg font-bold text-deep-forest font-display">
                     {tText('Enter Booking Details', 'Butiran Tempahan')}
                   </h2>
                   <p className="text-xs text-stone font-light mt-0.5">
@@ -1083,12 +1084,12 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                             onValueChange={(val) => setOrderState(prev => ({ ...prev, companyName: val }))}
                             required
                           >
-                            <SelectTrigger className="w-full h-11 rounded-2xl border-stone/20 bg-[#FAF8F5] focus:ring-crisp-carrot/20">
+                            <SelectTrigger className="w-full h-11 rounded-2xl border-stone/20 bg-muted focus:ring-crisp-carrot/20">
                               <SelectValue placeholder={`-- ${tText('Select Organization', 'Pilih Jabatan')} --`} />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-stone/10">
+                            <SelectContent className="bg-card border-stone/10">
                               {SAVED_COMPANIES.map((company, idx) => (
-                                <SelectItem key={idx} value={company} className="text-charcoal focus:bg-crisp-carrot/10">
+                                <SelectItem key={idx} value={company} className="text-deep-forest focus:bg-crisp-carrot/10">
                                   {company}
                                 </SelectItem>
                               ))}
@@ -1168,7 +1169,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         value={orderState.date}
                         min={format(new Date(), 'yyyy-MM-dd')}
                         onChange={(e) => setOrderState(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full h-11 px-4 border border-stone/10 bg-white text-charcoal rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
+                        className="w-full h-11 px-4 border border-stone/10 bg-card text-deep-forest rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1177,7 +1178,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         type="time"
                         value={orderState.time}
                         onChange={(e) => setOrderState(prev => ({ ...prev, time: e.target.value }))}
-                        className="w-full h-11 px-4 border border-stone/10 bg-white text-charcoal rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
+                        className="w-full h-11 px-4 border border-stone/10 bg-card text-deep-forest rounded-2xl font-sans text-sm focus:outline-none focus:border-crisp-carrot focus:ring-2 focus:ring-crisp-carrot/10"
                       />
                     </div>
                   </div>
@@ -1227,8 +1228,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         className={cn(
                           "p-4.5 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
                           orderState.delivery === 'delivery' 
-                            ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
-                            : "bg-[#FAF8F5] border-stone/15 text-stone"
+                            ? "bg-crisp-carrot/15 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                            : "bg-muted border-stone/15 text-stone"
                         )}
                       >
                         <Truck className="w-5 h-5 text-crisp-carrot" />
@@ -1242,8 +1243,8 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         className={cn(
                           "p-4.5 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-1.5 cursor-pointer",
                           orderState.delivery === 'pickup' 
-                            ? "bg-crisp-carrot/5 border-crisp-carrot text-crisp-carrot shadow-sm" 
-                            : "bg-[#FAF8F5] border-stone/15 text-stone"
+                            ? "bg-crisp-carrot/15 border-crisp-carrot text-crisp-carrot shadow-sm" 
+                            : "bg-muted border-stone/15 text-stone"
                         )}
                       >
                         <Store className="w-5 h-5 text-crisp-carrot" />
@@ -1298,7 +1299,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 className="space-y-5 text-left"
               >
                 <div>
-                  <h2 className="text-lg font-bold text-charcoal font-display">
+                  <h2 className="text-lg font-bold text-deep-forest font-display">
                     {tText('Review & Confirm Inquiry', 'Semak & Sahkan')}
                   </h2>
                   <p className="text-xs text-stone font-light mt-0.5">
@@ -1310,77 +1311,77 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
                   
                   {/* Event & Serve Summary */}
-                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                  <div className="bg-muted border border-stone/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-[#A8E10C] uppercase tracking-wider block mb-1">
                       {tText('Event Summary', 'Maklumat Majlis')}
                     </span>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('Event Type', 'Jenis Majlis')}</span>
-                      <span className="font-bold text-charcoal">{orderState.eventType === 'pejabat' ? tText('Corporate Feast', 'Jamuan Pejabat') : tText('Private Event', 'Lain-lain')}</span>
+                      <span className="font-bold text-deep-forest">{orderState.eventType === 'pejabat' ? tText('Corporate Feast', 'Jamuan Pejabat') : tText('Private Event', 'Lain-lain')}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('Catering Block', 'Hidangan Untuk')}</span>
-                      <span className="font-bold text-charcoal">
+                      <span className="font-bold text-deep-forest">
                         {orderState.mealType === 'sarapan' ? tText('Breakfast', 'Sarapan') : orderState.mealType === 'tengahari' ? tText('Lunch', 'Makan Tengah Hari') : tText('Hi-Tea', 'Hi-Tea')}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('Quantity', 'Kuantiti')}</span>
-                      <span className="font-bold text-charcoal">{orderState.guests} {tText('pax', 'orang')}</span>
+                      <span className="font-bold text-deep-forest">{orderState.guests} {tText('pax', 'orang')}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('Date & Time', 'Tarikh & Masa')}</span>
-                      <span className="font-bold text-charcoal">{orderState.date} @ {orderState.time}</span>
+                      <span className="font-bold text-deep-forest">{orderState.date} @ {orderState.time}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('Method', 'Kaedah')}</span>
-                      <span className="font-bold text-charcoal">{orderState.delivery === 'delivery' ? tText('Delivery to Location', 'Hantar ke Lokasi') : tText('Collect at Restaurant', 'Ambil di Restoran')}</span>
+                      <span className="font-bold text-deep-forest">{orderState.delivery === 'delivery' ? tText('Delivery to Location', 'Hantar ke Lokasi') : tText('Collect at Restaurant', 'Ambil di Restoran')}</span>
                     </div>
                   </div>
 
                   {/* Customer Billing Summary */}
-                  <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                  <div className="bg-muted border border-stone/10 p-4 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-[#A8E10C] uppercase tracking-wider block mb-1">
                       {tText('Customer & Billing Info', 'Maklumat Pembayar')}
                     </span>
                     {orderState.eventType === 'pejabat' && (
                       <div className="flex justify-between items-start text-xs gap-4">
                         <span className="text-stone shrink-0">{tText('Organization', 'Syarikat/Jabatan')}</span>
-                        <span className="font-bold text-charcoal text-right">
+                        <span className="font-bold text-deep-forest text-right">
                           {orderState.companyName === 'other' ? orderState.customCompany : orderState.companyName}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('PIC Name', 'Nama')}</span>
-                      <span className="font-bold text-charcoal">{orderState.name}</span>
+                      <span className="font-bold text-deep-forest">{orderState.name}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('PIC Phone', 'Telefon')}</span>
-                      <span className="font-bold text-charcoal">{orderState.contact}</span>
+                      <span className="font-bold text-deep-forest">{orderState.contact}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-stone">{tText('PIC Email', 'E-mel')}</span>
-                      <span className="font-bold text-charcoal break-all text-right">{orderState.email}</span>
+                      <span className="font-bold text-deep-forest break-all text-right">{orderState.email}</span>
                     </div>
                     <div className="flex justify-between items-start text-xs gap-4">
                       <span className="text-stone shrink-0">{tText('Venue Location', 'Lokasi')}</span>
-                      <span className="font-bold text-charcoal text-right">{orderState.location}</span>
+                      <span className="font-bold text-deep-forest text-right">{orderState.location}</span>
                     </div>
                   </div>
 
                     {/* Selected Menu Dishes Summary */}
-                    <div className="bg-[#FAF8F5] border border-stone/10 p-4 rounded-2xl space-y-2">
-                      <span className="text-[10px] font-black text-[#8C6510] uppercase tracking-wider block mb-1">
+                    <div className="bg-muted border border-stone/10 p-4 rounded-2xl space-y-2">
+                      <span className="text-[10px] font-black text-[#A8E10C] uppercase tracking-wider block mb-1">
                         {tText('Selected Dishes Menu', 'Senarai Hidangan')}
                       </span>
-                      <div className="text-xs text-charcoal space-y-1 font-semibold">
+                      <div className="text-xs text-deep-forest space-y-1 font-semibold">
                         {orderState.dishes.length > 0 && (
                           <>
                             <p className="text-stone text-[11px] uppercase">{tText('Main Lauk:', 'Lauk Utama:')}</p>
                             <div className="pl-2 flex flex-wrap gap-1">
                               {orderState.dishes.map(d => (
-                                <span key={d.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                                <span key={d.id} className="inline-block bg-card border border-stone/10 px-2 py-0.5 rounded text-[10px]">
                                   {tText(d.nameEn, d.nameBm)}
                                 </span>
                               ))}
@@ -1393,7 +1394,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                             <p className="text-stone text-[11px] uppercase pt-1">{tText('Vegetables:', 'Sayur-sayuran:')}</p>
                             <div className="pl-2 flex flex-wrap gap-1">
                               {orderState.veggies.map(v => (
-                                <span key={v.id} className="inline-block bg-white border border-stone/10 px-2 py-0.5 rounded text-[10px]">
+                                <span key={v.id} className="inline-block bg-card border border-stone/10 px-2 py-0.5 rounded text-[10px]">
                                   {tText(v.nameEn, v.nameBm)}
                                 </span>
                               ))}
@@ -1404,15 +1405,15 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                         {orderState.customMenu && (
                           <>
                             <p className="text-stone text-[11px] uppercase pt-1">{tText('Custom Menu / Request:', 'Menu Khas / Permintaan:')}</p>
-                            <p className="pl-2 text-[11px] font-normal text-charcoal italic whitespace-pre-wrap bg-white p-2 rounded-lg border border-stone/5 mt-0.5">
+                            <p className="pl-2 text-[11px] font-normal text-deep-forest italic whitespace-pre-wrap bg-card p-2 rounded-lg border border-stone/5 mt-0.5">
                               "{orderState.customMenu}"
                             </p>
                           </>
                         )}
 
                         {orderState.dishes.length === 0 && orderState.veggies.length === 0 && !orderState.customMenu && (
-                          <div className="bg-amber-50/50 border border-amber-500/20 p-2.5 rounded-lg text-center mt-2">
-                            <p className="text-xs font-bold text-[#8C6510]">
+                          <div className="bg-[#A8E10C]/10 border border-[#A8E10C]/30 p-2.5 rounded-lg text-center mt-2">
+                            <p className="text-xs font-bold text-[#A8E10C]">
                               {tText('Set Box Makanan & Minuman (Default)', 'Set Box Makanan & Minuman (Lalai)')}
                             </p>
                             <p className="text-[10px] text-stone font-light mt-0.5 leading-tight">
@@ -1423,10 +1424,10 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                       </div>
 
                     <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
-                      <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                      <span className="text-xs font-bold text-deep-forest uppercase tracking-wider">
                         {tText('Catering Price:', 'Harga Katering:')}
                       </span>
-                      <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                      <span className="text-xs font-bold text-[#A8E10C] bg-[#A8E10C]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
                         {tText('Quotation Pending', 'Menunggu Sebut Harga')}
                       </span>
                     </div>
@@ -1483,10 +1484,10 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 className="space-y-6 text-center"
               >
                 <div className="py-4">
-                  <div className="w-16 h-108 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 scale-110 shadow-sm">
+                  <div className="w-16 h-108 rounded-full bg-[#A8E10C]/15 text-[#A8E10C] flex items-center justify-center mx-auto mb-4 scale-110 shadow-sm">
                     <CheckCircle2 className="w-12 h-12" />
                   </div>
-                  <h2 className="text-xl font-bold text-charcoal font-display">
+                  <h2 className="text-xl font-bold text-deep-forest font-display">
                     {tText('Booking Request Sent!', 'Tempahan Dihantar!')}
                   </h2>
                   <p className="text-xs text-stone font-light max-w-sm mx-auto mt-1">
@@ -1498,62 +1499,62 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                 </div>
 
                 {/* Bill details receipt box */}
-                <div className="bg-[#FAF8F5] border border-stone/10 p-5 rounded-2xl text-left space-y-2.5">
+                <div className="bg-muted border border-stone/10 p-5 rounded-2xl text-left space-y-2.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Reference Number:', 'Nombor Rujukan')}</span>
-                    <span className="font-bold text-[#8C6510] text-sm tracking-wider select-all">{referenceNumber}</span>
+                    <span className="font-bold text-[#A8E10C] text-sm tracking-wider select-all">{referenceNumber}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('PIC Name:', 'Nama')}</span>
-                    <span className="font-bold text-charcoal">{orderState.name}</span>
+                    <span className="font-bold text-deep-forest">{orderState.name}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('PIC Contact:', 'Telefon')}</span>
-                    <span className="font-bold text-charcoal">{orderState.contact}</span>
+                    <span className="font-bold text-deep-forest">{orderState.contact}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Event Date:', 'Tarikh Majlis')}</span>
-                    <span className="font-bold text-charcoal">{orderState.date}</span>
+                    <span className="font-bold text-deep-forest">{orderState.date}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-stone">{tText('Meal serving:', 'Hidangan Untuk')}</span>
-                    <span className="font-bold text-charcoal">
+                    <span className="font-bold text-deep-forest">
                       {orderState.mealType === 'sarapan' ? tText('Breakfast', 'Sarapan') : orderState.mealType === 'tengahari' ? tText('Lunch', 'Makan Tengah Hari') : tText('Hi-Tea', 'Hi-Tea')}
                     </span>
                   </div>
                   
                   <div className="border-t border-stone/10 pt-2.5 mt-2 flex justify-between items-center">
-                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                    <span className="text-xs font-bold text-deep-forest uppercase tracking-wider">
                       {tText('Catering Price:', 'Harga Katering:')}
                     </span>
-                    <span className="text-xs font-bold text-[#8C6510] bg-[#8C6510]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                    <span className="text-xs font-bold text-[#A8E10C] bg-[#A8E10C]/10 px-2.5 py-1 rounded-full uppercase tracking-wide">
                       {tText('Quotation Pending', 'Menunggu Sebut Harga')}
                     </span>
                   </div>
                 </div>
 
                 {/* Email Delivery relay receipt check */}
-                <div className="p-4 bg-white rounded-2xl border border-stone/10 text-left space-y-2.5 shadow-sm">
+                <div className="p-4 bg-card rounded-2xl border border-stone/10 text-left space-y-2.5 shadow-sm">
                   <span className="text-[10px] text-stone font-bold uppercase tracking-wider block">
                     {tText('INVOICE / RECEIPT STATUS', 'STATUS PENGHANTARAN INVOIS')}
                   </span>
                   
                   <div className="space-y-1.5 text-xs text-stone">
-                    <p className="flex items-center gap-1.5 text-charcoal font-semibold">
-                      <span className="text-emerald-600">✓</span>
+                    <p className="flex items-center gap-1.5 text-deep-forest font-semibold">
+                      <span className="text-[#A8E10C]">✓</span>
                       <span>{tText('Preliminary PDF generated', 'Invois PDF dihasilkan')}</span>
                     </p>
                     
                     {emailStatus === 'sending' && (
-                      <p className="flex items-center gap-1.5 animate-pulse text-amber-500">
-                        <span className="text-amber-500 font-bold">●</span>
+                      <p className="flex items-center gap-1.5 animate-pulse text-crisp-carrot">
+                        <span className="text-crisp-carrot font-bold">●</span>
                         <span>{tText('Mailing PDF copy...', 'Sedang menghantar salinan emel...')}</span>
                       </p>
                     )}
 
                     {emailStatus === 'success' && (
-                      <p className="flex items-center gap-1.5 text-charcoal font-semibold">
-                        <span className="text-emerald-600">✓</span>
+                      <p className="flex items-center gap-1.5 text-deep-forest font-semibold">
+                        <span className="text-[#A8E10C]">✓</span>
                         <span>{tText(`E-mailed copy successfully to ${orderState.email}`, `Salinan invois emel berjaya dihantar ke ${orderState.email}`)}</span>
                       </p>
                     )}
@@ -1583,7 +1584,7 @@ export default function OrderForm({ initialData }: OrderFormProps) {
                   <Button
                     onClick={handleShareReceipt}
                     variant="outline"
-                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-charcoal cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 border-stone/20 h-12 rounded-2xl font-bold text-sm text-deep-forest cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Share2 className="w-4 h-4 text-crisp-carrot" />
                     <span>{tText('Share Invoice / Receipt', 'Kongsi Resit')}</span>
@@ -1597,13 +1598,13 @@ export default function OrderForm({ initialData }: OrderFormProps) {
 
         {/* Bottom Navigation mimics Kimi bottom bar layout */}
         {currentStep <= 4 && (
-          <div className="bg-white border-t border-stone/10 p-3 pb-6 flex justify-around items-center select-none">
+          <div className="bg-card border-t border-stone/10 p-3 pb-6 flex justify-around items-center select-none">
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
               className={cn(
                 "flex flex-col items-center gap-0.5 cursor-pointer text-xs font-semibold px-4 py-1.5 rounded-xl transition-all",
-                currentStep < 5 ? "text-crisp-carrot bg-crisp-carrot/5" : "text-stone"
+                currentStep < 5 ? "text-crisp-carrot bg-crisp-carrot/15" : "text-stone"
               )}
             >
               <Utensils className="w-5 h-5 shrink-0" />

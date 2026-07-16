@@ -75,6 +75,7 @@ const translations: Translation = {
   billed: { en: 'Billed', bm: 'Diinvois' },
   cancelled: { en: 'Cancelled', bm: 'Dibatalkan' },
   rejected: { en: 'Rejected', bm: 'Ditolak' },
+  cancel_requested: { en: 'Cancel Requested', bm: 'Minta Batal' },
   generate_invoice: { en: 'Generate Invoice', bm: 'Jana Invois' },
   invoice_generated: { en: 'Invoice Generated', bm: 'Invois Dijana' },
   no_orders: { en: 'No orders found', bm: 'Tiada pesanan dijumpai' },

@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTheme } from '@/context/ThemeContext';
-import { Languages, Shield, ArrowRight, User as UserIcon, Sun, Moon } from 'lucide-react';
+import { Shield, ArrowRight, User as UserIcon } from 'lucide-react';
 import type { User } from 'firebase/auth';
 
 interface MobileMenuProps {
@@ -18,7 +17,6 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
   const overlayRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
   const { language, setLanguage, t } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'bm' : 'en');
@@ -72,14 +70,18 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
         </button>
 
         <nav ref={itemsRef} className="flex-1 flex flex-col gap-1 overflow-y-auto pb-8">
-          <div className="flex flex-col justify-center mb-6">
-            <span className="font-urban text-2xl text-deep-forest leading-none tracking-wide">
+          <Link
+            to={currentUser ? "/home" : "/"}
+            onClick={onClose}
+            className="flex flex-col justify-center mb-6 cursor-pointer group"
+          >
+            <span className="font-urban text-2xl text-deep-forest group-hover:text-sunshine transition-colors leading-none tracking-wide">
               Restoran Wawasan
             </span>
             <span className="block font-graffiti text-lg text-crisp-carrot leading-none mt-1 ml-0.5">
               Pak Usop
             </span>
-          </div>
+          </Link>
 
           {links.map((link) => {
             if (link.isButton) {
@@ -127,31 +129,16 @@ export default function MobileMenu({ isOpen, onClose, links, currentUser, onAuth
             )}
           </button>
 
-          {/* Day/Night Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border border-deep-forest/20 text-deep-forest rounded-full hover:bg-deep-forest/5 transition-all text-sm font-medium"
-          >
-            {theme === 'light' ? (
-              <>
-                <Moon className="w-4 h-4 text-sunshine" />
-                <span>Switch to Night Mode</span>
-              </>
-            ) : (
-              <>
-                <Sun className="w-4 h-4 text-sunshine animate-pulse" />
-                <span>Switch to Day Mode</span>
-              </>
-            )}
-          </button>
-
           {/* Language Toggle */}
           <button
             onClick={toggleLanguage}
-            className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border border-deep-forest/20 text-deep-forest rounded-full hover:bg-deep-forest/5 transition-all text-sm font-medium"
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 border border-deep-forest/20 text-deep-forest rounded-full hover:bg-deep-forest/5 transition-all text-sm font-bold bg-black/[0.02]"
           >
-            <Languages className="w-4 h-4 text-sunshine" />
-            <span>{language === 'en' ? 'Tukar ke Bahasa Melayu' : 'Switch to English'}</span>
+            <span className="tracking-wider">
+              <span className={language === 'en' ? 'text-crisp-carrot font-extrabold' : 'text-deep-forest/50'}>EN</span>
+              <span className="text-deep-forest/30 mx-1.5">/</span>
+              <span className={language === 'bm' ? 'text-crisp-carrot font-extrabold' : 'text-deep-forest/50'}>BM</span>
+            </span>
           </button>
 
           {/* Admin Link */}

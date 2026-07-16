@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect, useState, ReactNode } from 'react';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebaseConfig';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { SafeArea } from 'capacitor-plugin-safe-area';
 import { Capacitor } from '@capacitor/core';
@@ -12,7 +14,6 @@ import { ToastProvider } from '@/components/ui/Toast';
 import PushNotificationHandler from '@/components/PushNotificationHandler';
 import NativeBackButtonHandler from '@/components/NativeBackButtonHandler';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
-
 import LandingPage from '@/pages/LandingPage';
 import OrderPage from '@/pages/OrderPage';
 import AdminPage from '@/pages/AdminPage';
@@ -35,6 +36,7 @@ function SmoothScrollHandler() {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a[href^="#"]');
+
       if (anchor) {
         const href = anchor.getAttribute('href');
         if (href && href !== '#' && !href.startsWith('#/')) {
@@ -54,6 +56,42 @@ function SmoothScrollHandler() {
   return null;
 }
 
+// Guard component to ensure guest or authenticated user has explicitly started from LoginPage
+function SessionGuard({ children }: { children: ReactNode }) {
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const isSessionStarted = sessionStorage.getItem('wawasan_session_started') === 'true';
+      const isGuestAllowed = sessionStorage.getItem('wawasan_guest_allowed') === 'true';
+      
+      // They MUST have started the session in this browser tab/window to be allowed.
+      if (isSessionStarted && (user || isGuestAllowed)) {
+        setAllowed(true);
+      } else {
+        setAllowed(false);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sunshine"></div>
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppContent() {
   return (
     <>
@@ -62,9 +100,34 @@ function AppContent() {
       <ScrollToTopButton />
       <Routes>
         <Route path="/" element={<LoginPage />} />
-        <Route path="/home" element={<LandingPage />} />
-        <Route path="/main" element={<LandingPage />} />
-        <Route path="/order" element={<OrderPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Client Routes protected by SessionGuard */}
+        <Route 
+          path="/home" 
+          element={
+            <SessionGuard>
+              <LandingPage />
+            </SessionGuard>
+          } 
+        />
+        <Route 
+          path="/main" 
+          element={
+            <SessionGuard>
+              <LandingPage />
+            </SessionGuard>
+          } 
+        />
+        <Route 
+          path="/order" 
+          element={
+            <SessionGuard>
+              <OrderPage />
+            </SessionGuard>
+          } 
+        />
+        
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>
@@ -74,6 +137,15 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
+    // Clear any temporary session/guest flags on a fresh load or manual refresh
+    sessionStorage.removeItem('wawasan_session_started');
+    sessionStorage.removeItem('wawasan_guest_allowed');
+
+    // Force route back to the startup screen /#/ on load or refresh
+    if (window.location.hash && window.location.hash !== '#/') {
+      window.location.hash = '#/';
+    }
+
     // Sync Capacitor Preferences to localStorage for synchronous access fallback
     syncPreferencesToLocalStorage();
 

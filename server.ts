@@ -104,6 +104,15 @@ function getFirestore() {
   return getFirestoreModular(app);
 }
 
+interface OrderData {
+  id?: string;
+  invoiceNo?: string;
+  name?: string;
+  email?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 async function sendNotificationToTopic(topic: string, title: string, body: string) {
   try {
     const app = getAdminApp();
@@ -185,6 +194,20 @@ function getStatusCopy(status: string, name: string, invoiceNo: string, lang: No
       pushTitle: "Order completed",
       pushBody: `Your order${invoiceSuffix} is completed. Thank you!`,
     },
+    cancel_requested: {
+      subject: `Your cancellation request is being reviewed${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Cancellation Requested — Pending Review",
+      message: `Hi ${who}, we've received your request to cancel your catering order${invoiceSuffix} and it is currently pending review by the admin. We'll update you soon.`,
+      pushTitle: "Cancellation pending review",
+      pushBody: `Your cancellation request${invoiceSuffix} is pending review.`,
+    },
+    cancelled: {
+      subject: `Your order has been cancelled${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Order Cancelled 🚫",
+      message: `Hi ${who}, your catering order${invoiceSuffix} has been successfully cancelled.`,
+      pushTitle: "Order cancelled 🚫",
+      pushBody: `Your order${invoiceSuffix} has been cancelled.`,
+    },
   };
 
   const bm: Record<string, StatusCopy> = {
@@ -222,6 +245,20 @@ function getStatusCopy(status: string, name: string, invoiceNo: string, lang: No
       message: `Salam ${who}, tempahan katering anda${invoiceSuffix} kini ditanda sebagai selesai. Terima kasih kerana memilih Restoran Wawasan — kami harap dapat berkhidmat lagi!`,
       pushTitle: "Tempahan selesai",
       pushBody: `Tempahan anda${invoiceSuffix} telah selesai. Terima kasih!`,
+    },
+    cancel_requested: {
+      subject: `Permintaan pembatalan anda sedang disemak${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Pembatalan Diminta — Menunggu Semakan",
+      message: `Salam ${who}, kami telah menerima permintaan pembatalan tempahan katering anda${invoiceSuffix} dan ia sedang menunggu kelulusan daripada admin. Kami akan maklumkan tidak lama lagi.`,
+      pushTitle: "Pembatalan menunggu semakan",
+      pushBody: `Permintaan pembatalan anda${invoiceSuffix} sedang disemak.`,
+    },
+    cancelled: {
+      subject: `Pesanan anda telah dibatalkan${invoiceNo ? ` — ${invoiceNo}` : ""}`,
+      heading: "Pesanan Dibatalkan 🚫",
+      message: `Salam ${who}, tempahan katering anda${invoiceSuffix} telah berjaya dibatalkan.`,
+      pushTitle: "Pesanan dibatalkan 🚫",
+      pushBody: `Pesanan anda${invoiceSuffix} telah dibatalkan.`,
     },
   };
 
@@ -1099,6 +1136,175 @@ async function startServer() {
     }
   });
 
+  // Cancel order request endpoint (called by member/user)
+  app.post("/api/orders/cancel", async (req, res) => {
+    try {
+      const { orderId, userId } = req.body;
+
+      if (!orderId || !userId) {
+        return res.status(400).json({ success: false, error: "Missing orderId or userId" });
+      }
+
+      // 1. Fetch document from Firestore or Local JSON
+      let data: OrderData | null = null;
+      let isLocal = false;
+      
+      try {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection("orders").doc(orderId).get();
+        if (docSnap.exists) {
+          data = docSnap.data() as OrderData;
+        }
+      } catch (dbErr) {
+        console.warn("Firestore fetch in order cancel failed, trying local backup:", dbErr);
+      }
+
+      if (!data) {
+        const localOrders = getLocalOrders();
+        const found = localOrders.find(o => o.id === orderId);
+        if (found) {
+          data = found;
+          isLocal = true;
+        }
+      }
+
+      if (!data) {
+        return res.status(404).json({ success: false, error: "Order not found" });
+      }
+
+      // 2. Security validation: ensure order belongs to requesting user
+      const orderUserId = data.userId || data.uid;
+      if (orderUserId !== userId) {
+        return res.status(403).json({ success: false, error: "Unauthorized: You do not own this order" });
+      }
+
+      // 3. Update Firestore or Local JSON to status 'cancel_requested'
+      const updatedFields = {
+        status: 'cancel_requested',
+        cancelRequestedAt: new Date().toISOString()
+      };
+
+      if (!isLocal) {
+        try {
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).update(updatedFields));
+        } catch (dbErr) {
+          console.warn("Firestore update in order cancel failed after retries, syncing locally:", dbErr);
+          isLocal = true;
+        }
+      }
+
+      if (isLocal) {
+        const localOrders = getLocalOrders();
+        const localIndex = localOrders.findIndex(o => o.id === orderId);
+        if (localIndex !== -1) {
+          localOrders[localIndex] = {
+            ...localOrders[localIndex],
+            ...updatedFields
+          };
+          saveLocalOrders(localOrders);
+        }
+      }
+
+      // Sync Google Calendar Event in background
+      syncGoogleCalendarEvent(orderId).catch(err => {
+        console.error("Background Google Calendar event sync error during cancel request:", err);
+      });
+
+      // Notify the customer that cancellation has been requested
+      const mergedOrder = {
+        ...data,
+        ...updatedFields,
+        id: orderId,
+      } as unknown as OrderData;
+      notifyCustomerOfStatusChange(transporter, mergedOrder, "cancel_requested").catch(err => {
+        console.error("[StatusNotify] Background cancel requested notification error:", err);
+      });
+
+      // Also trigger a push notification to admin/topic
+      sendNotificationToTopic("new_orders", "Order Cancellation Requested", `Cancellation requested for order ${data.invoiceNo || orderId} by ${data.name || 'Customer'}`).catch(err => {
+        console.error("Background push notification error for cancellation request:", err);
+      });
+
+      return res.json({ success: true, message: "Cancellation request submitted successfully" });
+    } catch (err) {
+      console.error("Order cancel endpoint error:", err);
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
+  // Direct delete of billed order endpoint (called by member/user)
+  app.post("/api/orders/delete", async (req, res) => {
+    try {
+      const { orderId, userId } = req.body;
+
+      if (!orderId || !userId) {
+        return res.status(400).json({ success: false, error: "Missing orderId or userId" });
+      }
+
+      // 1. Fetch document from Firestore or Local JSON
+      let data: OrderData | null = null;
+      let isLocal = false;
+      
+      try {
+        const adminDb = getFirestore();
+        const docSnap = await adminDb.collection("orders").doc(orderId).get();
+        if (docSnap.exists) {
+          data = docSnap.data() as OrderData;
+        }
+      } catch (dbErr) {
+        console.warn("Firestore fetch in order delete failed, trying local backup:", dbErr);
+      }
+
+      if (!data) {
+        const localOrders = getLocalOrders();
+        const found = localOrders.find(o => o.id === orderId);
+        if (found) {
+          data = found;
+          isLocal = true;
+        }
+      }
+
+      if (!data) {
+        return res.status(404).json({ success: false, error: "Order not found" });
+      }
+
+      // 2. Security validation: ensure order belongs to requesting user
+      const orderUserId = data.userId || data.uid;
+      if (orderUserId !== userId) {
+        return res.status(403).json({ success: false, error: "Unauthorized: You do not own this order" });
+      }
+
+      // 3. Status validation: must be billed to be deleted directly by user
+      if (data.status !== "billed") {
+        return res.status(400).json({ success: false, error: "Unauthorized: Only billed orders can be deleted directly" });
+      }
+
+      // 4. Delete from Firestore and Local JSON
+      if (!isLocal) {
+        try {
+          const adminDb = getFirestore();
+          await runWithRetry(() => adminDb.collection("orders").doc(orderId).delete());
+        } catch (dbErr) {
+          console.warn("Firestore delete failed, falling back to local:", dbErr);
+          isLocal = true;
+        }
+      }
+
+      // Also delete from local orders
+      const localOrders = getLocalOrders();
+      const filtered = localOrders.filter(o => o.id !== orderId);
+      if (filtered.length !== localOrders.length) {
+        saveLocalOrders(filtered);
+      }
+
+      return res.json({ success: true, message: "Order deleted successfully" });
+    } catch (err) {
+      console.error("Order delete endpoint error:", err);
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : "Internal server error" });
+    }
+  });
+
   // Invoice Billing and Delivery system for Submissions/Orders collection
   app.post("/api/submissions/bill", async (req, res) => {
     try {
@@ -1758,7 +1964,7 @@ async function startServer() {
     try {
       jwt.verify(token, effectiveJwtSecret);
       next();
-    } catch (err) {
+    } catch {
       return res.status(401).json({ error: "Unauthorized: Invalid or expired admin session token" });
     }
   }
@@ -1923,6 +2129,24 @@ async function startServer() {
         if (!orderId) {
           return res.status(400).json({ error: "Missing orderId for delete" });
         }
+
+        // Detect if we need to send cancellation notification
+        let previousOrder: OrderData | undefined;
+        try {
+          const adminDb = getFirestore();
+          const docSnap = await adminDb.collection("orders").doc(orderId).get();
+          if (docSnap.exists) {
+            previousOrder = docSnap.data() as OrderData;
+          }
+        } catch (readErr) {
+          console.warn("[DeleteNotify] Could not read order before delete (Firestore):", readErr);
+        }
+        if (!previousOrder) {
+          const localOrdersBefore = getLocalOrders();
+          previousOrder = localOrdersBefore.find(o => o.id === orderId);
+        }
+
+        const isCancellationApproval = previousOrder?.status === "cancel_requested";
         
         try {
           const adminDb = getFirestore();
@@ -1936,6 +2160,19 @@ async function startServer() {
         const filtered = localOrders.filter(o => o.id !== orderId);
         if (filtered.length !== localOrders.length) {
           saveLocalOrders(filtered);
+        }
+
+        // Notify customer that cancellation request has been approved and order is cancelled
+        if (isCancellationApproval && previousOrder) {
+          const mergedOrder = {
+            ...previousOrder,
+            id: orderId,
+            status: 'cancelled'
+          };
+          console.log(`[StatusNotify] Order ${orderId} cancellation approved by admin. Notifying customer.`);
+          notifyCustomerOfStatusChange(transporter, mergedOrder, "cancelled").catch(err => {
+            console.error("[StatusNotify] Background cancellation notification error:", err);
+          });
         }
 
         return res.json({ success: true });

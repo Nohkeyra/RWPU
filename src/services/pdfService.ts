@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { numberToWords } from './numberToWordsBM';
+import type { Order, CombinedInvoicePayload } from '@/types';
 
 let cachedLogoBase64: string | null = null;
 
@@ -43,24 +44,6 @@ export const preloadLogoForPDF = (): Promise<string> => {
     img.src = '/assets/wawasan_logo.jpg';
   });
 };
-
-interface Order {
-  to: string;
-  attn?: string;
-  name: string;
-  contact: string;
-  email: string;
-  dateTime: string;
-  location: string;
-  quantity: number;
-  meals: string[];
-  menu?: string;
-  notes?: string;
-  prices?: Record<string, number>;
-  totalAmount?: number;
-  invoiceNo?: string;
-  lang?: 'en' | 'bm';
-}
 
 const formatDateSafe = (dateString: string | undefined, lang: 'en' | 'bm'): string => {
   if (!dateString) return '-';
@@ -380,9 +363,7 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.text('Restoran Wawasan  |  Unit 3, Level B3, Menara PjH, Putrajaya  |  Est. 1986', 105, 285, { align: 'center' });
 
 
-  // ==========================================
-  // PAGE 2: PIC DETAILS & SIGNATURES
-  // ==========================================
+  // Final page with PIC info
   doc.addPage();
 
   // --- 1. PAGE 2 HEADER ---
@@ -497,6 +478,384 @@ export const generateInvoicePDF = (order: Order, isFinal: boolean, lang: 'en' | 
   doc.line(15, sigSectionY + 25, 80, sigSectionY + 25); // signature line
 
   // --- 4. PAGE 2 FOOTER LINE & TEXTS ---
+  const footerLineY = sigSectionY + 42;
+  doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
+  doc.setLineWidth(0.3);
+  doc.line(15, footerLineY, 195, footerLineY);
+
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('Terima kasih di atas kepercayaan anda  |  ON BEHALF OF RESTORAN WAWASAN', 105, footerLineY + 5, { align: 'center' });
+
+  doc.setTextColor(cGrey[0], cGrey[1], cGrey[2]);
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(7.5);
+  doc.text('* This file is computer generated — no company stamp required', 105, footerLineY + 9, { align: 'center' });
+
+  return doc;
+};
+
+export const generateCombinedInvoicePDF = (payload: CombinedInvoicePayload, isFinal: boolean = true): jsPDF => {
+  const { orders, includeNotes, lang = 'bm' } = payload;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const cCreamBg = [250, 247, 240];
+  const cGoldBorder = [194, 147, 45];
+  const cHeaderGold = [166, 124, 30];
+  const cDarkBrown = [96, 64, 8];
+  const cCharcoal = [26, 24, 22];
+  const cGrey = [148, 163, 184];
+
+  const drawPageHeader = (pageNumber: number) => {
+    if (cachedLogoBase64) {
+      try {
+        doc.addImage(cachedLogoBase64, 'JPEG', 15, 14, 21, 21);
+      } catch { console.warn('Logo err'); }
+    }
+
+    doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('RESTORAN WAWASAN', 40, 20);
+
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.text('Unit 3, Level B3, Menara PjH', 40, 25);
+    doc.text('Jalan P2a, Presint 2, 62100 Putrajaya', 40, 29);
+    doc.text('Est. 1986', 40, 33);
+
+    doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.text('COMBINED INVOICE', 195, 24, { align: 'right' });
+
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.text(`Tarikh / Date: ${formatDateSafe(new Date().toISOString(), lang)}`, 195, 33, { align: 'right' });
+    if (pageNumber > 1) {
+      doc.text(`Page ${pageNumber}`, 195, 38, { align: 'right' });
+    }
+  };
+
+  let pageNumber = 1;
+  drawPageHeader(pageNumber);
+
+  const firstOrder = orders[0] || {} as Order;
+  const recipientText = firstOrder.to + (firstOrder.attn ? ` (Attn: ${firstOrder.attn})` : '');
+  
+  drawCreamBox(doc, 15, 42, 180, 15, 'KEPADA / TO', recipientText, true);
+
+  const allPossibleMeals = ['breakfast', 'lunch', 'tea_break', 'hi_tea', 'dinner'];
+  const activeMeals = allPossibleMeals.filter(m => orders.some(o => (o.meals || []).includes(m)));
+  
+  const startX = 15;
+  const colDate = 20;
+  const colQty = 10;
+  const colNotes = includeNotes ? 30 : 0;
+  const colMealsWidth = activeMeals.length * 15;
+  const colRM = 16;
+  const colMenu = 180 - colDate - colQty - colNotes - colMealsWidth - colRM;
+
+  const xDate = startX;
+  const xQty = xDate + colDate;
+  const xNotes = xQty + colQty;
+  const xMenu = includeNotes ? xNotes + colNotes : xNotes;
+  const xMealsStart = xMenu + colMenu;
+  const xRM = xMealsStart + colMealsWidth;
+
+  const drawMatrixHeader = (y: number) => {
+    doc.setFillColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+    doc.rect(15, y, 180, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    
+    doc.text('ORDER DETAILS', xDate + (xMealsStart - xDate) / 2, y + 4.8, { align: 'center' });
+    
+    if (activeMeals.length > 0) {
+      doc.line(xMealsStart, y, xMealsStart, y + 7);
+      doc.text('PRICE PER UNIT (RM)', xMealsStart + colMealsWidth / 2, y + 4.8, { align: 'center' });
+    }
+    
+    doc.line(xRM, y, xRM, y + 7);
+    doc.text('TOTAL', xRM + colRM / 2, y + 4.8, { align: 'center' });
+
+    const r2Y = y + 7;
+    doc.setFillColor(cDarkBrown[0], cDarkBrown[1], cDarkBrown[2]);
+    doc.rect(15, r2Y, 180, 7, 'F');
+    
+    doc.setFontSize(7.5);
+    const centerText = (txt: string, x: number, w: number) => {
+      doc.text(txt, x + w / 2, r2Y + 4.8, { align: 'center' });
+    };
+
+    centerText('Date', xDate, colDate);
+    centerText('QTY', xQty, colQty);
+    if (includeNotes) centerText('Notes', xNotes, colNotes);
+    centerText('Menu', xMenu, colMenu);
+
+    activeMeals.forEach((meal, i) => {
+      const shortLabel = mealLabelsMap[meal] || meal;
+      centerText(shortLabel, xMealsStart + (i * 15), 15);
+    });
+
+    centerText('RM', xRM, colRM);
+    
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.1);
+    [xQty, xNotes, xMenu, xMealsStart, ...activeMeals.map((_, i) => xMealsStart + i * 15), xRM].forEach(x => {
+      if (x > xDate && x < xRM + colRM) {
+        doc.line(x, r2Y, x, r2Y + 7);
+      }
+    });
+
+    return r2Y + 7;
+  };
+
+  let currentY = 62;
+  currentY = drawMatrixHeader(currentY);
+
+  let grandTotal = 0;
+
+  const checkPageBreak = (neededHeight: number) => {
+    if (currentY + neededHeight > 265) {
+      doc.addPage();
+      pageNumber++;
+      drawPageHeader(pageNumber);
+      currentY = 42;
+      currentY = drawMatrixHeader(currentY);
+    }
+  };
+
+  orders.forEach(order => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    
+    const formattedDate = formatDateSafe(order.dateTime, lang);
+    const splitDate = doc.splitTextToSize(formattedDate, colDate - 2);
+    const splitNotes = includeNotes ? doc.splitTextToSize(order.notes || '-', colNotes - 2) : [];
+    const splitMenu = doc.splitTextToSize(order.menu || 'Set Box', colMenu - 2);
+    const qtyStr = (order.quantity || 0).toString();
+    
+    const maxLines = Math.max(splitDate.length, splitNotes.length, splitMenu.length, 1);
+    const rowHeight = Math.max(7, maxLines * 4 + 3);
+    
+    checkPageBreak(rowHeight);
+
+    doc.setFillColor(cCreamBg[0], cCreamBg[1], cCreamBg[2]);
+    doc.rect(15, currentY, 180, rowHeight, 'F');
+    
+    doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
+    doc.setLineWidth(0.35);
+    doc.rect(15, currentY, 180, rowHeight, 'S');
+
+    [xQty, xNotes, xMenu, xMealsStart, ...activeMeals.map((_, i) => xMealsStart + i * 15), xRM].forEach(x => {
+      if (x > xDate && x < xRM + colRM && x !== xNotes || (includeNotes && x === xNotes)) {
+        doc.line(x, currentY, x, currentY + rowHeight);
+      }
+    });
+
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    const textY = currentY + 5;
+    
+    doc.text(splitDate, xDate + colDate / 2, textY, { align: 'center' });
+    doc.text(qtyStr, xQty + colQty / 2, textY, { align: 'center' });
+    if (includeNotes) doc.text(splitNotes, xNotes + colNotes / 2, textY, { align: 'center' });
+    doc.text(splitMenu, xMenu + colMenu / 2, textY, { align: 'center' });
+
+    activeMeals.forEach((meal, i) => {
+      if (order.meals.includes(meal) && order.prices && order.prices[meal] !== undefined) {
+        const p = order.prices[meal];
+        const val = typeof p === 'number' ? p : parseFloat(p as string);
+        doc.text(val.toFixed(2), xMealsStart + (i * 15) + 7.5, textY, { align: 'center' });
+      } else {
+        doc.setTextColor(cGrey[0], cGrey[1], cGrey[2]);
+        doc.text('-', xMealsStart + (i * 15) + 7.5, textY, { align: 'center' });
+        doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+      }
+    });
+
+    const totalNum = typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount as string) || 0;
+    doc.text(totalNum.toFixed(2), xRM + colRM - 2, textY, { align: 'right' });
+    
+    grandTotal += totalNum;
+    currentY += rowHeight;
+  });
+
+  checkPageBreak(7);
+  doc.setFillColor(cDarkBrown[0], cDarkBrown[1], cDarkBrown[2]);
+  doc.rect(15, currentY, 180, 7, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text('JUMLAH KESELURUHAN / GRAND TOTAL', 18, currentY + 4.8);
+  doc.text(`RM ${grandTotal.toFixed(2)}`, xRM + colRM - 2, currentY + 4.8, { align: 'right' });
+  currentY += 7;
+
+  checkPageBreak(40);
+  
+  const textNoteY = currentY + 7;
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'bolditalic');
+  doc.setFontSize(8.5);
+
+  if (isFinal && grandTotal > 0) {
+    const spelledWords = numberToWords(grandTotal, lang).toUpperCase();
+    doc.text(spelledWords, 15, textNoteY);
+  } else {
+    if (lang === 'en') {
+      doc.text('RINGGIT MALAYSIA ____________________________________________________________________ ONLY', 15, textNoteY);
+    } else {
+      doc.text('RINGGIT MALAYSIA ____________________________________________________________________ SAHAJA', 15, textNoteY);
+    }
+  }
+
+  const disclaimerY = textNoteY + 4;
+  doc.setFillColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.rect(15, disclaimerY, 1, 7.5, 'F');
+
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(7.5);
+  doc.text('* Harga yang diberikan termasuk caj perkhidmatan & set pembungkusan biodegradable.', 18, disclaimerY + 3);
+  doc.text('* The price given includes service charge & biodegradable packaging sets.', 18, disclaimerY + 6.5);
+
+  const bankBoxY = disclaimerY + 11;
+  doc.setFillColor(cCreamBg[0], cCreamBg[1], cCreamBg[2]);
+  doc.rect(15, bankBoxY, 180, 22, 'F');
+  doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
+  doc.setLineWidth(0.35);
+  doc.rect(15, bankBoxY, 180, 22, 'S');
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text('MAKLUMAT AKAUN BANK / BANK ACCOUNT DETAILS', 18, bankBoxY + 5);
+
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(lang === 'en' ? 'Name' : 'Nama', 18, bankBoxY + 11);
+  doc.text(lang === 'en' ? 'Bank' : 'Bank', 18, bankBoxY + 15);
+  doc.text(lang === 'en' ? 'Account No.' : 'No. Akaun', 18, bankBoxY + 19);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('RESTORAN WAWASAN', 42, bankBoxY + 11);
+  doc.text('BANK MUAMALAT', 42, bankBoxY + 15);
+  doc.text('16010000-405710', 42, bankBoxY + 19);
+
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
+    doc.setLineWidth(0.3);
+    doc.line(15, 280, 195, 280);
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Restoran Wawasan  |  Unit 3, Level B3, Menara PjH, Putrajaya  |  Est. 1986', 105, 285, { align: 'center' });
+  }
+
+  doc.addPage();
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('RESTORAN WAWASAN — COMBINED INVOICE', 15, 20);
+
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('Maklumat Pegawai Bertanggungjawab / Person in Charge Details', 15, 24.5);
+
+  const picHeaderY = 31;
+  doc.setFillColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.rect(15, picHeaderY, 180, 7.5, 'F');
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text('PERSON IN CHARGE DETAILS', 18, picHeaderY + 5);
+
+  const picBoxY = picHeaderY + 7.5;
+  const picBoxHeight = 44;
+  doc.setFillColor(cCreamBg[0], cCreamBg[1], cCreamBg[2]);
+  doc.rect(15, picBoxY, 180, picBoxHeight, 'F');
+  
+  doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
+  doc.setLineWidth(0.35);
+  doc.rect(15, picBoxY, 180, picBoxHeight, 'S');
+
+  doc.line(105, picBoxY, 105, picBoxY + 30);
+  doc.line(15, picBoxY + 15, 195, picBoxY + 15);
+  doc.line(15, picBoxY + 30, 195, picBoxY + 30);
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('NAMA / NAME', 18, picBoxY + 5.5);
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(firstOrder.name || '-', 18, picBoxY + 10.5);
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('NO. TELEFON / CONTACT NUMBER', 108, picBoxY + 5.5);
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(firstOrder.contact || '-', 108, picBoxY + 10.5);
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('E-MEL / EMAIL', 18, picBoxY + 20.5);
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(firstOrder.email || '-', 18, picBoxY + 25.5);
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('ATTN', 108, picBoxY + 20.5);
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(firstOrder.attn || '-', 108, picBoxY + 25.5);
+
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('NOTA / NOTES', 18, picBoxY + 35.5);
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('Combined invoice for multiple selected orders.', 18, picBoxY + 40);
+
+  const sigSectionY = picBoxY + picBoxHeight + 25;
+  doc.setTextColor(cHeaderGold[0], cHeaderGold[1], cHeaderGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text('DISEDIAKAN OLEH / PREPARED BY', 15, sigSectionY);
+
+  doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('Restoran Wawasan', 15, sigSectionY + 4.5);
+
+  doc.setDrawColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+  doc.setLineWidth(0.4);
+  doc.line(15, sigSectionY + 25, 80, sigSectionY + 25);
+
   const footerLineY = sigSectionY + 42;
   doc.setDrawColor(cGoldBorder[0], cGoldBorder[1], cGoldBorder[2]);
   doc.setLineWidth(0.3);

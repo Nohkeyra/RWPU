@@ -293,7 +293,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0B0B0C]/80 backdrop-blur-md"
+          className="absolute inset-0 bg-[#161618]/80 backdrop-blur-md"
         />
 
         {/* Modal Panel */}
@@ -301,15 +301,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-[#141417] border border-[#222226] rounded-2xl shadow-2xl overflow-hidden z-10"
+          className="relative w-full max-w-lg bg-[#1C1C1E] border border-[#2E2E32] rounded-2xl shadow-2xl overflow-hidden z-10"
         >
           {/* Accent Gold Line */}
-          <div className="h-[3px] bg-gradient-to-r from-[#C5A059] via-[#E2C792] to-[#C5A059]" />
+          <div className="h-[3px] bg-gradient-to-r from-[#FF7A1A] via-[#FFA35C] to-[#FF7A1A]" />
 
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-[#8E8E93] hover:text-[#F4F4F6] hover:bg-[#222226] rounded-lg transition-colors duration-200"
+            className="absolute top-4 right-4 p-2 text-[#8E8E93] hover:text-[#F4F4F6] hover:bg-[#2E2E32] rounded-lg transition-colors duration-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -345,7 +345,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Dato' Ahmad"
-                        className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                        className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                         required
                       />
                     </div>
@@ -362,7 +362,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                         value={contact}
                         onChange={(e) => setContact(e.target.value)}
                         placeholder="e.g. +60123456789"
-                        className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                        className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                         required
                       />
                     </div>
@@ -385,15 +385,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                             setTo(val);
                           }
                         }}
-                        className="w-full h-11 pl-10 pr-10 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200 appearance-none"
+                        className="w-full h-11 pl-10 pr-10 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200 appearance-none"
                       >
-                        <option value="" className="text-[#8E8E93] bg-[#0B0B0C]">-- {t('Select Company / Organization', 'Pilih Syarikat / Organisasi')} --</option>
+                        <option value="" className="text-[#8E8E93] bg-[#161618]">-- {t('Select Company / Organization', 'Pilih Syarikat / Organisasi')} --</option>
                         {SAVED_COMPANIES.map((company, idx) => (
-                          <option key={idx} value={company} className="text-[#F4F4F6] bg-[#0B0B0C]">
+                          <option key={idx} value={company} className="text-[#F4F4F6] bg-[#161618]">
                             {company}
                           </option>
                         ))}
-                        <option value="other" className="text-[#C5A059] bg-[#0B0B0C] font-semibold">{t('Other (Specify)', 'Lain-lain (Nyatakan)')}</option>
+                        <option value="other" className="text-[#FF7A1A] bg-[#161618] font-semibold">{t('Other (Specify)', 'Lain-lain (Nyatakan)')}</option>
                       </select>
                       <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" />
                     </div>
@@ -405,7 +405,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                           value={to}
                           onChange={(e) => setTo(e.target.value)}
                           placeholder={t('e.g. PMO Putrajaya', 'cth. PMO Putrajaya')}
-                          className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                          className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                         />
                       </div>
                     )}
@@ -422,7 +422,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                         value={attn}
                         onChange={(e) => setAttn(e.target.value)}
                         placeholder="e.g. Unit Kewangan"
-                        className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                        className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -441,7 +441,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. nama@organisasi.gov.my"
-                    className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                    className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                     required
                   />
                 </div>
@@ -458,7 +458,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                       <button
                         type="button"
                         onClick={() => handleModeChange('forgot')}
-                        className="text-[10px] text-[#C5A059] hover:underline"
+                        className="text-[10px] text-[#FF7A1A] hover:underline"
                       >
                         {t('Forgot Password?', 'Lupa Kata Laluan?')}
                       </button>
@@ -471,7 +471,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full h-11 pl-10 pr-4 bg-[#0B0B0C] border border-[#222226] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/50 outline-none transition-all duration-200"
+                      className="w-full h-11 pl-10 pr-4 bg-[#161618] border border-[#2E2E32] rounded-lg text-sm text-[#F4F4F6] placeholder-[#8E8E93]/40 focus:border-[#A8E10C]/60 focus:ring-1 focus:ring-[#A8E10C]/40 outline-none transition-all duration-200"
                       required
                     />
                   </div>
@@ -482,7 +482,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-[#C5A059] text-[#0B0B0C] font-semibold rounded-lg hover:bg-[#E2C792] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-6 shadow-lg shadow-[#C5A059]/10 disabled:opacity-50"
+                className="w-full h-12 bg-[#FF7A1A] text-[#161618] font-semibold rounded-lg hover:bg-[#FFA35C] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-6 shadow-lg shadow-[#FF7A1A]/10 disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -501,7 +501,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   type="button"
                   onClick={handleBiometricAuth}
                   disabled={isLoading}
-                  className="w-full h-12 border border-[#C5A059]/30 text-[#C5A059] font-semibold rounded-lg hover:bg-[#C5A059]/10 active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-3"
+                  className="w-full h-12 border border-[#A8E10C]/40 text-[#A8E10C] font-semibold rounded-lg hover:bg-[#A8E10C]/10 active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-3"
                 >
                   <Fingerprint className="w-5 h-5" />
                   {t('Use Fingerprint / Face ID', 'Guna Cap Jari / Face ID')}
@@ -509,14 +509,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               )}
 
               {/* Toggle modes */}
-              <div className="text-center mt-6 pt-4 border-t border-[#222226] text-xs">
+              <div className="text-center mt-6 pt-4 border-t border-[#2E2E32] text-xs">
                 {mode === 'signin' && (
                   <p className="text-[#8E8E93]">
                     {t("First time booking?", "Pertama kali menempah?")}{' '}
                     <button
                       type="button"
                       onClick={() => handleModeChange('signup')}
-                      className="text-[#C5A059] font-semibold hover:underline"
+                      className="text-[#FF7A1A] font-semibold hover:underline"
                     >
                       {t('Register account', 'Daftar akaun')}
                     </button>
@@ -528,7 +528,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                     <button
                       type="button"
                       onClick={() => handleModeChange('signin')}
-                      className="text-[#C5A059] font-semibold hover:underline"
+                      className="text-[#FF7A1A] font-semibold hover:underline"
                     >
                       {t('Sign in here', 'Log masuk di sini')}
                     </button>
@@ -538,7 +538,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   <button
                     type="button"
                     onClick={() => handleModeChange('signin')}
-                    className="text-[#C5A059] font-semibold hover:underline"
+                    className="text-[#FF7A1A] font-semibold hover:underline"
                   >
                     {t('Back to sign in', 'Kembali ke log masuk')}
                   </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, Languages, User as UserIcon, Sun, Moon } from 'lucide-react';
+import { Menu, User as UserIcon, Sun, Moon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
@@ -68,7 +68,7 @@ export default function Header() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between gap-4 md:gap-6 lg:gap-8">
-          <Link to="/home" className="flex items-center gap-3 group shrink-0">
+          <Link to={currentUser ? "/home" : "/"} className="flex items-center gap-3 group shrink-0">
             <BrandMark />
             <div className="shrink-0 flex flex-col justify-center">
               <span className="font-urban text-lg md:text-xl text-deep-forest leading-none tracking-wide">
@@ -109,7 +109,7 @@ export default function Header() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300"
+              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all duration-300"
               aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
             >
               {theme === 'light' ? (
@@ -122,24 +122,36 @@ export default function Header() {
             {/* Language toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300 text-sm font-medium"
+              className="flex items-center px-3 py-1.5 border border-deep-forest/20 hover:border-deep-forest/40 rounded-full transition-all duration-300 text-xs font-bold bg-black/[0.02]"
+              aria-label="Toggle Language"
             >
-              <Languages className="w-4 h-4" />
-              <span className="uppercase text-xs tracking-wider">{language === 'en' ? 'BM' : 'EN'}</span>
+              <span className="tracking-wider">
+                <span className={language === 'en' ? 'text-crisp-carrot font-extrabold' : 'text-deep-forest/50'}>EN</span>
+                <span className="text-deep-forest/30 mx-0.5">/</span>
+                <span className={language === 'bm' ? 'text-crisp-carrot font-extrabold' : 'text-deep-forest/50'}>BM</span>
+              </span>
             </button>
 
             {/* Client login / account */}
             <button
               onClick={handleAuthClick}
-              className="p-2 text-deep-forest/70 hover:text-deep-forest hover:/5 rounded-lg transition-all duration-300"
+              className="flex items-center gap-2 px-3 py-1.5 border border-deep-forest/20 hover:border-deep-forest/50 text-deep-forest/80 hover:text-deep-forest rounded-full transition-all duration-300 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5"
               aria-label={currentUser ? 'Account' : 'Sign in'}
             >
               {currentUser ? (
-                <div className="w-8 h-8 rounded-full bg-crisp-carrot text-white flex items-center justify-center font-bold text-xs">
-                  {currentUser.displayName?.slice(0, 2).toUpperCase() || currentUser.email?.slice(0, 2).toUpperCase()}
-                </div>
+                <>
+                  <div className="w-6.5 h-6.5 rounded-full bg-crisp-carrot text-white flex items-center justify-center font-bold text-[10px]">
+                    {currentUser.displayName?.slice(0, 2).toUpperCase() || currentUser.email?.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="hidden lg:inline text-deep-forest/90 font-medium">
+                    {currentUser.displayName || currentUser.email?.split('@')[0]}
+                  </span>
+                </>
               ) : (
-                <UserIcon className="w-5 h-5" />
+                <>
+                  <UserIcon className="w-4 h-4 text-sunshine" />
+                  <span>{language === 'bm' ? 'Log Masuk' : 'Sign In'}</span>
+                </>
               )}
             </button>
           </div>
@@ -148,7 +160,7 @@ export default function Header() {
             {/* Mobile Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 text-deep-forest hover:/5 rounded-full transition-colors"
+              className="p-2.5 text-deep-forest hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors flex items-center justify-center"
               aria-label={theme === 'light' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
             >
               {theme === 'light' ? (
@@ -158,9 +170,24 @@ export default function Header() {
               )}
             </button>
 
+            {/* Mobile User Account / Sign In */}
+            <button
+              onClick={handleAuthClick}
+              className="p-2.5 text-deep-forest hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors flex items-center justify-center"
+              aria-label={currentUser ? 'Account' : 'Sign in'}
+            >
+              {currentUser ? (
+                <div className="w-6.5 h-6.5 rounded-full bg-crisp-carrot text-white flex items-center justify-center font-bold text-[10px]">
+                  {currentUser.displayName?.slice(0, 2).toUpperCase() || currentUser.email?.slice(0, 2).toUpperCase()}
+                </div>
+              ) : (
+                <UserIcon className="w-5 h-5 text-deep-forest/70" />
+              )}
+            </button>
+
             <button
               onClick={() => setMobileOpen(true)}
-              className="p-2.5 text-deep-forest hover:/5 rounded-full transition-colors"
+              className="p-2.5 text-deep-forest hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
             >
               <Menu className="w-6 h-6" />
             </button>

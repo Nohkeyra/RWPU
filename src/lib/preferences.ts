@@ -23,6 +23,8 @@ export const CRITICAL_STORAGE_KEYS = [
   'wawasan_biometric_enabled',
   'notificationsEnabled',
   'developerMode',
+  'app_theme',
+  'app_accent',
 ];
 
 /**

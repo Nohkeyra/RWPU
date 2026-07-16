@@ -6,116 +6,116 @@
   :root {
     --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
 
-    /* Nusantara Deep Espresso - Dark Theme */
-    --color-deep-forest: #F5EFE6;      /* Warm Cream Text */
-    --color-forest: #1E1512;           /* Deep Espresso/Chocolate */
-    --color-light-forest: #2D211C;     /* Lighter Chocolate for Hover */
-    
-    --color-sunshine: #E89025;         /* Radiant Golden Orange */
-    --color-honey: #F2A43F;            /* Soft Orange-Gold */
-    --color-crisp-carrot: #E55928;     /* Sambal Orange-Red */
-    --color-tomato-burst: #BA3C1E;     /* Rich Tomato Red */
-    --color-kiwi: #729B48;             /* Fresh Leaf Green */
-    
-    --color-cream: #0B0807;            /* Premium Espresso Black Primary Background */
-    --color-cream-dark: #15100E;       /* Deep Warm Chocolate Secondary Background */
-    --color-charcoal: #120E0C;         /* Secondary dark surface */
-    --color-stone: #A69D95;            /* Muted Taupe/Sand Text */
-    
-    /* Updated shadcn tokens for beautiful dark mode */
-    --background: 15 13% 4%;           /* Matches #0B0807 */
-    --foreground: 36 33% 93%;          /* Matches #F5EFE6 */
-    --card: 15 20% 8%;                 /* Matches #15100E */
-    --card-foreground: 36 33% 93%;
-    --popover: 15 20% 8%;
-    --popover-foreground: 36 33% 93%;
-    --primary: 36 80% 53%;             /* Sunshine Golden Orange */
-    --primary-foreground: 15 13% 4%;
-    --secondary: 15 20% 8%;
-    --secondary-foreground: 36 33% 93%;
-    --muted: 15 15% 15%;
-    --muted-foreground: 36 10% 65%;
-    --accent: 14 78% 53%;              /* Crisp Carrot */
-    --accent-foreground: 36 33% 93%;
-    --destructive: 11 72% 42%;         /* Tomato Burst */
-    --destructive-foreground: 36 33% 93%;
-    --border: 15 20% 15%;
-    --input: 15 20% 15%;
-    --ring: 36 80% 53%;
-    --radius: 1.25rem;
+    /* Day Mode (Warm & Professional) */
+    --color-deep-forest: #023341;       /* Deep Navy Text */
+    --color-forest: #0B4A5C;            /* Darker Navy for surfaces */
+    --color-light-forest: #1A6075;      /* Lighter Navy for accents */
 
-    --color-selection-bg: rgba(232, 144, 37, 0.3);
-    --color-selection-text: #F5EFE6;
-    --color-scrollbar-track: #0B0807;
-    --color-scrollbar-thumb: #2D211C;
-    --color-scrollbar-hover: #E89025;
-    
-    --color-input-bg: rgba(21, 16, 14, 0.6);
-    --color-input-text: #F5EFE6;
-    --color-input-border: rgba(255, 255, 255, 0.08);
-    --color-input-focus-shadow: rgba(232, 144, 37, 0.15);
+    --color-sunshine: #FD5E02;          /* Wawasan Orange (Primary Action) */
+    --color-honey: #FFA033;             /* Lighter Orange */
+    --color-crisp-carrot: #E04D00;      /* Deep Wawasan Orange */
+    --color-tomato-burst: #B33D00;      /* Darkest Orange */
+    --color-kiwi: #39FF14;              /* Neon Lime Accent */
 
-    --color-header-bg: rgba(11, 8, 7, 0.8);
-    --color-header-border: rgba(255, 255, 255, 0.05);
+    --color-cream: #FCF5E3;             /* Warm Cream Bg */
+    --color-cream-dark: #F5E8D0;        /* Slightly Darker Cream */
+    --color-charcoal: #023341;          /* Re-mapped to Deep Navy for legacy classes */
+    --color-stone: #6B7280;             /* Muted Grey Text */
 
-    --color-card-bg: rgba(21, 16, 14, 0.85);
-    --color-card-border: rgba(255, 255, 255, 0.05);
-  }
-
-  .light {
-    /* Day mode styling - ONLY using #023341, #FD5E02, and #FCF5E3 */
-    --color-deep-forest: #023341;      /* Deep dark teal for primary text and headings */
-    --color-forest: #023341;           /* Deep dark teal */
-    --color-light-forest: rgba(2, 51, 65, 0.12); /* Lighter teal / borders */
-    
-    --color-sunshine: #FD5E02;         /* Vibrant Orange */
-    --color-honey: #FD5E02;            /* Vibrant Orange */
-    --color-crisp-carrot: #FD5E02;     /* Vibrant Orange */
-    --color-tomato-burst: #FD5E02;     /* Vibrant Orange */
-    --color-kiwi: #FD5E02;             /* Vibrant Orange */
-    
-    --color-cream: #FCF5E3;            /* Cream Background */
-    --color-cream-dark: #FCF5E3;       /* Cream Background Secondary */
-    --color-charcoal: #FCF5E3;         /* Cream Background Tertiary */
-    --color-stone: rgba(2, 51, 65, 0.7); /* Muted Deep Teal Text */
-
-    /* Shadcn tokens updated for Day mode */
-    --background: 43 75% 94%;           /* Matches #FCF5E3 */
+    /* Shadcn tokens */
+    --background: 42 66% 94%;           /* Matches #FCF5E3 */
     --foreground: 193 94% 13%;          /* Matches #023341 */
-    --card: 43 75% 94%;                 /* Matches #FCF5E3 */
+    --card: 0 0% 100%;                  /* White Cards */
     --card-foreground: 193 94% 13%;
-    --popover: 43 75% 94%;
+    --popover: 42 66% 94%;
     --popover-foreground: 193 94% 13%;
-    --primary: 22 98% 50%;             /* Matches #FD5E02 */
-    --primary-foreground: 43 75% 94%;
-    --secondary: 43 75% 94%;
+    --primary: 22 99% 50%;              /* Matches #FD5E02 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 60% 89%;            /* Matches #F5E8D0 */
     --secondary-foreground: 193 94% 13%;
-    --muted: 43 50% 88%;                /* Slightly darker cream */
-    --muted-foreground: 193 60% 30%;    /* Lighter teal */
-    --accent: 22 98% 50%;               /* Matches #FD5E02 */
-    --accent-foreground: 43 75% 94%;
-    --destructive: 22 98% 50%;
-    --destructive-foreground: 43 75% 94%;
-    --border: 193 94% 13% / 0.15;       /* Transparent teal border */
-    --input: 193 94% 13% / 0.15;
-    --ring: 22 98% 50%;
+    --muted: 42 30% 85%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 111 100% 54%;             /* Matches #39FF14 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 14 82% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 42 30% 85%;
+    --input: 42 30% 85%;
+    --ring: 22 99% 50%;
+    --radius: 1.5rem;                   /* Large rounded corners */
 
-    --color-selection-bg: rgba(253, 94, 2, 0.2);
+    --color-selection-bg: rgba(253, 94, 2, 0.3);
     --color-selection-text: #023341;
     --color-scrollbar-track: #FCF5E3;
-    --color-scrollbar-thumb: rgba(2, 51, 65, 0.2);
+    --color-scrollbar-thumb: #D1D5DB;
     --color-scrollbar-hover: #FD5E02;
-    
-    --color-input-bg: #FCF5E3;
+
+    --color-input-bg: #FFFFFF;
     --color-input-text: #023341;
-    --color-input-border: rgba(2, 51, 65, 0.2);
-    --color-input-focus-shadow: rgba(253, 94, 2, 0.15);
+    --color-input-border: rgba(0, 0, 0, 0.1);
+    --color-input-focus-shadow: rgba(253, 94, 2, 0.2);
 
-    --color-header-bg: rgba(252, 245, 227, 0.85);
-    --color-header-border: rgba(2, 51, 65, 0.12);
+    --color-header-bg: rgba(252, 245, 227, 0.95);
+    --color-header-border: rgba(0, 0, 0, 0.05);
 
-    --color-card-bg: rgba(252, 245, 227, 0.95);
-    --color-card-border: rgba(2, 51, 65, 0.12);
+    --color-card-bg: #FFFFFF;
+    --color-card-border: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
+    /* Dark Mode (Midnight Heritage) */
+    --color-deep-forest: #F5F5F5;       /* Soft Ivory Text */
+    --color-forest: #D1D5DB;            /* Soft Grey */
+    --color-light-forest: #9CA3AF;      /* Lighter Grey */
+
+    --color-sunshine: #FF8C42;          /* Vibrant Amber (Primary Action) */
+    --color-honey: #FFAA73;             /* Light Amber */
+    --color-crisp-carrot: #E67228;      /* Deep Amber */
+    --color-tomato-burst: #CC5500;      /* Dark Amber */
+    --color-kiwi: #CCFF00;              /* Electric Lime Accent */
+
+    --color-cream: #0B1A2A;             /* Deep Midnight Navy Bg */
+    --color-cream-dark: #07121F;        /* Darker Navy */
+    --color-charcoal: #0B1A2A;          /* Maps to background for legacy classes */
+    --color-stone: #9CA3AF;             /* Muted Grey Text */
+
+    /* Shadcn tokens */
+    --background: 211 58% 10%;          /* Matches #0B1A2A */
+    --foreground: 0 0% 96%;             /* Matches #F5F5F5 */
+    --card: 210 41% 17%;                /* Matches #1A2C3E (Dark Slate Blue Cards) */
+    --card-foreground: 0 0% 96%;
+    --popover: 211 58% 10%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 23 100% 63%;             /* Matches #FF8C42 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 41% 17%;           /* Matches #1A2C3E */
+    --secondary-foreground: 0 0% 96%;
+    --muted: 215 25% 27%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 75 100% 50%;              /* Matches #CCFF00 */
+    --accent-foreground: 211 58% 10%;
+    --destructive: 14 82% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 25% 27%;
+    --input: 215 25% 27%;
+    --ring: 23 100% 63%;
+
+    --color-selection-bg: rgba(255, 140, 66, 0.3);
+    --color-selection-text: #F5F5F5;
+    --color-scrollbar-track: #0B1A2A;
+    --color-scrollbar-thumb: #374151;
+    --color-scrollbar-hover: #FF8C42;
+
+    --color-input-bg: #1A2C3E;
+    --color-input-text: #F5F5F5;
+    --color-input-border: rgba(255, 255, 255, 0.1);
+    --color-input-focus-shadow: rgba(255, 140, 66, 0.2);
+
+    --color-header-bg: rgba(11, 26, 42, 0.95);
+    --color-header-border: rgba(255, 255, 255, 0.05);
+
+    --color-card-bg: #1A2C3E;
+    --color-card-border: rgba(255, 255, 255, 0.05);
   }
 
   * {
@@ -182,7 +182,7 @@
   .nature-card {
     background-color: var(--color-card-bg);
     border: 1px solid var(--color-card-border);
-    @apply backdrop-blur-md rounded-[2.5rem] shadow-2xl overflow-hidden;
+    @apply backdrop-blur-md rounded-3xl shadow-xl overflow-hidden;
   }
   
   /* Brand gradient text */
@@ -195,26 +195,26 @@
   
   /* Accents */
   .kiwi-accent {
-    @apply text-kiwi drop-shadow-[0_0_8px_rgba(114,155,72,0.3)];
+    @apply text-kiwi drop-shadow-[0_0_8px_rgba(56,142,60,0.3)];
   }
   .carrot-accent {
     @apply text-crisp-carrot font-bold;
   }
   .sunshine-accent {
-    @apply text-sunshine drop-shadow-[0_0_8px_rgba(232,144,37,0.4)];
+    @apply text-sunshine drop-shadow-[0_0_8px_rgba(232,122,0,0.4)];
   }
   
   /* Glassmorphism for headers */
   .glass-header {
     background-color: var(--color-header-bg);
     border-bottom: 1px solid var(--color-header-border);
-    @apply backdrop-blur-xl shadow-lg;
+    @apply backdrop-blur-xl shadow-sm;
   }
   
-  /* Pattern overlay for sections - Dimmed for dark mode comfort */
+  /* Geometric Star Pattern (Islamic Geometry) for headers */
   .pattern-dots {
-    background-image: radial-gradient(rgba(245, 239, 230, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2.5 12.5L35 15l-10 7.5L28 35 20 25l-8 10 3-12.5-10-7.5 12.5-2.5L20 0z' fill='%23E87A00' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-size: 40px 40px;
   }
   
   /* Touch targets */
@@ -233,3 +233,4 @@
   scrollbar-width: none;
 }
 .kp-skip { position: absolute; top: -100px; left: 0; background: var(--color-sunshine); color: #fff; padding: 8px 16px; z-index: 9999; transition: top 0.2s; font-weight: bold; } .kp-skip:focus { top: 0; }
+

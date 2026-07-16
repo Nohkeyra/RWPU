@@ -18,7 +18,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-cream pattern-dots">
+    <div className="min-h-screen bg-cream dark:bg-background pattern-dots">
       <Header />
       <main>
         <HeroSection />

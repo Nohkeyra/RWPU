@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,7 +42,10 @@ import {
   Database,
   Cpu,
   RefreshCw,
-  Terminal
+  Terminal,
+  Palette,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { useNavigate } from 'react-router-dom';
@@ -55,27 +59,7 @@ import { Device } from '@capacitor/device';
 import { removeSecureItem } from '@/lib/preferences';
 import { getApiUrl } from '@/lib/api';
 import { getAssetUrl } from '@/lib/utils';
-
-interface Order {
-  id: string;
-  to: string;
-  attn: string;
-  name: string;
-  contact: string;
-  email: string;
-  dateTime: string;
-  location: string;
-  quantity: number;
-  meals: string[];
-  menu: string;
-  notes: string;
-  status: 'pending' | 'approved' | 'billed' | 'cancelled' | 'rejected';
-  prices: Record<string, number>;
-  totalAmount: number;
-  lang: 'en' | 'bm';
-  createdAt: Timestamp;
-  invoiceNo?: string;
-}
+import type { Order } from '@/types';
 
 interface SerializedOrder extends Omit<Order, 'createdAt'> {
   createdAt: { seconds: number; nanoseconds: number } | null;
@@ -91,6 +75,7 @@ const MEAL_LABELS: Record<string, { en: string; bm: string }> = {
 
 export default function AdminPanel({ adminToken, onLogout }: { adminToken?: string; onLogout?: () => void }) {
   const { t } = useLanguage();
+  const { accent, updateAccentInDb } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -128,7 +113,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
     loading: boolean;
   }>({ ok: false, loading: true });
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'diagnostics'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'diagnostics' | 'branding'>('orders');
 
   // Diagnostics states
   const [diagFirebase, setDiagFirebase] = useState<{ status: 'idle' | 'running' | 'pass' | 'fail'; message?: string; projectId?: string }>({ status: 'idle' });
@@ -195,6 +180,23 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
           console.warn('Eruda destroy error:', e);
         }
       }
+    }
+  };
+
+  const handleAccentChange = async (newAccent: 'sunshine' | 'kiwi') => {
+    try {
+      await updateAccentInDb(newAccent);
+      toast({
+        title: 'Branding Updated',
+        description: `Theme accent color switched to ${newAccent === 'sunshine' ? 'Sunshine Orange' : 'Kiwi Green'} successfully.`,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Could not update global branding setting.';
+      toast({
+        title: 'Branding Update Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -593,6 +595,48 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
     }
   };
 
+  const handleRejectCancellation = async (orderId: string) => {
+    const confirmReject = confirm("Are you sure you want to REJECT this cancellation request? This will restore the order status to Approved.");
+    if (!confirmReject) return;
+
+    setIsApproving(true);
+    try {
+      const response = await fetch(getApiUrl('/api/admin/orders'), {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          action: 'update',
+          orderId,
+          data: {
+            status: 'approved',
+            rejectedCancellationAt: new Date().toISOString()
+          }
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: t('success') || 'Success',
+          description: 'Cancellation request rejected. Order status restored to Approved.',
+          variant: 'success'
+        });
+        setIsDetailOpen(false);
+        fetchOrders();
+      } else {
+        throw new Error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error rejecting cancellation:', error);
+      toast({
+        title: t('error') || 'Error',
+        description: 'Failed to reject cancellation request.',
+        variant: 'error'
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   const handlePreviewPDF = async (order: Order, isFinal: boolean) => {
     try {
       let pdfData = order;
@@ -791,16 +835,18 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'cancel_requested':
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 font-bold animate-pulse">{t('cancel_requested') || 'Cancel Requested'}</Badge>;
       case 'billed':
-        return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{t('billed')}</Badge>;
+        return <Badge className="bg-kiwi/10 text-kiwi border-kiwi/20">{t('billed')}</Badge>;
       case 'approved':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('approved')}</Badge>;
+        return <Badge className="bg-kiwi/10 text-kiwi border-kiwi/20">{t('approved')}</Badge>;
       case 'cancelled':
         return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">{t('cancelled')}</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{t('rejected')}</Badge>;
+        return <Badge className="bg-tomato-burst/10 text-tomato-burst border-tomato-burst/20">{t('rejected')}</Badge>;
       default:
-        return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">{t('pending')}</Badge>;
+        return <Badge className="bg-sunshine/10 text-sunshine border-sunshine/20">{t('pending')}</Badge>;
     }
   };
 
@@ -812,7 +858,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-charcoal flex items-center justify-center">
+      <div className="min-h-screen bg-cream dark:bg-background flex items-center justify-center">
         <div className="flex items-center gap-3 text-deep-forest/60">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>{t('loading')}</span>
@@ -822,9 +868,9 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
   }
 
   return (
-    <div className="min-h-screen bg-charcoal">
+    <div className="min-h-screen bg-cream dark:bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-charcoal/95 backdrop-blur-xl border-b border-warm-gold/10 pt-[var(--sat)]">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-cream/90 dark:bg-background/90 backdrop-blur-xl border-b border-sunshine/10 pt-[var(--sat)]">
         <div className="flex items-center justify-between px-6 md:px-12 h-[72px]">
           <div className="flex items-center gap-4">
             <div onClick={() => navigate('/home', { replace: true })} className="flex items-center gap-3 group cursor-pointer">
@@ -846,7 +892,18 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/home', { replace: true })} className="text-deep-forest hover:text-warm-gold hover:bg-transparent">
+            <button 
+              onClick={toggleTheme} 
+              className="p-2 md:p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-deep-forest" />
+              ) : (
+                <Sun className="w-5 h-5 text-sunshine" />
+              )}
+            </button>
+            <Button variant="ghost" onClick={() => navigate('/home', { replace: true })} className="text-deep-forest hover:text-sunshine hover:bg-transparent">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('back')}
             </Button>
@@ -886,7 +943,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             </div>
             
             {calendarState.loading ? (
-              <div className="flex items-center gap-2 px-4 py-2 bg-cream/5 text-deep-forest/50 border border-deep-forest/10 rounded-md">
+              <div className="flex items-center gap-2 px-4 py-2 bg-cream dark:bg-background/5 text-deep-forest/50 border border-deep-forest/10 rounded-md">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm font-medium">Checking Calendar Sync...</span>
               </div>
@@ -919,12 +976,12 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex border-b border-warm-gold/10 mb-8">
+          <div className="flex border-b border-sunshine/10 mb-8">
             <button
               onClick={() => setActiveTab('orders')}
               className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
                 activeTab === 'orders'
-                  ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
+                  ? 'border-sunshine text-sunshine bg-sunshine/5'
                   : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
               }`}
             >
@@ -938,12 +995,23 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
               }}
               className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
                 activeTab === 'diagnostics'
-                  ? 'border-warm-gold text-warm-gold bg-warm-gold/5'
+                  ? 'border-sunshine text-sunshine bg-sunshine/5'
                   : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
               }`}
             >
               <Activity className="w-4 h-4" />
               <span>Diagnostics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('branding')}
+              className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-all duration-200 ${
+                activeTab === 'branding'
+                  ? 'border-sunshine text-sunshine bg-sunshine/5'
+                  : 'border-transparent text-deep-forest/50 hover:text-deep-forest/80 hover:bg-deep-forest/5'
+              }`}
+            >
+              <Palette className="w-4 h-4" />
+              <span>Branding</span>
             </button>
           </div>
 
@@ -956,16 +1024,16 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                   placeholder={t('search_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-deep-brown border-warm-gold/20 text-deep-forest placeholder:text-deep-forest/30 focus:border-warm-gold/50"
+                  className="pl-10 bg-deep-brown border-sunshine/20 text-deep-forest placeholder:text-deep-forest/30 focus:border-sunshine/50"
                 />
               </div>
 
               {/* Orders Table */}
-              <div className="bg-deep-brown rounded-xl border border-warm-gold/10 overflow-hidden">
+              <div className="bg-deep-brown rounded-xl border border-sunshine/10 overflow-hidden">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-warm-gold/10 hover:bg-transparent">
+                      <TableRow className="border-sunshine/10 hover:bg-transparent">
                         <TableHead className="text-deep-forest/60">{t('date')}</TableHead>
                         <TableHead className="text-deep-forest/60">{t('quantity')}</TableHead>
                         <TableHead className="text-deep-forest/60">{t('status')}</TableHead>
@@ -981,7 +1049,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                         </TableRow>
                       ) : (
                         filteredOrders.map((order) => (
-                          <TableRow key={order.id} className="border-warm-gold/10 hover:bg-warm-gold/5">
+                          <TableRow key={order.id} className={`border-sunshine/10 hover:bg-sunshine/5 ${order.status === 'cancel_requested' ? 'bg-amber-500/5 border-l-4 border-l-amber-500' : ''}`}>
                             <TableCell className="text-deep-forest/70">
                               {order.dateTime ? format(new Date(order.dateTime), 'PP') : '-'}
                             </TableCell>
@@ -997,7 +1065,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                                   variant="ghost"
                                   size="sm"
                                   title={t('view_edit_details')}
-                                  className="text-deep-forest/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  className="text-deep-forest/60 hover:text-sunshine hover:bg-sunshine/10"
                                   onClick={() => openOrderDetail(order)}
                                 >
                                   <Eye className="w-4 h-4" />
@@ -1032,7 +1100,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                                   variant="ghost"
                                   size="sm"
                                   title={t('send_pdf')}
-                                  className="text-deep-forest/60 hover:text-warm-gold hover:bg-warm-gold/10"
+                                  className="text-deep-forest/60 hover:text-sunshine hover:bg-sunshine/10"
                                   onClick={() => openSendDialog(order)}
                                 >
                                   <Send className="w-4 h-4" />
@@ -1057,16 +1125,16 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
               </div>
             </>
-          ) : (
+          ) : activeTab === 'diagnostics' ? (
             <div className="space-y-6 animate-fade-in">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-charcoal/50 border border-warm-gold/10 rounded-xl gap-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-cream dark:bg-background/50 border border-sunshine/10 rounded-xl gap-4">
                 <div>
                   <h3 className="font-display font-bold text-deep-forest text-lg">System Diagnostics</h3>
                   <p className="text-xs text-deep-forest/50 mt-1">Verify health and credentials of automated backend services and PDF capabilities.</p>
                 </div>
                 <Button 
                   onClick={runAllDiagnostics}
-                  className="bg-warm-gold hover:bg-[#E0BC74] text-charcoal font-semibold flex items-center gap-2 text-xs"
+                  className="bg-sunshine hover:bg-[#E0BC74] text-charcoal font-semibold flex items-center gap-2 text-xs"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Run All Diagnostics
@@ -1075,7 +1143,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Firebase Connectivity */}
-                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 bg-yellow-500/10 text-yellow-500 rounded-lg">
@@ -1091,7 +1159,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       size="sm" 
                       onClick={runFirebaseDiag}
                       disabled={diagFirebase.status === 'running'}
-                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
+                      className="border-sunshine/20 text-deep-forest text-xs hover:bg-sunshine/5"
                     >
                       Test
                     </Button>
@@ -1099,8 +1167,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
                   <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
                     <span className="text-deep-forest/50">Status:</span>
-                    {diagFirebase.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
-                    {diagFirebase.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagFirebase.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>Idle</span>}
+                    {diagFirebase.status === 'running' && <span className="text-sunshine flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagFirebase.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Connected</span>}
                     {diagFirebase.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
                   </div>
@@ -1121,7 +1189,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
 
                 {/* Google Calendar Sync */}
-                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-lg">
@@ -1137,7 +1205,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       size="sm" 
                       onClick={runCalendarDiag}
                       disabled={diagCalendar.status === 'running'}
-                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
+                      className="border-sunshine/20 text-deep-forest text-xs hover:bg-sunshine/5"
                     >
                       Test
                     </Button>
@@ -1145,8 +1213,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
                   <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
                     <span className="text-deep-forest/50">Status:</span>
-                    {diagCalendar.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
-                    {diagCalendar.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagCalendar.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>Idle</span>}
+                    {diagCalendar.status === 'running' && <span className="text-sunshine flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagCalendar.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Online</span>}
                     {diagCalendar.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
                   </div>
@@ -1167,7 +1235,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
 
                 {/* PDF Generation Integrity */}
-                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 bg-rose-500/10 text-rose-500 rounded-lg">
@@ -1183,7 +1251,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       size="sm" 
                       onClick={runPdfDiag}
                       disabled={diagPdf.status === 'running'}
-                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
+                      className="border-sunshine/20 text-deep-forest text-xs hover:bg-sunshine/5"
                     >
                       Test
                     </Button>
@@ -1191,8 +1259,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
                   <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
                     <span className="text-deep-forest/50">Status:</span>
-                    {diagPdf.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
-                    {diagPdf.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagPdf.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>Idle</span>}
+                    {diagPdf.status === 'running' && <span className="text-sunshine flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagPdf.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
                     {diagPdf.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
                   </div>
@@ -1213,7 +1281,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
 
                 {/* Native / APK Integration Info */}
-                <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+                <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-lg">
@@ -1229,7 +1297,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       size="sm" 
                       onClick={runNativeDiag}
                       disabled={diagNative.status === 'running'}
-                      className="border-warm-gold/20 text-deep-forest text-xs hover:bg-warm-gold/5"
+                      className="border-sunshine/20 text-deep-forest text-xs hover:bg-sunshine/5"
                     >
                       Test
                     </Button>
@@ -1237,8 +1305,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
                   <div className="pt-2 border-t border-deep-forest/5 flex items-center justify-between text-xs">
                     <span className="text-deep-forest/50">Status:</span>
-                    {diagNative.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Idle</span>}
-                    {diagNative.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
+                    {diagNative.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>Idle</span>}
+                    {diagNative.status === 'running' && <span className="text-sunshine flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Running</span>}
                     {diagNative.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Pass</span>}
                     {diagNative.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
                   </div>
@@ -1301,7 +1369,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
               </div>
 
               {/* Brevo SMTP Diagnostic Mailer */}
-              <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+              <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-purple-500/10 text-purple-500 rounded-lg">
                     <Mail className="w-5 h-5" />
@@ -1320,7 +1388,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                         placeholder="Enter test recipient email address"
                         value={testEmailAddress}
                         onChange={(e) => setTestEmailAddress(e.target.value)}
-                        className="bg-charcoal/30 border-warm-gold/20 text-deep-forest text-xs placeholder:text-deep-forest/30 h-10"
+                        className="bg-cream dark:bg-background/30 border-sunshine/20 text-deep-forest text-xs placeholder:text-deep-forest/30 h-10"
                       />
                     </div>
                     <Button
@@ -1335,8 +1403,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="text-deep-forest/50">SMTP Test Status:</span>
-                    {diagEmail.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream/30"></span>Not Tested</span>}
-                    {diagEmail.status === 'running' && <span className="text-warm-gold flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Sending...</span>}
+                    {diagEmail.status === 'idle' && <span className="text-deep-forest/40 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>Not Tested</span>}
+                    {diagEmail.status === 'running' && <span className="text-sunshine flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />Sending...</span>}
                     {diagEmail.status === 'pass' && <span className="text-green-400 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />Email Dispatched Successfully</span>}
                     {diagEmail.status === 'fail' && <span className="text-red-400 flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Failed</span>}
                   </div>
@@ -1360,7 +1428,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
               </div>
 
               {/* Mobile Developer Toolkit */}
-              <div className="p-5 bg-deep-brown border border-warm-gold/10 rounded-xl space-y-4">
+              <div className="p-5 bg-deep-brown border border-sunshine/10 rounded-xl space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg animate-pulse">
@@ -1376,7 +1444,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       onClick={toggleEruda}
                       aria-label="Toggle Mobile Developer Toolkit"
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        erudaEnabled ? 'bg-emerald-500' : 'bg-charcoal/80'
+                        erudaEnabled ? 'bg-emerald-500' : 'bg-cream dark:bg-background/80'
                       }`}
                     >
                       <span
@@ -1397,13 +1465,13 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                     </span>
                   ) : (
                     <span className="text-deep-forest/40 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-cream/30"></span>
+                      <span className="w-2 h-2 rounded-full bg-cream dark:bg-background/30"></span>
                       Disabled
                     </span>
                   )}
                 </div>
 
-                <div className="p-4 bg-charcoal/30 border border-warm-gold/5 rounded-lg text-xs text-deep-forest/60 space-y-2 leading-relaxed">
+                <div className="p-4 bg-cream dark:bg-background/30 border border-sunshine/5 rounded-lg text-xs text-deep-forest/60 space-y-2 leading-relaxed">
                   <p>
                     Designed specifically for mobile-only developers. When activated, a <strong>floating gear/cog icon</strong> will appear in the bottom-right corner of your screen.
                   </p>
@@ -1419,13 +1487,100 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="space-y-6 animate-fade-in">
+              <div className="p-6 bg-cream dark:bg-background/50 border border-sunshine/10 rounded-xl space-y-4">
+                <div>
+                  <h3 className="font-display font-bold text-deep-forest text-lg flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-sunshine" />
+                    Application Accent Color
+                  </h3>
+                  <p className="text-xs text-deep-forest/50 mt-1">
+                    Toggle the primary accent color of the application globally. Changing this updates the primary buttons, highlights, selections, and interactive states for all users in real-time.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                  {/* Option 1: Sunshine Orange */}
+                  <div 
+                    onClick={() => handleAccentChange('sunshine')}
+                    className={`p-5 rounded-xl border cursor-pointer transition-all duration-300 flex flex-col justify-between h-40 ${
+                      accent === 'sunshine'
+                        ? 'bg-sunshine/10 border-sunshine shadow-lg shadow-sunshine/5'
+                        : 'bg-cream dark:bg-background/20 border-sunshine/15 hover:border-sunshine/30 hover:bg-cream dark:bg-background/30'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-deep-forest text-base flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#E89025] inline-block border border-white/10" />
+                          Sunshine Orange
+                        </h4>
+                        <p className="text-xs text-deep-forest/50 mt-1.5 leading-relaxed">
+                          Radiant Golden Orange. Warm, high-energy, and traditional. The default aesthetic.
+                        </p>
+                      </div>
+                      {accent === 'sunshine' && (
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sunshine text-charcoal">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-1.5 mt-4">
+                      <div className="w-8 h-8 rounded-lg bg-[#E89025] shadow" />
+                      <div className="w-8 h-8 rounded-lg bg-[#F2A43F] shadow" />
+                      <div className="w-8 h-8 rounded-lg bg-[#E55928] shadow" />
+                    </div>
+                  </div>
+
+                  {/* Option 2: Kiwi Green */}
+                  <div 
+                    onClick={() => handleAccentChange('kiwi')}
+                    className={`p-5 rounded-xl border cursor-pointer transition-all duration-300 flex flex-col justify-between h-40 ${
+                      accent === 'kiwi'
+                        ? 'bg-kiwi/10 border-kiwi shadow-lg shadow-kiwi/5'
+                        : 'bg-cream dark:bg-background/20 border-sunshine/15 hover:border-sunshine/30 hover:bg-cream dark:bg-background/30'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-deep-forest text-base flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#729B48] inline-block border border-white/10" />
+                          Kiwi Green
+                        </h4>
+                        <p className="text-xs text-deep-forest/50 mt-1.5 leading-relaxed">
+                          Fresh Leaf Green. Vibrant, organic, modern, and refreshing.
+                        </p>
+                      </div>
+                      {accent === 'kiwi' && (
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-kiwi text-charcoal">
+                          Active
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-1.5 mt-4">
+                      <div className="w-8 h-8 rounded-lg bg-[#729B48] shadow" />
+                      <div className="w-8 h-8 rounded-lg bg-[#82AF52] shadow" />
+                      <div className="w-8 h-8 rounded-lg bg-[#5E8239] shadow" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-deep-forest/40 italic pt-2 flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Your preference is saved locally and synced to all other connected clients in real-time.
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>
 
       {/* Order Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl bg-deep-brown border-warm-gold/20 text-deep-forest max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl bg-deep-brown border-sunshine/20 text-deep-forest max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-display">
               {t('order_details')}
@@ -1438,14 +1593,14 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
           {selectedOrder && (
             <div className="space-y-6 py-4">
               {/* Status Banner */}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-charcoal/50">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-cream dark:bg-background/50">
                 <span className="text-deep-forest/60">Status</span>
                 {getStatusBadge(selectedOrder.status)}
               </div>
 
               {/* Customer Info */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-warm-gold">{t('customer_info')}</h4>
+                <h4 className="font-semibold text-sunshine">{t('customer_info')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-deep-forest/50">{t('to')}:</span>
@@ -1472,7 +1627,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
               {/* Event Details */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-warm-gold">{t('event_details')}</h4>
+                <h4 className="font-semibold text-sunshine">{t('event_details')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-deep-forest/50">{t('datetime')}:</span>
@@ -1497,7 +1652,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                         <Badge 
                           key={meal} 
                           variant="outline" 
-                          className="border-warm-gold/30 text-deep-forest"
+                          className="border-sunshine/30 text-deep-forest"
                         >
                           {MEAL_LABELS[meal]?.[selectedOrder.lang] || meal}
                         </Badge>
@@ -1520,8 +1675,8 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
               </div>
 
               {/* Pricing Section */}
-              <div className="space-y-4 pt-4 border-t border-warm-gold/10">
-                <h4 className="font-semibold text-warm-gold">{t('price_pax')}</h4>
+              <div className="space-y-4 pt-4 border-t border-sunshine/10">
+                <h4 className="font-semibold text-sunshine">{t('price_pax')}</h4>
                 <div className="space-y-3">
                   {selectedOrder.meals.map((meal) => (
                     <div key={meal} className="flex items-center gap-4">
@@ -1539,7 +1694,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                             ...prev, 
                             [meal]: e.target.value 
                           }))}
-                          className="pl-10 bg-charcoal/50 border-warm-gold/20 text-deep-forest"
+                          className="pl-10 bg-cream dark:bg-background/50 border-sunshine/20 text-deep-forest"
                           placeholder="0.00"
                         />
                       </div>
@@ -1548,10 +1703,10 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
 
                 {/* Total Preview */}
-                <div className="p-4 bg-charcoal/50 rounded-lg">
+                <div className="p-4 bg-cream dark:bg-background/50 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-deep-forest/60">{t('grand_total')}:</span>
-                    <span className="text-2xl font-bold text-warm-gold">
+                    <span className="text-2xl font-bold text-sunshine">
                       RM {selectedOrder.meals.reduce((total, meal) => {
                         const price = parseFloat(prices[meal] || '0');
                         return total + (price * selectedOrder.quantity);
@@ -1570,19 +1725,74 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             </div>
           )}
 
-          <DialogFooter className="gap-2 mt-6">
-            <Button
-              onClick={() => handleApprove(selectedOrder?.id || '')}
-              disabled={isApproving || !selectedOrder || selectedOrder.meals.some(m => !prices[m] || parseFloat(prices[m]) <= 0)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-              {selectedOrder?.status === 'approved' || selectedOrder?.status === 'billed' ? t('update_invoice') || 'Update Invoice' : t('approve')}
-            </Button>
+          <DialogFooter className="gap-2 mt-6 flex-wrap md:flex-nowrap">
+            {selectedOrder?.status === 'cancel_requested' ? (
+              <>
+                <Button
+                  onClick={async () => {
+                    const confirmCancelApprove = confirm("Are you sure you want to APPROVE this cancellation? This will permanently delete the order and notify the customer.");
+                    if (!confirmCancelApprove) return;
+                    setIsApproving(true);
+                    try {
+                      const response = await fetch(getApiUrl('/api/admin/orders'), {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                          action: 'delete',
+                          orderId: selectedOrder.id
+                        })
+                      });
+                      if (response.ok) {
+                        toast({
+                          title: t('success') || 'Success',
+                          description: 'Order cancelled and deleted successfully.',
+                          variant: 'success'
+                        });
+                        setIsDetailOpen(false);
+                        fetchOrders();
+                      } else {
+                        throw new Error('Failed to delete order');
+                      }
+                    } catch (error) {
+                      console.error('Error deleting cancelled order:', error);
+                      toast({
+                        title: t('error') || 'Error',
+                        description: 'Failed to delete order.',
+                        variant: 'error'
+                      });
+                    } finally {
+                      setIsApproving(false);
+                    }
+                  }}
+                  disabled={isApproving}
+                  className="bg-tomato-burst hover:bg-tomato-burst/85 text-white"
+                >
+                  {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                  {t('approve_cancellation') || 'Approve Cancellation'}
+                </Button>
+                <Button
+                  onClick={() => handleRejectCancellation(selectedOrder.id)}
+                  disabled={isApproving}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  {t('reject_cancellation') || 'Reject Cancellation'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={() => handleApprove(selectedOrder?.id || '')}
+                disabled={isApproving || !selectedOrder || selectedOrder.meals.some(m => !prices[m] || parseFloat(prices[m]) <= 0)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                {selectedOrder?.status === 'approved' || selectedOrder?.status === 'billed' ? t('update_invoice') || 'Update Invoice' : t('approve')}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setIsDetailOpen(false)}
-              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10"
+              className="border-sunshine/30 text-deep-forest hover:bg-sunshine/10"
             >
               {t('close')}
             </Button>
@@ -1592,10 +1802,10 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
       {/* Send Invoice Dialog */}
       <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
-        <DialogContent className="max-w-md bg-deep-brown border-warm-gold/20 text-deep-forest">
+        <DialogContent className="max-w-md bg-deep-brown border-sunshine/20 text-deep-forest">
           <DialogHeader>
-            <DialogTitle className="text-xl font-display font-bold text-warm-gold flex items-center gap-2">
-              <Send className="w-5 h-5 text-warm-gold" />
+            <DialogTitle className="text-xl font-display font-bold text-sunshine flex items-center gap-2">
+              <Send className="w-5 h-5 text-sunshine" />
               {t('send_invoice_pdf')}
             </DialogTitle>
             <DialogDescription>
@@ -1606,7 +1816,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
           {sendOrder && (
             <div className="space-y-6 py-4">
               {/* Summary Box */}
-              <div className="p-4 bg-charcoal/50 rounded-xl border border-warm-gold/10 text-sm space-y-2">
+              <div className="p-4 bg-cream dark:bg-background/50 rounded-xl border border-sunshine/10 text-sm space-y-2">
                 <div className="flex justify-between">
                   <span className="text-deep-forest/50">{t('invoice_no_label')}</span>
                   <span className="font-mono font-medium text-deep-forest">
@@ -1619,7 +1829,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
                 <div className="flex justify-between">
                   <span className="text-deep-forest/50">{t('grand_total_label')}</span>
-                  <span className="font-bold text-warm-gold">
+                  <span className="font-bold text-sunshine">
                     RM {(sendOrder.totalAmount || sendOrder.meals.reduce((sum, meal) => {
                       const price = sendOrder.prices?.[meal] || 0;
                       return sum + (price * sendOrder.quantity);
@@ -1631,9 +1841,9 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
               {/* Options */}
               <div className="space-y-5">
                 {/* Email Option */}
-                <div className="p-4 rounded-xl border border-warm-gold/10 bg-charcoal/20 space-y-4">
+                <div className="p-4 rounded-xl border border-sunshine/10 bg-cream dark:bg-background/20 space-y-4">
                   <div className="flex items-center gap-2 font-semibold text-deep-forest">
-                    <Mail className="w-4 h-4 text-warm-gold" />
+                    <Mail className="w-4 h-4 text-sunshine" />
                     <span>{t('option_email')}</span>
                   </div>
                   <p className="text-xs text-deep-forest/60">
@@ -1648,14 +1858,14 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       type="email"
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
-                      className="bg-charcoal/50 border-warm-gold/20 text-deep-forest focus:border-warm-gold/50 h-10 text-sm"
+                      className="bg-cream dark:bg-background/50 border-sunshine/20 text-deep-forest focus:border-sunshine/50 h-10 text-sm"
                       placeholder="customer@email.com"
                     />
                   </div>
                   <Button
                     onClick={handleSendEmail}
                     disabled={sendingEmail || !recipientEmail}
-                    className="w-full bg-warm-gold text-charcoal font-semibold hover:bg-[#E0BC74] transition-all duration-200 h-10 text-sm"
+                    className="w-full bg-sunshine text-charcoal font-semibold hover:bg-[#E0BC74] transition-all duration-200 h-10 text-sm"
                   >
                     {sendingEmail ? (
                       <span className="flex items-center gap-2">
@@ -1672,7 +1882,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 </div>
 
                 {/* WhatsApp Option */}
-                <div className="p-4 rounded-xl border border-warm-gold/10 bg-charcoal/20 space-y-4">
+                <div className="p-4 rounded-xl border border-sunshine/10 bg-cream dark:bg-background/20 space-y-4">
                   <div className="flex items-center gap-2 font-semibold text-deep-forest">
                     <MessageSquare className="w-4 h-4 text-emerald-500" />
                     <span>{t('option_whatsapp')}</span>
@@ -1689,7 +1899,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                       type="text"
                       value={recipientPhone}
                       onChange={(e) => setRecipientPhone(e.target.value)}
-                      className="bg-charcoal/50 border-warm-gold/20 text-deep-forest focus:border-warm-gold/50 h-10 text-sm"
+                      className="bg-cream dark:bg-background/50 border-sunshine/20 text-deep-forest focus:border-sunshine/50 h-10 text-sm"
                       placeholder="e.g. 0123456789"
                     />
                   </div>
@@ -1712,7 +1922,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             <Button
               variant="outline"
               onClick={() => setIsSendDialogOpen(false)}
-              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10 w-full md:w-auto text-sm"
+              className="border-sunshine/30 text-deep-forest hover:bg-sunshine/10 w-full md:w-auto text-sm"
             >
               {t('cancel')}
             </Button>
@@ -1722,9 +1932,9 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
 
       {/* PDF Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-deep-brown border-warm-gold/20 text-deep-forest flex flex-col p-6">
-          <DialogHeader className="pb-2 border-b border-warm-gold/10 flex-shrink-0">
-            <DialogTitle className="text-xl font-display font-bold text-warm-gold">
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] bg-deep-brown border-sunshine/20 text-deep-forest flex flex-col p-6">
+          <DialogHeader className="pb-2 border-b border-sunshine/10 flex-shrink-0">
+            <DialogTitle className="text-xl font-display font-bold text-sunshine">
               {previewFileName || 'PDF Preview'}
             </DialogTitle>
             <DialogDescription>
@@ -1732,7 +1942,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 min-h-0 bg-charcoal/50 rounded-lg overflow-hidden relative my-4 border border-warm-gold/10">
+          <div className="flex-1 min-h-0 bg-cream dark:bg-background/50 rounded-lg overflow-hidden relative my-4 border border-sunshine/10">
             {previewPdfUrl ? (
               <iframe
                 src={previewPdfUrl}
@@ -1746,7 +1956,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
             )}
           </div>
 
-          <DialogFooter className="gap-2 pt-2 border-t border-warm-gold/10 justify-end flex-shrink-0">
+          <DialogFooter className="gap-2 pt-2 border-t border-sunshine/10 justify-end flex-shrink-0">
             <Button
               onClick={() => {
                 const link = document.createElement('a');
@@ -1756,7 +1966,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 link.click();
                 document.body.removeChild(link);
               }}
-              className="bg-warm-gold text-charcoal font-semibold hover:bg-[#E0BC74]"
+              className="bg-sunshine text-charcoal font-semibold hover:bg-[#E0BC74]"
             >
               <FileDown className="w-4 h-4 mr-2" />
               {t('download')}
@@ -1767,7 +1977,7 @@ export default function AdminPanel({ adminToken, onLogout }: { adminToken?: stri
                 setIsPreviewOpen(false);
                 setPreviewPdfUrl('');
               }}
-              className="border-warm-gold/30 text-deep-forest hover:bg-warm-gold/10"
+              className="border-sunshine/30 text-deep-forest hover:bg-sunshine/10"
             >
               {t('close')}
             </Button>
